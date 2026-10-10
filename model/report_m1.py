@@ -165,16 +165,7 @@ for m in MODELS:
 
 a("## 6. Known model biases (written before m1; DESIGN §7.4, SPEC §6)")
 a("")
-a("- The +1 PSETUP cycle per pixel is hidden behind the requantizer when a layer is requant bound "
-  "(T_tile = NV); the model keeps the +1 (conservative), about +3 % on cifar op_2/4/6.")
-a("- The last tile's W_t and NV are counted in both T_tile and FLUSH (at most P + 3 cycles per command).")
-a("- Driver constants are measured on the walking-skeleton stub (START -> DONE next cycle): they "
-  "include one full poll iteration and the call site as compiled in the timing app, so with a "
-  "real, longer chain they can differ by about one poll iteration; negligible against the chain "
-  "times above but not zero. The CPI estimate they replace is kept in `parameters` of the summary.")
-a("- STAMP is self-reported by the ctrl counter; M5/M6 cross-check against CYCLES and a VCD.")
-a("- Software-op cycles come from the instrumented profile build (rdcycle around each op adds a few "
-  "cycles per op) averaged over a small number of inferences; they are measurements, not scored.")
+a("\n".join(f"- {b}" for b in S["biases"]))
 a("")
 (d / "M1_PREDICTIONS.md").write_text("\n".join(L) + "\n")
 print(f"wrote {d / 'M1_PREDICTIONS.md'}")

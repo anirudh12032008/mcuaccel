@@ -202,3 +202,89 @@ def test_pstar_uses_sum_stamp(tmp_path):
         st = {p: e["P"][str(p)]["sum_stamp"] for p in m1.PS}
         assert e["p_star"] == min(p for p in st if st[p] <= 1.10 * st[16])
         assert e["P"]["8"]["sum_stamp"] == sum(r["t_cmd"] for r in m1.predict(m, "os", 8))
+
+
+# ---- executor cross-checks (backend split plan and bus word counts) ----------------------------
+
+XP = (1, 8, 16)   # subset of m1.PS keeps the pure-Python executor under ~60 s
+
+
+def _backend_layer(L):
+    from array import array
+    from mcuaccel_backend.layers import Layer
+    Cg = 1 if L["kind"] == "dw" else L["C"]
+    K = L["KH"] * L["KW"] * Cg
+    w = array("b", np.random.default_rng(1).integers(-3, 4, L["O"] * K).astype(np.int8).tobytes())
+    return Layer(L["kind"], L["H"], L["W"], L["C"], L["O"], L["KH"], L["KW"], L["SH"], L["SW"],
+                 L["PH"], L["PW"], -128 if L["x_zp"] < -127 else L["x_zp"], 0, -128, 127, w,
+                 [0] * L["O"], [1 << 30] * L["O"], [0] * L["O"])
+
+
+@pytest.mark.parametrize("model", MODELS)
+def test_executor_cross_check(model):
+    """Model bus words, split plan and NT*sum R equal the backend executor (per command)."""
+    sys.path.insert(0, str(ROOT / "backend/tests"))
+    from helpers import image
+    from mcuaccel_backend.exec import run_descriptor
+    for P in XP:
+        rows = m1.predict(model, "os", P)
+        for L in m1.LAYERS[model]:
+            if L["kind"] not in m1.ACCEL_KINDS:
+                continue
+            xa = ya = 0   # real alignment of both nets; alignment variants in the next test
+            mem, _, _, d, cmds = image(_backend_layer(L), P, xa, ya, bytes(L["H"] * L["W"] * L["C"]))
+            st = run_descriptor(mem, d, P, stats=True)
+            mr = [r for r in rows if r["op"] == L["op"]]
+            assert [(c.o_s, c.nch) for c in cmds] == [(r["o_s"], r["nch"]) for r in mr]
+            assert len(st) == len(mr)
+            for s, r in zip(st, mr):
+                where = (model, L["op"], P, r["cmd"])
+                assert 17 + s["w_words"] + s["p_words"] + s["x_words"] == r["bus_rd"], where
+                assert s["y_words"] + 1 == r["bus_wr"], where
+                # NT * sum_pix R == executor sum over tiles of (mac_words + prime_words)
+                tiles = []
+                m1._cmd_os(L, P, m1.Cfg(), r["o_s"], r["nch"], tiles)
+                nt_sumR = len(tiles) * int(tiles[0]["R"].sum())
+                assert nt_sumR == s["mac_words"] + s["prime_words"], where
+
+
+@pytest.mark.parametrize("model,op", [("cifar_mobilenet", 0), ("mnist_cnn", 7), ("cifar_mobilenet", 15)])
+def test_executor_alignment_variants(model, op):
+    """x_align (network input) and y_align (final fc output) against the executor."""
+    sys.path.insert(0, str(ROOT / "backend/tests"))
+    from helpers import image
+    from mcuaccel_backend.exec import run_descriptor
+    L = layer(model, op)
+    xs, ys = (range(4), (0,)) if L.get("from_input") else ((0,), range(4))
+    for xa in xs:
+        for ya in ys:
+            for P in XP:
+                rows = [r for r in m1.predict(model, "os", P, x_align=xa, y_align=ya) if r["op"] == op]
+                mem, _, _, d, _ = image(_backend_layer(L), P, xa, ya, bytes(L["H"] * L["W"] * L["C"]))
+                for s, r in zip(run_descriptor(mem, d, P, stats=True), rows):
+                    assert (17 + s["w_words"] + s["p_words"] + s["x_words"], s["y_words"] + 1) == \
+                        (r["bus_rd"], r["bus_wr"]), (model, op, xa, ya, P)
+
+
+def test_y_align_only_final_layer():
+    for model in MODELS:
+        a, b = m1.predict(model, "os", 8), m1.predict(model, "os", 8, y_align=3)
+        for ra, rb in zip(a, b):
+            if not layer(model, ra["op"]).get("writes_output"):
+                assert ra == rb, (model, ra["op"])
+
+
+def test_c4b_pred_cycles(tmp_path):
+    _write_results(tmp_path, SYN_BASE, SYN_OPS, drv={"drv_chain": 70, "drv_patch": 9})
+    s = m1.run_all(tmp_path)
+    assert s["biases"] and all(isinstance(b, str) for b in s["biases"])
+    for m in MODELS:
+        for P in m1.PS:
+            e = s["models"][m]["archs"]["os"]["P"][str(P)]
+            rows = m1.predict(m, "os", P, t_drv_chain=70, t_drv_patch=9)
+            chains = e["n_chains"]
+            stamp_accel = sum(r["t_cmd"] + 2 for r in rows) + 2 * chains   # lam + 1 = 2 per command
+            drv = 70 * chains + 9 * e["n_patches"]
+            assert e["sum_stamp"] + 2 * len(rows) + 2 * chains == stamp_accel
+            assert e["c4b_pred_cycles"] == stamp_accel + drv
+            assert e["predicted_model_run"] == e["c4b_pred_cycles"] + e["sw_cycles"] + 120

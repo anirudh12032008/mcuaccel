@@ -118,8 +118,8 @@ output bytes of `model_run` equal `sim.run_int8(graph, ...)` and equal the basel
   one untimed warm-up, `BENCH_RUNS = 3` timed runs over all images (D17: the simulator is
   deterministic, so repeated runs can only demonstrate that; three suffice); reported value =
   median over runs of each run's per-image median (`cycles_median`), with min/max across images
-  and any spread across runs reported, not hidden. Runs made with more repetitions (e.g. the
-  cifar baseline at 10 × 10) are kept as recorded.
+  and any spread across runs reported, not hidden. Both baselines are 10 × 3
+  (cifar re-measured at 10 × 3 before tag `m1`; D17).
 - **Per-layer time**: (a) software layers and whole accelerated chains: an instrumented build
   (`-DMCUACCEL_PROFILE`) reads `rdcycle` around every `op_*` call (instrumentation cost
   reported); (b) each accelerator command: the hardware STAMP word the accelerator writes into
@@ -186,8 +186,8 @@ SoC's Fmax with and without the accelerator, and wall-time speedup = S × Fmax r
 (a) **Per command.** For every P ∈ {1, 2, 4, 8, 16} and every accelerator command of both
 networks, `|predicted − measured| / measured ≤ 20 %`, where measured = the command's STAMP and
 predicted = the row of `results/m1_predictions.csv` as committed at tag `m1`, joined on
-(model, op, P, split index). At P = 8 no command is split (17 rows per sweep point: 3 mnist +
-14 cifar); a measured command with no matching row, or vice versa, counts as a violation.
+(arch = "os", model, op, P, split index). At P = 8 and 16 no command is split (17 rows: 3 mnist +
+14 cifar; 32, 23 and 19 rows at P = 1, 2, 4); a measured command with no matching row, or vice versa, counts as a violation.
 (b) **Per network, accelerator + driver only.** For P = 8, `|pred − meas| / meas ≤ 10 %` with
 meas = median over the 10 images of (the `model_run` interval − the 120-cycle bench window − Σ of
 the software fallback ops' rdcycle intervals), all taken per image in ONE accelerated profile

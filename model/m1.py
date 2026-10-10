@@ -14,13 +14,12 @@ Decisions made here (the task said: decide, document):
   16-aligned, so only the network input (cifar op_0, flag from_input) can be misaligned:
   `x_align` = (input address) mod 4, default 0. `y_align` = (output address) mod 4 for the final
   fc (default 0). Y alignment per tile follows DESIGN 7.1: yaddr = Y_BASE + pix*O + ch0 with
-  Y_BASE = y_align + o_s, so W_t = ceil(((yaddr mod 4) + NV)/4) is evaluated per pixel and tile.
+  Y_BASE = (y_align if the layer writes `output` else 0) + o_s, so W_t = ceil(((yaddr mod 4) + NV)/4) is evaluated per pixel and tile.
 - a_ky (prime word rule, 7.1): a = (x_base + iy*XROW + ix0*XPIX) mod 4 with the UNCLIPPED
   ix0 = ox*SW - PW (rowA is the address of the virtual kx = 0 pixel; 4*j0 is a multiple of 4).
 - Third term of T_tile is ceil((NV + lam + l_mac + 1)/credits) = ceil((NV+lam+3)/2) for the defaults.
 - Bus words: bus_rd = 17 + Wwords + 3*NCH + (x words actually read). In "os" x words are re-read
-  for every tile, so they are NT * sum_pix R (DESIGN 9.2 writes "sum R"; the per-tile re-read is
-  what the datapath does). "acc" reads x once per pixel (sum_pix R). bus_wr = sum W_t + 1 (STAMP).
+  for every tile, so they are NT * sum_pix R (DESIGN 9.2). "acc" reads x once per pixel (sum_pix R). bus_wr = sum W_t + 1 (STAMP).
 - util = macs / (4P * t_compute), macs = in-bounds MACs of the command.
 - Command splitting per 6.4: conv NCH_max = min(512, P*floor(512/ROWS_PER_TILE)), dw
   4*floor(512/(KH*KW)). A split command pays DESC/WLOAD/PLOAD/FLUSH/STAMP again.
@@ -31,9 +30,13 @@ Decisions made here (the task said: decide, document):
   input (cifar op_0), Y_BASE of every command of a layer that writes `output` (final fc).
 - predict() returns accelerator commands only; its sw_cycles argument is accepted for API parity
   and unused there (software ops are not commands); summarize() consumes sw_cycles.
-- Saturation width (SPEC C5): smallest P whose total (accelerator + software + driver) is
-  <= 1.10 * total(P=16). With sw unmeasured the software term is 0, which makes P* >= the value
-  with software included (a constant added to every P only loosens the 10 % test).
+- Saturation width (SPEC C5): P* is defined on sum STAMP (accelerator only): the smallest P with
+  sum STAMP <= 1.10 * sum STAMP(P=16). `p_star_end_to_end` applies the same rule to the predicted
+  model_run (software + driver + window included) and is descriptive only.
+- c4b_pred_cycles (summary, per model/P) = accel + driver, without the bench window. SPEC C4(b)
+  measures median over images of (model_run interval - 120 - sum of fallback-op intervals) in the
+  accelerated profile build, so the window and the software ops are removed from the measurement.
+  predicted_model_run keeps the window.
 
 Driver constants (DESIGN 9.5). PicoRV32 CPI: load 5, store 5, ALU 3, branch 3 not taken / 5
 taken, jal 3, jalr 6. Assumed -O2 rv32im sequence for `mcuaccel_run(first)` as seen from the
@@ -50,7 +53,8 @@ caller, counting only what is NOT overlapped with the accelerator:
     t_drv_chain = 9 + 16 + 6 + 11 + 6 + 6 = 54 cycles.
     t_drv_patch = one patched descriptor field: add to form the value, reload descriptor
     pointer, sw: alu alu store = 3+3+5 = 11 cycles.
-These are estimates, refined in M1 proper from the compiled driver.
+This CPI sequence is an unused estimate kept for provenance; `__main__` uses the values measured on the
+stub (results/driver_overhead.json, load_driver), and the summary records which was used.
 
 Measured inputs (optional, absence tolerated; provenance recorded in the summary):
   results/baseline_<model>.json         {"mcugrad_result": {"cycles_median": ...}, "x_align": ...}
@@ -241,7 +245,7 @@ def _wt(L, g, cfg, o_s, ch0, NV):
     """W_t per pixel: ceil(((yaddr mod 4) + NV)/4), yaddr = Y_BASE + pix*O + ch0 (7.1)."""
     OW = g["OW"]
     pix = np.arange(g["OH"])[:, None] * OW + np.arange(OW)[None, :]
-    y_base = cfg.y_align + o_s
+    y_base = (cfg.y_align if L.get("writes_output") else 0) + o_s   # only the final fc is misaligned
     return -(-(((y_base + pix * L["O"] + ch0) % 4) + NV) // 4)
 
 
@@ -433,7 +437,8 @@ def summarize(model_name, arch, P, cfg=None, sw_cycles=None, baseline=None, rows
     tc = sum(r["t_compute"] for r in rows)
     return dict(accel_cycles=accel, sum_stamp=sum(r["t_cmd"] for r in rows), sw_cycles=sw,
                 driver_cycles=drv, bench_window_cycles=window,
-                accel_plus_driver_cycles=accel + drv, predicted_model_run=total,
+                accel_plus_driver_cycles=accel + drv, c4b_pred_cycles=accel + drv,
+                predicted_model_run=total,
                 n_chains=len(chains), n_commands=len(rows), n_patches=patches,
                 sw_ops=[v["op"] for v in per_op if v["where"] == "sw"],
                 sw_complete=all(v["cycles"] is not None for v in per_op if v["where"] == "sw"),
@@ -442,6 +447,34 @@ def summarize(model_name, arch, P, cfg=None, sw_cycles=None, baseline=None, rows
                 macs=sum(r["macs"] for r in rows), bus_rd=sum(r["bus_rd"] for r in rows),
                 bus_wr=sum(r["bus_wr"] for r in rows),
                 util=sum(r["macs"] for r in rows) / (4 * P * tc), ops=per_op)
+
+
+BIASES = [   # verbatim DESIGN 7.4 (written before m1); bullets added by the M1 red-team marked (T1.2)
+    "PSETUP: the +1 cycle per pixel is hidden behind the requantizer where a layer is requant or "
+    "credit bound; the model keeps the +1 (conservative). Over-prediction by command: mnist op_1 "
+    "+3.4 % (P=8,16), cifar op_2 +3.0 % (P=8,16), cifar op_4 +3.0 % (P=16), cifar op_0 +1.9 % "
+    "(P=16), cifar op_6 +1.3 % (P=16), all others < 0.5 %",
+    "FLUSH: the real remainder after the last issue is NV + 10 cycles; the model's W_last + 2*lam + "
+    "10 + NV counts the last tile's W_t and NV in both T_tile and FLUSH and over-predicts by "
+    "2 + W_last cycles per command (<= P + 3; <= 7 at P=16)",
+    "*_WAIT phases: +0 cycles if fetch idle is combinational as specified (DESIGN 8.4); a registered "
+    "idle would add <= 4 cycles per command (0.6 % worst case, cifar op_15 at P=16)",
+    "Driver: drv_chain = 71 was measured on the stub (first poll sees DONE); a real chain adds "
+    "~6-7 cycles of phase wait, +3 for call-site addressing, and the per-model_run-call bind check "
+    "(~8-10 cycles) is not modelled: ~40 cycles under-prediction on mnist (0.2 %)",
+    "STAMP is self-reported by the ctrl counter; M5/M6 assert per chain that "
+    "CYCLES == sum(STAMP + lam + 1) + 2 and count at least three commands independently from a VCD",
+    "(T1.2) C4(b) measurement side: the profile macros (MCUACCEL_PROF_END 64-bit accumulate, "
+    "~30-40 cycles per op), the call/return around each accelerated chain function and the "
+    "model_run prologue land in the measured interval but not in c4b_pred_cycles: ~200-500 cycles "
+    "under-prediction (~1-2 % on mnist, < 0.5 % on cifar)",
+    "(T1.2) y_align = 0 is assumed (bench_main's s_out has no alignment attribute and is not "
+    "extracted from the link map); a misaligned output costs <= 1 cycle per tile of the final fc",
+    "(T1.2) software-op cycles: the profile build is 0.46 % faster than the uninstrumented cifar "
+    "baseline on the same 2 images, so the compiled fallback code is not identical across builds; "
+    "these cycles are measurements, not scored",
+    "bus_rd counts NT * sum_pix R (x re-fetched per tile)",
+]
 
 
 def _commit():
@@ -490,9 +523,13 @@ def run_all(out_dir, cfg=None, results_dir=None):
         for r in all_rows:
             w.writerow({k: (f"{v:.4f}" if k == "util" else v) for k, v in r.items()})
     summary = dict(commit=_commit(), date=datetime.date.today().isoformat(),
-                   parameters=asdict(cfg) | {"Ps": list(PS), "cpi": CPI,
+                   parameters=asdict(cfg) | {"Ps": list(PS), "cpi": CPI, "lanes": 4, "L_rq": 6,
+                                             "flush_const_note": "flush_const 10 = L_rq 6 + 4 (DESIGN 7.2)",
                                              "drv_chain_seq": DRV_CHAIN_SEQ,
-                                             "drv_patch_seq": DRV_PATCH_SEQ},
+                                             "drv_patch_seq": DRV_PATCH_SEQ,
+                                             "drv_seq_note": "CPI instruction sequence is an unused "
+                                             "estimate; measured values from "
+                                             "results/driver_overhead.json are used"},
                    inputs=dict(accelerator="modelled (DESIGN 7)", driver=drv_prov,
                                bench_window_cycles=window if window_ok else "absent: 0 used",
                                p_star_definition="SPEC C5: smallest P with sum(STAMP) <= 1.10 * "
@@ -500,7 +537,7 @@ def run_all(out_dir, cfg=None, results_dir=None):
                                                  "p_star_end_to_end uses predicted_model_run",
                                layers="DESIGN 2 table, checked against model.c by test",
                                per_model=measured),
-                   models=models)
+                   biases=BIASES, models=models)
     (out_dir / "m1_summary.json").write_text(json.dumps(summary, indent=1))
     return summary
 
@@ -508,10 +545,10 @@ def run_all(out_dir, cfg=None, results_dir=None):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", default=str(ROOT / "results"))
-    ap.add_argument("--results", default=None, help="dir with baseline/driver JSON (default: --out)")
+    ap.add_argument("--results", default=str(ROOT / "results"), help="dir with baseline/driver JSON")
     ap.add_argument("--x-align", type=int, default=None, help="default: x_align of the baseline JSON (0)")
     a = ap.parse_args()
-    rd = Path(a.results or a.out)
+    rd = Path(a.results)
     xa = a.x_align
     if xa is None:   # network-input alignment of the measured firmware (cifar op_0 reads it)
         xa = load_baseline("cifar_mobilenet", rd)[2] or 0
