@@ -1,0 +1,3 @@
+`verilator_config
+// Vendored PicoRV32 is not ours to make -Wall clean.
+lint_off -file "*third_party/picorv32/picorv32.v"
