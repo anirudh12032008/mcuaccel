@@ -115,9 +115,11 @@ output bytes of `model_run` equal `sim.run_int8(graph, ...)` and equal the basel
   reported, identical in both builds), including software fallback layers, descriptor patching,
   polling and all driver overhead. Protocol =
   bench_main's: `TESTSET_N = 10` fixed test images (the first 10 of mcugrad's test set),
-  one untimed warm-up, `BENCH_RUNS = 10` timed runs over all images; reported value =
-  median over runs of each run's per-image median (`cycles_median`). Simulation is
-  deterministic, so runs are expected to be identical; any spread is reported, not hidden.
+  one untimed warm-up, `BENCH_RUNS = 3` timed runs over all images (D17: the simulator is
+  deterministic, so repeated runs can only demonstrate that; three suffice); reported value =
+  median over runs of each run's per-image median (`cycles_median`), with min/max across images
+  and any spread across runs reported, not hidden. Runs made with more repetitions (e.g. the
+  cifar baseline at 10 × 10) are kept as recorded.
 - **Per-layer time**: (a) software layers and whole accelerated chains: an instrumented build
   (`-DMCUACCEL_PROFILE`) reads `rdcycle` around every `op_*` call (instrumentation cost
   reported); (b) each accelerator command: the hardware STAMP word the accelerator writes into
@@ -138,7 +140,7 @@ output bytes of `model_run` equal `sim.run_int8(graph, ...)` and equal the basel
 ### C1 — the claim (the brief's)
 
 > **Metric** S(model, P=8) for **both** `mnist_cnn` and `cifar_mobilenet`, measured by
-> **procedure** §5 (median `model_run` cycles, 10 images × 10 runs, baseline vs accelerated
+> **procedure** §5 (median `model_run` cycles, 10 images × 3 runs, baseline vs accelerated
 > build, software fallback layers and driver overhead included), on **system** §2 (Verilator
 > model of the PicoRV32 SoC with `mcuaccel_top #(P=8)`), **will be ≥ 10**. If either network's
 > S is < 10 the claim is refuted.

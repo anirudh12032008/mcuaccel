@@ -131,3 +131,10 @@ this loaded machine and much longer for cifar. Options: run it in `make test` ev
 the JSON under build/ and still run the reproduction test; mark `slow` and run via `make test-slow`.
 Choice: `slow` marker, excluded from `make test`, included in `make test-slow` and in the Step 5
 clean-clone verification. Reason: a 1-2 h default test run would stop every agent from testing.
+
+## D17 Orchestrator: timing protocol 10 images x 3 runs (2026-10-10)
+SPEC v1 said 10 x 10. The Verilator model is deterministic (measured: cifar cycles_min/max differ
+only across images), so extra runs add wall time and no information; under the shared host load
+(~400) a 10 x 10 cifar run is many hours. Options: keep 10 x 10; 10 x 3; 10 x 1.
+Choice: 10 x 3 (three runs still demonstrate determinism), decided before any accelerated
+measurement exists. A 10 x 10 baseline already running is kept if it completes.
