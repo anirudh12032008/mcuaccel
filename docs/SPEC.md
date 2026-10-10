@@ -130,20 +130,26 @@ output bytes of `model_run` equal `sim.run_int8(graph, ...)` and equal the basel
 
 ## 6. Claims (pre-registered)
 
-### C1 — the claim
+### C1 — the claim (the brief's)
 
-> **Metric** S(cifar_mobilenet, P=8), measured by **procedure** §5 (median `model_run` cycles,
-> 10 images × 10 runs, baseline vs accelerated build), on **system** §2 (Verilator model of
-> the PicoRV32 SoC with `mcuaccel_top #(P=8)`), **will be ≥ 100**. If it is < 100 the claim
-> is refuted.
+> **Metric** S(model, P=8) for **both** `mnist_cnn` and `cifar_mobilenet`, measured by
+> **procedure** §5 (median `model_run` cycles, 10 images × 10 runs, baseline vs accelerated
+> build, software fallback layers and driver overhead included), on **system** §2 (Verilator
+> model of the PicoRV32 SoC with `mcuaccel_top #(P=8)`), **will be ≥ 10**. If either network's
+> S is < 10 the claim is refuted.
 
-Basis (an estimate, not the pre-registered prediction; that is M1's `results/m1_predictions.csv`):
-the accelerator is bound by its single 32-bit RAM port (one word per cycle); the
-DESIGN §7 equations give ≈ 1.4·10^5 accelerator cycles for cifar_mobilenet at P=8, plus a few
-10^4 cycles of software avgpool and driver. mcugrad needs ≈ 1.6·10^7 instructions on a
-Cortex-M0 for this model (third_party/mcugrad/results/emulated.csv); PicoRV32 needs ≥ 3 cycles
-per instruction (5 per load/store), so the baseline is expected at ≥ 3·10^7 cycles. 100 leaves
-a factor ≥ 2 margin for both estimates.
+### C1b — stronger pre-registered statement
+
+> S(cifar_mobilenet, P=8) **will be ≥ 100**. If it is < 100, C1b is refuted (C1 may still hold).
+
+Basis of C1b (an estimate, not the pre-registered prediction; that is M1's
+`results/m1_predictions.csv`): the accelerator is bound by its single 32-bit RAM port (one word
+per cycle); the DESIGN §7 equations give ≈ 1.4·10^5 accelerator cycles for cifar_mobilenet at
+P=8, plus a few 10^4 cycles of software avgpool and driver. mcugrad needs ≈ 1.6·10^7 instructions
+on a Cortex-M0 for this model (third_party/mcugrad/results/emulated.csv); PicoRV32 needs ≥ 3
+cycles per instruction (5 per load/store), so the baseline is expected at ≥ 3·10^7 cycles. 100
+leaves a factor ≥ 2 margin for both estimates. MNIST is expected far below 100 because its
+maxpools and transposes stay in software (Amdahl); that share is itself a reported result.
 
 ### C2 — bit-exactness
 
@@ -182,14 +188,18 @@ that sets DONE without computing, is exempt). Model fixes after `m1` are allowed
 outputs are reported as "post-hoc" beside the original predictions, which remain the scored ones.
 Baseline (software) cycles are measurements, not predictions, and may be taken at any time.
 
-### C5 — secondary speedup statement
+### C5 — saturation width
 
-S(mnist_cnn, P=8) **≥ 10**, procedure and system as C1, without the optional backend passes.
-(MNIST is dominated by software maxpools and transposes after acceleration; Amdahl bound.)
+For each network, define the *saturation width* P\* as the smallest P ∈ {1, 2, 4, 8, 16} whose
+accelerated `model_run` cycles are within 10 % of the P = 16 value. The M1 model's predicted P\*
+(from `results/m1_summary.json` at tag `m1`) and the measured P\* (M6 ablation builds) agree
+within a factor of two (P\*_meas ∈ [P\*_pred / 2, 2·P\*_pred]) for both networks; otherwise C5 is
+refuted. Rationale: with a 32-bit port the speedup must stop scaling with P; predicting where is
+the bandwidth model's purpose.
 
 ## 7. Fixed configuration
 
-PicoRV32 parameters (D11): `ENABLE_COUNTERS=1, ENABLE_COUNTERS64=1, ENABLE_REGS_16_31=1,
+PicoRV32 parameters (D12): `ENABLE_COUNTERS=1, ENABLE_COUNTERS64=1, ENABLE_REGS_16_31=1,
 ENABLE_REGS_DUALPORT=1, LATCHED_MEM_RDATA=0, TWO_STAGE_SHIFT=1, BARREL_SHIFTER=1,
 TWO_CYCLE_COMPARE=0, TWO_CYCLE_ALU=0, COMPRESSED_ISA=0, CATCH_MISALIGN=1, CATCH_ILLINSN=1,
 ENABLE_PCPI=0, ENABLE_MUL=0, ENABLE_FAST_MUL=1, ENABLE_DIV=1, ENABLE_IRQ=0, ENABLE_TRACE=0,
@@ -199,8 +209,20 @@ ablation says otherwise; weight buffer 512 rows × 4P bytes; parameter buffer 51
 
 ## 8. Relation to prior art
 
-TODO(orchestrator): state, after docs/PRIOR_ART.md, what is new relative to the closest prior
-work and adjust C1's framing (not its threshold) accordingly.
+docs/PRIOR_ART.md §6 shows that a dedicated int8 accelerator beating a scalar in-order RISC-V
+core by well over 10× is established (Gemmini: 127× on MobileNetV2 vs in-order Rocket; CFU
+Playground: 55× on the dominant 1×1 conv; VTA on edge FPGAs: 2-6×). C1 therefore reproduces a
+known effect on a new, much smaller system (one 32-bit single-port BRAM, ~4k LUT4, PicoRV32) and
+is kept because the brief asks for it. What this project adds, and what the paper is organised
+around: (i) the speedup and per-command cycle counts are predicted by an analytic port-bound
+model committed before the RTL exists and scored against measurement with a tolerance fixed in
+advance (C4, C5); earlier analytic models (Zhang 2015, Alwani 2016) were fitted alongside their
+designs. (ii) Bit-exactness is asserted at the whole-network level against a specific compiler's
+integer simulator, with the non-accelerated layers running the same software as the baseline
+(C2). (iii) The MAC-width sweep P ∈ {1..16} on a fixed 32-bit port gives the saturation curve and
+the depthwise/requant-bound regimes for a microcontroller-class memory system. (iv) The Amdahl
+share of pooling and layout ops is measured, not assumed. Negative results on any of these are
+reported as such.
 
 ## 9. Test plan summary
 
