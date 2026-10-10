@@ -297,7 +297,7 @@ Zero-wait slave: `gnt = 1`, `rvalid <= req`, `err = 0`. Writes take effect only 
 | 0x10 | DESC_ADDR | RW | 0 | address of the first descriptor (4-byte aligned) |
 | 0x14 | CYCLES | RO | 0 | cycles BUSY was high during the last chain (cleared at START) |
 | 0x18 | NCMD | RO | 0 | commands completed in the last chain (cleared at START) |
-| 0x1C | ERR_ADDR | RO | 0 | address of the access that returned `err` |
+| 0x1C | ERR_ADDR | RO | 0 | address of the access that returned `err`; held until the next START or CLEAR |
 
 8 registers. START sets BUSY at the end of the acceptance cycle of the CTRL write, so any later
 STATUS read sees BUSY = 1 until the chain ends. The CPU must not write CTRL.START while BUSY
@@ -346,7 +346,9 @@ raised. On any `err` response: stop issuing, wait for the outstanding response, 
 ERR_ADDR, drop pipeline state, go IDLE (BUSY = 0, DONE = 0). "Drop pipeline state" means, explicitly:
 credits reset to 2, both requant FIFOs emptied, writer assembly and pending write cleared (no
 further RAM writes), MAC valids cleared, aligner `prev` irrelevant (reloaded by the next prime).
-A correct chain started after an aborted one must be bit-exact (tested, §10.2).
+A correct chain started after an aborted one must be bit-exact (tested, §10.2). After an abort
+STATUS reads exactly ERR (BUSY = 0, DONE = 0); NCMD counts only commands whose STAMP write was
+acknowledged without error, so a command whose STAMP write itself faults is not counted.
 
 ### 6.4 Backend packing and limits
 
