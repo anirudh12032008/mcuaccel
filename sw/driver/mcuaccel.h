@@ -29,6 +29,11 @@
 #define MCUACCEL_W_X_ORIGIN  6u
 #define MCUACCEL_W_Y_BASE    11u
 
+/* Descriptor address fields in generated code go through this (a host test build overrides it). */
+#ifndef MCUACCEL_ADDR
+#define MCUACCEL_ADDR(p) ((uint32_t)(uintptr_t)(p))
+#endif
+
 typedef struct { uint32_t w[18]; } mcuaccel_desc_t;   /* 72 B, 4-byte aligned by the caller */
 
 /* Start the chain at `first` and block until it ends. On ERR: writes MCUACCEL_FAIL_CODE to the

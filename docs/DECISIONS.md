@@ -138,3 +138,17 @@ only across images), so extra runs add wall time and no information; under the s
 (~400) a 10 x 10 cifar run is many hours. Options: keep 10 x 10; 10 x 3; 10 x 1.
 Choice: 10 x 3 (three runs still demonstrate determinism), decided before any accelerated
 measurement exists. A 10 x 10 baseline already running is kept if it completes.
+
+## D18 Orchestrator: generated-code conventions of the backend emitter (2026-10-10)
+Decided while implementing T4.1 (`backend/mcuaccel_backend/emit.py`), each the simplest reading
+of DESIGN 6.5. (1) Address fields in generated code go through `MCUACCEL_ADDR(p)` (default
+`(uint32_t)(uintptr_t)p` in `mcuaccel.h`) so the host bit-exactness test can map pointers to
+offsets of a shared arena without changing the emitted text. (2) NEXT is never taken from
+`build_commands`; the emitter links descriptors as `&ad_c[k+1]` in `ad_bind()`, last one 0.
+(3) A depthwise layer whose x is the network `input` falls back to software (input alignment is
+not guaranteed); neither workload hits this. (4) The accelerated build contains only the mcugrad
+kernels that its fallback ops use; fairness (SPEC §7) is checked textually on the kernels that
+remain, the objdump comparison is M5's. (5) Host test images are the head of the committed
+baseline `testset.c`. (6) Per-chain functions take only the `input`/`output` they patch.
+Options rejected: emitting NEXT from the backend (needs final addresses at emit time) and a
+separate accelerated driver header (duplicates the register map).

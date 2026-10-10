@@ -101,6 +101,8 @@ def check(layer):
 
 def from_node(graph, node):
     """Layer for an int8-graph conv2d(_fused) / matmul(_fused) node (N must be 1)."""
+    if node.op not in ("conv2d", "conv2d_fused", "matmul", "matmul_fused"):
+        raise ValueError(f"op {node.op}")
     a = node.attrs
     xs = graph.values[node.inputs[0]].shape
     wc = graph.consts[node.inputs[1]]
