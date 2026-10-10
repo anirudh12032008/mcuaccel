@@ -5,6 +5,20 @@
 #define TOHOST      (*(volatile uint32_t *)(uintptr_t)MCUACCEL_CONSOLE_TOHOST)
 #define BARRIER()   __asm__ volatile("" ::: "memory")
 
+static void fail(void)
+{
+    TOHOST = MCUACCEL_FAIL_CODE;
+    for (;;) {
+    }
+}
+
+void mcuaccel_check_p(uint32_t p)
+{
+    if ((REG(MCUACCEL_CONFIG) & 0xFFu) != p) {
+        fail();
+    }
+}
+
 void mcuaccel_run(volatile mcuaccel_desc_t *first)
 {
     uint32_t st;
@@ -17,9 +31,7 @@ void mcuaccel_run(volatile mcuaccel_desc_t *first)
     } while (st & MCUACCEL_STATUS_BUSY);
     BARRIER();   /* no tensor value cached across the chain */
     if (st & MCUACCEL_STATUS_ERR) {
-        TOHOST = MCUACCEL_FAIL_CODE;
-        for (;;) {
-        }
+        fail();
     }
 }
 

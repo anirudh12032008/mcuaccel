@@ -425,9 +425,13 @@ Compiler ordering: the descriptor patches are plain stores, so `mcuaccel_run` ha
 (`(uintptr_t)input − 99`), never as out-of-object pointer arithmetic. The driver is written before
 tag m1 (it is software) so M1 can read its instruction sequence (§9.5). Fairness of the fallback
 code: the accelerated build's fallback kernels must be the same machine code as the baseline's;
-M5 compares objdump hashes of every `mg_*` function in both ELFs and, if GCC's per-call-site
-specialisation (`.constprop`) makes them differ, both builds compile the kernels in one shared
-translation unit with `__attribute__((noinline))` (recorded in DECISIONS).
+M5 checks it by measurement: both builds are also made with `-DMCUACCEL_PROFILE` and every
+fallback `op_*` must report identical per-op cycles in both (the simulator is deterministic; an
+objdump hash of `mg_*` symbols would pass vacuously because -O2 inlines the kernels into
+`model_run`, T4.3). If they differ, both builds compile the kernels in one shared translation unit
+with `__attribute__((noinline))` (recorded in DECISIONS). The emitted file also carries
+`#define MCUACCEL_P <P>`; `ad_bind` compares it with CONFIG[7:0] and fails with the fail code on
+a mismatch (firmware emitted for one P never silently runs on another).
 
 ## 7. Timing (normative; the RTL is built to match, the M1 model implements it)
 

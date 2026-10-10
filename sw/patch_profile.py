@@ -4,7 +4,8 @@ MCUACCEL_PROF_BEGIN/END and appending the prof_* tables. Usage: patch_profile.py
 import re
 import sys
 
-CALL = re.compile(r"^(\s*)(op_(\d+)_(\w+))\(([^;]*)\);\s*$")
+CALL = re.compile(r"^(\s*)((?:op_(\d+)_(\w+))|(?:chain_\d+_(\d+)_\d+))\(([^;]*)\);\s*$")
+STMT = re.compile(r"^\s*(?!ad_bind)\w+\([^;]*\);\s*$")
 
 
 def patch(src: str) -> str:
@@ -16,14 +17,17 @@ def patch(src: str) -> str:
     for line in run.split("\n"):
         m = CALL.match(line)
         if not m:
+            assert not STMT.match(line), f"unwrapped call in model_run: {line.strip()}"
             out.append(line)
             continue
-        ind, fn, idx, name, _ = m.groups()
+        ind, fn, idx, name, cfirst, _ = m.groups()
         k = len(ops)
-        # kernel = first mg_* call inside the op function body
-        fb = re.search(r"static void %s\(.*?\n}\n" % fn, head, re.S)
-        kern = re.search(r"\b(mg_\w+)\(", fb.group(0) if fb else "")
-        ops.append((int(idx), name, kern.group(1) if kern else "none"))
+        if cfirst:      # accelerated chain: reported under its first op index
+            ops.append((int(cfirst), fn, "mcuaccel_run"))
+        else:           # kernel = first mg_* call inside the op function body
+            fb = re.search(r"static void %s\(.*?\n}\n" % fn, head, re.S)
+            kern = re.search(r"\b(mg_\w+)\(", fb.group(0) if fb else "")
+            ops.append((int(idx), name, kern.group(1) if kern else "none"))
         out.append(f"{ind}{{ MCUACCEL_PROF_BEGIN({k}); {line.strip()} MCUACCEL_PROF_END({k}); }}")
     n = len(ops)
     tbl = (f'\n#include "profile.h"\nuint64_t prof_cycles[{n}];\nconst int prof_n = {n};\n'

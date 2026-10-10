@@ -40,6 +40,9 @@ typedef struct { uint32_t w[18]; } mcuaccel_desc_t;   /* 72 B, 4-byte aligned by
  * console TOHOST and never returns. */
 void mcuaccel_run(volatile mcuaccel_desc_t *first);
 
+/* Compare `p` with the P field (CONFIG[7:0]); on mismatch write MCUACCEL_FAIL_CODE to TOHOST and spin. */
+void mcuaccel_check_p(uint32_t p);
+
 /* CYCLES register: cycles BUSY was high during the last chain. */
 uint32_t mcuaccel_read_cycles(void);
 /* NCMD register: commands completed in the last chain. */

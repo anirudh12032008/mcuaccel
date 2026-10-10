@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build a benchmark firmware image for the PicoRV32 SoC.
-    build_fw.py <model> [--images 10] [--runs 3] [--profile] [--model-dir DIR] [--out DIR]
+    build_fw.py <model> [--images 10] [--runs 3] [--profile] [--model-dir DIR] [--out DIR] [-D NAME[=VAL]]...
 model.c/model.h come unchanged from third_party/mcugrad/firmware/generated/<model> (the baseline,
 D6) unless --profile (model.c patched by patch_profile.py) or --model-dir (backend output).
 Writes <out>/{fw.elf,fw.hex,fw.map}; prints the hex path."""
@@ -28,7 +28,7 @@ def compiler_version() -> str:
 
 
 def build(model: str, images: int, runs: int, profile: bool = False, model_dir: str | None = None,
-          out: str | None = None, stub: bool = False) -> dict:
+          out: str | None = None, stub: bool = False, defines: list[str] | None = None) -> dict:
     src = model_dir or os.path.join(MG, "generated", model)
     out = out or os.path.join(ROOT, "build", "fw", f"{model}{'_prof' if profile else ''}{'_stub' if stub else ''}_i{images}_r{runs}")
     os.makedirs(out, exist_ok=True)
@@ -41,11 +41,12 @@ def build(model: str, images: int, runs: int, profile: bool = False, model_dir: 
     common = os.path.join(ROOT, "sw", "common")
     srcs = [os.path.join(out, "model.c"), os.path.join(out, "testset.c"),
             os.path.join(MG, "common", "bench_main.c"), os.path.join(common, "platform.c"),
-            os.path.join(common, "main_bench.c"), os.path.join(common, "crt0.S")]
-    defs = [f'-DBENCH_BOARD="{BOARD}"', f"-DBENCH_RUNS={runs}"] + (["-DMCUACCEL_PROFILE"] if profile else [])
+            os.path.join(common, "main_bench.c"), os.path.join(common, "crt0.S"),
+            os.path.join(ROOT, "sw", "driver", "mcuaccel.c")]
+    defs = [f'-DBENCH_BOARD="{BOARD}"', f"-DBENCH_RUNS={runs}"] + (["-DMCUACCEL_PROFILE"] if profile else []) + [f"-D{d}" for d in defines or []]
     elf, hexf, mapf = (os.path.join(out, "fw" + e) for e in (".elf", ".hex", ".map"))
     cmd = [CC, *FLAGS, *defs, f"-I{out}", f"-I{os.path.join(MG, 'common')}", f"-I{common}",
-           "-T", os.path.join(common, "link.ld"), f"-Wl,-Map={mapf}", "-o", elf, *srcs, "-lgcc"]
+           f"-I{os.path.join(ROOT, 'sw', 'driver')}", "-T", os.path.join(common, "link.ld"), f"-Wl,-Map={mapf}", "-o", elf, *srcs, "-lgcc"]
     r = subprocess.run(cmd, capture_output=True, text=True)
     if r.returncode:
         sys.exit(f"firmware build failed:\n{' '.join(cmd)}\n{r.stderr}")
@@ -94,5 +95,6 @@ if __name__ == "__main__":
     ap.add_argument("--profile", action="store_true")
     ap.add_argument("--model-dir")
     ap.add_argument("--out")
+    ap.add_argument("-D", dest="defines", action="append", default=[], metavar="NAME[=VAL]")
     a = ap.parse_args()
-    print(build(a.model, a.images, a.runs, a.profile, a.model_dir, a.out)["hex"])
+    print(build(a.model, a.images, a.runs, a.profile, a.model_dir, a.out, defines=a.defines)["hex"])

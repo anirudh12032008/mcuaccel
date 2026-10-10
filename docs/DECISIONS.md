@@ -152,3 +152,6 @@ remain, the objdump comparison is M5's. (5) Host test images are the head of the
 baseline `testset.c`. (6) Per-chain functions take only the `input`/`output` they patch.
 Options rejected: emitting NEXT from the backend (needs final addresses at emit time) and a
 separate accelerated driver header (duplicates the register map).
+(7) T4.3: the emitted model.c carries `MCUACCEL_P`, checked against CONFIG at bind (a P sweep
+would otherwise run P=8 firmware on a P=4 build silently). (8) T4.3: the M5 fairness check is a
+measured per-op cycle comparison of the profile builds, not an objdump hash (kernels are inlined).
