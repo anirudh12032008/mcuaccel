@@ -44,3 +44,9 @@ Software baseline = the C that mcugrad already emits (`mcugrad.codegen`, kernels
 compiled with `riscv-none-elf-gcc -O2 -march=rv32im -mabi=ilp32`, running on the same SoC CPU at the
 same clock, cycles read from `rdcycle`. The accelerated build uses the same compiler flags, the same
 model, the same test images, and the same CPU for the layers that fall back to software.
+
+## D7 Smoke-test layout and empty-suite handling (2026-10-10)
+Toolchain smoke tests live in `tb/unit/test_toolchain.py` against a trivial `rtl/soc/soc_smoke_counter.sv`
+(kept in rtl/ so lint and synthesis flows see real input). `make test` tolerates pytest exit code 5
+(no tests collected) so the target stays green on a bare checkout; `make lint` prints "no RTL yet" when
+rtl/ is empty. Reason: the targets must be CI-safe at every stage of the build-up.

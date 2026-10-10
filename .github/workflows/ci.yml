@@ -1,0 +1,19 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/cache@v4
+        with:
+          path: tools
+          key: tools-${{ runner.os }}-${{ hashFiles('scripts/bootstrap.sh', 'requirements.txt') }}
+      - uses: astral-sh/setup-uv@v5
+      - run: scripts/bootstrap.sh
+      - run: |
+          source scripts/env.sh
+          make lint test
+        shell: bash
