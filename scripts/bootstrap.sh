@@ -53,4 +53,13 @@ else
 fi
 
 [ -f third_party/mcugrad/mcugrad/quant/sim.py ] || echo "hint: mcugrad submodule missing; run: git submodule update --init"
+# Datasets for the mcugrad models (MNIST, CIFAR-10): copy from a sibling mcugrad checkout when
+# present; otherwise mcugrad.data downloads and hash-verifies them on first use.
+D=third_party/mcugrad/data
+mkdir -p "$D"
+for f in train-images-idx3-ubyte.gz train-labels-idx1-ubyte.gz t10k-images-idx3-ubyte.gz \
+         t10k-labels-idx1-ubyte.gz cifar-10-python.tar.gz HASHES.json; do
+  if [ ! -f "$D/$f" ] && [ -f "../mcugrad/data/$f" ]; then cp "../mcugrad/data/$f" "$D/$f"; echo "reuse: $D/$f"; fi
+done
+
 echo "bootstrap complete; run: source scripts/env.sh"
