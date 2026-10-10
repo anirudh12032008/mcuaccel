@@ -1,3 +1,7 @@
+`ifdef MCUACCEL_NONE
+/* verilator lint_off UNUSEDPARAM */
+/* verilator lint_off UNUSEDSIGNAL */
+`endif
 // SoC top (DESIGN 4): PicoRV32 + adapter + interconnect + dual-port RAM + console + accelerator.
 module soc_top #(
     parameter int RAM_BYTES = 1048576,
@@ -89,6 +93,21 @@ module soc_top #(
       .putc_valid(putc_valid), .putc_data(putc_data),
       .tohost_valid(tohost_valid), .tohost_data(tohost_data));
 
+`ifdef MCUACCEL_NONE
+  // Synthesis baseline without the accelerator: register slave answers OK/0, master idle.
+  logic a_rv_q;
+  always_ff @(posedge clk) a_rv_q <= a_req && !rst;
+  assign a_gnt = 1'b1;
+  assign a_rvalid = a_rv_q;
+  assign a_rdata = 32'd0;
+  assign a_err = 1'b0;
+  assign m_req = 1'b0;
+  assign m_addr = 32'd0;
+  assign m_we = 1'b0;
+  assign m_be = 4'h0;
+  assign m_wdata = 32'd0;
+  assign accel_busy = 1'b0;
+`else
   mcuaccel_top #(.P(P)) u_accel (
       .clk(clk), .rst(rst),
       .s_req(a_req), .s_addr(a_addr), .s_we(a_we), .s_be(a_be), .s_wdata(a_wdata),
@@ -96,4 +115,5 @@ module soc_top #(
       .m_req(m_req), .m_addr(m_addr), .m_we(m_we), .m_be(m_be), .m_wdata(m_wdata),
       .m_gnt(m_gnt), .m_rvalid(m_rvalid), .m_rdata(m_rdata), .m_err(m_err),
       .busy(accel_busy));
+`endif
 endmodule
