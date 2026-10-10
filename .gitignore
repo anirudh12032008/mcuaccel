@@ -1,0 +1,24 @@
+# Project-local toolchains (scripts/bootstrap.sh)
+/tools
+/.venv
+/.cache/
+# Build products
+build/
+obj_dir/
+sim_build/
+__pycache__/
+*.pyc
+*.vcd
+*.fst
+results.xml
+.pytest_cache/
+# LaTeX intermediates (the PDF itself is tracked)
+paper/build/
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+.DS_Store
+# agent worktrees
+.claude/worktrees/
