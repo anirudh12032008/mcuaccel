@@ -124,3 +124,10 @@ fallback-code identity checked by objdump hash; max_cycles default raised; no pa
 fallback; `make reproduce` must include experiments. Rejected: a denser P grid (DSP budget; P*
 on the doubling grid is reported descriptively instead); external timestamping of m1 (no remote;
 hash recorded, manual step in HARDWARE_TODO.md).
+
+## D16 Orchestrator: slow tests out of the default `make test` (2026-10-10)
+The mcugrad int8 graph build (pure-Python calibration over 512 images) took 2275 s for mnist on
+this loaded machine and much longer for cifar. Options: run it in `make test` every time; cache
+the JSON under build/ and still run the reproduction test; mark `slow` and run via `make test-slow`.
+Choice: `slow` marker, excluded from `make test`, included in `make test-slow` and in the Step 5
+clean-clone verification. Reason: a 1-2 h default test run would stop every agent from testing.

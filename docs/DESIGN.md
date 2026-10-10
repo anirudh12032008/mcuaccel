@@ -326,7 +326,12 @@ STATUS read sees BUSY = 1 until the chain ends. The CPU must not write CTRL.STAR
 | 16 | 0x40 | QPARAM | [7:0] x_zp, [15:8] y_zp, [23:16] act_min, [31:24] act_max (int8, two's complement) |
 | 17 | 0x44 | STAMP | written by the accelerator: cycles of this command (§6.3) |
 
-The accelerator reads words 0..16 and writes word 17. It does not validate descriptors: the
+The accelerator reads words 0..16 and writes word 17. Where this section left room for
+interpretation, the de-facto semantics are those of the Python executor
+`backend/mcuaccel_backend/exec.py` (its module docstring lists every resolution: XPIX = C in all
+modes, YPIX = O, Y_BASE = y + o_s, split descriptors contiguous at desc_addr + 72k, shift sign-
+extended from bits [5:0], wrap-per-tile accumulation, prime read only when misaligned); the RTL
+must match the executor, and the executor is proven equal to int8ops (backend/tests). It does not validate descriptors: the
 backend guarantees the constraints of §6.4; behaviour on a violating descriptor is
 undefined but terminates (all loop bounds are counters compared with `<`; a zero count runs
 zero iterations).
