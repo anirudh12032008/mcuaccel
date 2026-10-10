@@ -1,0 +1,16 @@
+{
+  "kind": "empty model_run stub: fixed bench_main window overhead per inference (cycles)",
+  "cycles_median": 120,
+  "cycles_min": 120,
+  "cycles_max": 120,
+  "sim_cycles": 220466,
+  "commit": "aef9183befbb5593cd8f29dba4ee26079cf86945",
+  "date": "2026-10-10T10:52:55+00:00",
+  "compiler": "riscv-none-elf-gcc (xPack GNU RISC-V Embedded GCC arm64) 15.2.0",
+  "flags": "-O2 -march=rv32im_zicsr -mabi=ilp32 -nostdlib -ffreestanding -fno-builtin -Wall -Wextra -Wl,--no-warn-rwx-segments -Wl,--gc-sections -DBENCH_BOARD=\"picorv32-soc\" -DBENCH_RUNS=1",
+  "picorv32_config": "ENABLE_COUNTERS=1 ENABLE_COUNTERS64=1 ENABLE_REGS_16_31=1 ENABLE_REGS_DUALPORT=1 LATCHED_MEM_RDATA=0 TWO_STAGE_SHIFT=1 BARREL_SHIFTER=1 TWO_CYCLE_COMPARE=0 TWO_CYCLE_ALU=0 COMPRESSED_ISA=0 CATCH_MISALIGN=1 CATCH_ILLINSN=1 ENABLE_PCPI=0 ENABLE_MUL=0 ENABLE_FAST_MUL=1 ENABLE_DIV=1 ENABLE_IRQ=0 ENABLE_TRACE=0 PROGADDR_RESET=0x80000000 STACKADDR=0x80100000 (SPEC section 7)",
+  "images": 2,
+  "runs": 1,
+  "image_bytes": 5350,
+  "x_align": 0
+}

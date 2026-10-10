@@ -1,0 +1,142 @@
+{
+  "model": "cifar_mobilenet",
+  "kind": "PROFILE build (-DMCUACCEL_PROFILE): rdcycle around each op_* call adds a few cycles per op; per-op numbers and cycles_median here come from the instrumented build, NOT the baseline. Use baseline_<model>.json for the headline number.",
+  "inferences_averaged": 3,
+  "ops": [
+    {
+      "op": 0,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv2d_nhwc_s8",
+      "cycles_total": 54446213,
+      "cycles_per_inference": 18148737.666666668,
+      "share": 0.25267090094277633
+    },
+    {
+      "op": 1,
+      "name": "conv2d_fused",
+      "kernel": "mg_dwconv2d_nhwc_s8",
+      "cycles_total": 6435492,
+      "cycles_per_inference": 2145164.0,
+      "share": 0.029865466706564685
+    },
+    {
+      "op": 2,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv1x1_nhwc_s8",
+      "cycles_total": 15584611,
+      "cycles_per_inference": 5194870.333333333,
+      "share": 0.07232417986927211
+    },
+    {
+      "op": 3,
+      "name": "conv2d_fused",
+      "kernel": "mg_dwconv2d_nhwc_s8",
+      "cycles_total": 14263354,
+      "cycles_per_inference": 4754451.333333333,
+      "share": 0.06619256523214484
+    },
+    {
+      "op": 4,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv1x1_nhwc_s8",
+      "cycles_total": 27346226,
+      "cycles_per_inference": 9115408.666666666,
+      "share": 0.1269068164723371
+    },
+    {
+      "op": 5,
+      "name": "conv2d_fused",
+      "kernel": "mg_dwconv2d_nhwc_s8",
+      "cycles_total": 3735767,
+      "cycles_per_inference": 1245255.6666666667,
+      "share": 0.017336735864481385
+    },
+    {
+      "op": 6,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv1x1_nhwc_s8",
+      "cycles_total": 13696400,
+      "cycles_per_inference": 4565466.666666667,
+      "share": 0.06356147722657297
+    },
+    {
+      "op": 7,
+      "name": "conv2d_fused",
+      "kernel": "mg_dwconv2d_nhwc_s8",
+      "cycles_total": 8753864,
+      "cycles_per_inference": 2917954.6666666665,
+      "share": 0.040624436149682905
+    },
+    {
+      "op": 8,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv1x1_nhwc_s8",
+      "cycles_total": 25443879,
+      "cycles_per_inference": 8481293.0,
+      "share": 0.11807851228163448
+    },
+    {
+      "op": 9,
+      "name": "conv2d_fused",
+      "kernel": "mg_dwconv2d_nhwc_s8",
+      "cycles_total": 2382812,
+      "cycles_per_inference": 794270.6666666666,
+      "share": 0.011058018944628135
+    },
+    {
+      "op": 10,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv1x1_nhwc_s8",
+      "cycles_total": 12787766,
+      "cycles_per_inference": 4262588.666666667,
+      "share": 0.0593447400329827
+    },
+    {
+      "op": 11,
+      "name": "conv2d_fused",
+      "kernel": "mg_dwconv2d_nhwc_s8",
+      "cycles_total": 5719471,
+      "cycles_per_inference": 1906490.3333333333,
+      "share": 0.0265425970119553
+    },
+    {
+      "op": 12,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv1x1_nhwc_s8",
+      "cycles_total": 24584930,
+      "cycles_per_inference": 8194976.666666667,
+      "share": 0.11409235042141663
+    },
+    {
+      "op": 13,
+      "name": "avgpool2d",
+      "kernel": "mg_avgpool2d_nhwc_s8",
+      "cycles_total": 188268,
+      "cycles_per_inference": 62756.0,
+      "share": 0.0008737034691227213
+    },
+    {
+      "op": 15,
+      "name": "matmul_fused",
+      "kernel": "mg_fc_s8",
+      "cycles_total": 113667,
+      "cycles_per_inference": 37889.0,
+      "share": 0.0005274993744277963
+    }
+  ],
+  "sum_op_cycles_per_inference": 71827573.33333333,
+  "profile_build_cycles_median": 71827951,
+  "accuracy": 1.0,
+  "sim_cycles": 215783885,
+  "wall_s": 1796.09,
+  "sim_cpu_s": 49.83,
+  "commit": "7da607d7200c552b41297e2817fa2493049d0cb8",
+  "date": "2026-10-10T12:01:42+00:00",
+  "compiler": "riscv-none-elf-gcc (xPack GNU RISC-V Embedded GCC arm64) 15.2.0",
+  "flags": "-O2 -march=rv32im_zicsr -mabi=ilp32 -nostdlib -ffreestanding -fno-builtin -Wall -Wextra -Wl,--no-warn-rwx-segments -Wl,--gc-sections -DBENCH_BOARD=\"picorv32-soc\" -DBENCH_RUNS=1 -DMCUACCEL_PROFILE",
+  "picorv32_config": "ENABLE_COUNTERS=1 ENABLE_COUNTERS64=1 ENABLE_REGS_16_31=1 ENABLE_REGS_DUALPORT=1 LATCHED_MEM_RDATA=0 TWO_STAGE_SHIFT=1 BARREL_SHIFTER=1 TWO_CYCLE_COMPARE=0 TWO_CYCLE_ALU=0 COMPRESSED_ISA=0 CATCH_MISALIGN=1 CATCH_ILLINSN=1 ENABLE_PCPI=0 ENABLE_MUL=0 ENABLE_FAST_MUL=1 ENABLE_DIV=1 ENABLE_IRQ=0 ENABLE_TRACE=0 PROGADDR_RESET=0x80000000 STACKADDR=0x80100000 (SPEC section 7)",
+  "images": 2,
+  "runs": 1,
+  "image_bytes": 86442,
+  "x_align": 0
+}

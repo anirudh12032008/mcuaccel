@@ -41,7 +41,7 @@ per-cycle Python callback.
 
 ## D6 Baseline definition (2026-10-10)
 Software baseline = the C that mcugrad already emits (`mcugrad.codegen`, kernels `mg_int8.c`),
-compiled with `riscv-none-elf-gcc -O2 -march=rv32im -mabi=ilp32`, running on the same SoC CPU at the
+compiled with `riscv-none-elf-gcc -O2 -march=rv32im_zicsr -mabi=ilp32` (zicsr for `rdcycle`), running on the same SoC CPU at the
 same clock, cycles read from `rdcycle`. The accelerated build uses the same compiler flags, the same
 model, the same test images, and the same CPU for the layers that fall back to software.
 

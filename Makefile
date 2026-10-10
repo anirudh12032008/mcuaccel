@@ -41,7 +41,7 @@ test-slow:
 	$(PY) -m pytest -q -m slow backend/tests
 
 synth:
-	@if [ -x syn/synth.sh ]; then bash syn/synth.sh; else echo "syn/synth.sh not present yet"; fi
+	bash syn/synth.sh $(or $(DESIGN),accel) $(or $(P),8) $(or $(SEED),1)
 
 macros:
 	$(PY) experiments/make_macros.py
