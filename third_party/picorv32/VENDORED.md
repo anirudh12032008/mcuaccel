@@ -5,3 +5,4 @@
 - sha256(picorv32.v): 0836050971b3c6cdd28ac3b1e5719a67fb645161912bef1e472e63995ceb0622
 - Verified 2026-10-10: the copy taken from corv32's third_party/picorv32 is byte-identical to the
   upstream file fetched at that commit (same sha256).
+- Also vendored: README.md (native memory interface, parameters, cycle counts), same commit.

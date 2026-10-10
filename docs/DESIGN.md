@@ -1,6 +1,6 @@
 # DESIGN — mcuaccel
 
-Status: v1 (Architect, 2026-10-10). Normative for implementers: names, widths, encodings and
+Status: v1.1 (Architect 2026-10-10; red-team amendments D15, orchestrator). Normative for implementers: names, widths, encodings and
 cycle behaviour below are the contract between modules, the backend, the M1 model and the
 tests. Change an interface only through docs/DECISIONS.md plus an edit here. docs/SPEC.md
 says *what* and how claims are judged; this file says *how*.
@@ -230,7 +230,8 @@ Per port: `gnt = 1`; in range ⇔ `addr - BASE < BYTES`; `rvalid <= req`; `err <
 range`; `rdata <= mem[(addr-BASE)>>2]` (read-first); write bytes with `be` when
 `req && we && in range`. `logic [31:0] mem [0:BYTES/4-1]`. `ifndef SYNTHESIS`: `$readmemh`
 from `INIT_FILE` if non-empty, and from plusarg `+ram=<file>`. Same-word writes on both ports
-in one cycle: undefined (the software contract forbids it, §6.5).
+in one cycle: undefined (the software contract forbids it, §6.5). Both ports write `mem` from one
+`always_ff` block (Verilator `-Wall` MULTIDRIVEN otherwise).
 
 ```systemverilog
 module soc_console (
@@ -240,7 +241,7 @@ module soc_console (
 ```
 
 ### 4.4 Verilator harness (`sim/`)
-`sim/sim_main.cpp` + `soc_top`: plusargs `+ram=<hex>`, `+max_cycles=<n>` (default 2·10^9),
+`sim/sim_main.cpp` + `soc_top`: plusargs `+ram=<hex>`, `+max_cycles=<n>` (default 2·10^10),
 `+vcd=<file>`. Prints `putc` bytes to stdout; exits on `tohost_valid` (exit code 0 iff data
 == 1), on `cpu_trap`, on `cpu_bus_err`, or at max_cycles (codes 2, 3, 4, 5). Prints
 `SIM_CYCLES=<n>` at exit. Built with `-O3 --x-assign fast --x-initial fast`, `RAM_BYTES = 1 MiB`.
@@ -337,7 +338,10 @@ For each descriptor: DESC (17 reads) → WLOAD (W_ROWS rows) → PLOAD (3·NCH w
 write → next descriptor if NEXT ≠ 0, else DONE. STAMP value = number of cycles from the cycle
 the first DESC read of this descriptor is raised up to the cycle before the STAMP write is
 raised. On any `err` response: stop issuing, wait for the outstanding response, set ERR and
-ERR_ADDR, drop pipeline state, go IDLE (BUSY = 0, DONE = 0).
+ERR_ADDR, drop pipeline state, go IDLE (BUSY = 0, DONE = 0). "Drop pipeline state" means, explicitly:
+credits reset to 2, both requant FIFOs emptied, writer assembly and pending write cleared (no
+further RAM writes), MAC valids cleared, aligner `prev` irrelevant (reloaded by the next prime).
+A correct chain started after an aborted one must be bit-exact (tested, §10.2).
 
 ### 6.4 Backend packing and limits
 
@@ -384,8 +388,11 @@ word + 3 quads; quad 0 has lanes 0..2 masked and lane 3 = x[0][0][0].
   `P_BASE`, `W_BASE` per slab.
 - dw: C % 4 = 0, x_base % 4 = 0, XPIX % 4 = 0; split channels into commands of
   `4·floor(512 / (KH·KW))` channels: `X_ORIGIN += c0`, `Y_BASE += c0`, C = NCH = channels.
-- Guard: every x tensor has ≥ 8 bytes of RAM before and after it (the aligner and border
-  clipping may read up to 6 bytes outside the tensor; values are masked; RAM bounds give err).
+- Guard: the aligner and border clipping may read up to 6 bytes outside an x tensor; those bytes
+  are masked and never written, so the only requirement is that `x − 8 .. x_end + 8` lies inside
+  RAM. Enforced in `sw/common/link.ld` with an 16-byte pad at both RAM edges and an `ASSERT` that
+  no section lies within 8 bytes of either edge; the backend cannot see `input`'s address, so the
+  rule is a link-time property, not a backend check.
 - No overlap between a command's x and y ranges. Accumulator bound SPEC §4 rule 3.
 - shift ∈ [−31, 31].
 
@@ -405,6 +412,15 @@ chain (in .data, aligned 4). A static `bind` step on the first `model_run` call 
 address field (NEXT, X_ORIGIN, Y_BASE, W_BASE, P_BASE) from C expressions; on every call the
 driver patches only the fields that depend on `input`/`output` (X_ORIGIN of the first layer,
 Y_BASE of the last), then `mcuaccel_run(ad_<chain>)`. The CPU only polls while a chain runs.
+Compiler ordering: the descriptor patches are plain stores, so `mcuaccel_run` has
+`__asm__ volatile("" ::: "memory")` before the DESC_ADDR/CTRL writes and after the poll loop exits
+(no cached arena value may be reused across a chain). Address fields are computed in `uintptr_t`
+(`(uintptr_t)input − 99`), never as out-of-object pointer arithmetic. The driver is written before
+tag m1 (it is software) so M1 can read its instruction sequence (§9.5). Fairness of the fallback
+code: the accelerated build's fallback kernels must be the same machine code as the baseline's;
+M5 compares objdump hashes of every `mg_*` function in both ELFs and, if GCC's per-call-site
+specialisation (`.constprop`) makes them differ, both builds compile the kernels in one shared
+translation unit with `__attribute__((noinline))` (recorded in DECISIONS).
 
 ## 7. Timing (normative; the RTL is built to match, the M1 model implements it)
 
@@ -477,6 +493,17 @@ T_chain   = Σ_cmd (T_cmd + λ + 1) + 2
 requantizer (one output/cycle), the third the two-credit latency bound for tiles with few
 outputs. Example: 1×1, C = 16, P = 8, aligned (cifar op_2): R = 4, W = 2, NV = 8 →
 T_tile = max(6, 8, 6) = 8 (requant bound); op_12 (C = 128): max(34, 8, 6) = 34 (port bound).
+
+### 7.4 Known model biases (written before m1)
+
+- The +1 PSETUP cycle per pixel is hidden behind the requantizer when a layer is requant bound
+  (T_tile = NV): ≈ +3 % on cifar op_2/4/6. The model keeps the +1 (conservative).
+- The last tile's W_t and NV are counted in both T_tile and FLUSH (≤ P + 3 cycles per command).
+- Driver constants (§9.5) are estimated from the compiled driver's instructions with PicoRV32's
+  CPI table; measured on the stub accelerator before m1 where possible.
+- STAMP is self-reported by the ctrl counter; M5/M6 assert per chain that
+  `CYCLES == Σ(STAMP + λ + 1) + 2` and count at least three commands independently from a VCD
+  (first DESC request raised → STAMP request raised).
 
 ### 7.3 Datapath pipeline (relative to the response cycle r of a request with mac_en)
 
@@ -616,7 +643,7 @@ module mcuaccel_mac_array #(parameter int P = 8) (
   output logic out_valid, output logic [32*((P > 4) ? P : 4)-1:0] out_acc,
   output logic idle);
 ```
-S1 (end of r): `xs[l] = in_mask[l] ? $signed(x_l) − $signed(x_zp) : 0` (9 b);
+S1 (end of r): `xs[l] = in_mask[l] ? $signed(x_l) − $signed(x_zp) : 9'sd0` (9 b signed; all arithmetic signed);
 `prod[p][l] = xs[l] · $signed(w[p][l])` (17 b) registered, with valid/first/last.
 S2 (end of r+1): conv: `sum[p] = Σ_l prod[p][l]` (19 b), `acc[p] <= first ? sext(sum[p]) :
 acc[p] + sext(sum[p])` for p < P; dw: `acc[l] <= first ? sext(prod[0][l]) : acc[l] +
@@ -649,7 +676,7 @@ Stall = `!out_ready`: freezes every stage (pbuf `re` low, so its output holds).
 | S2 | `prod = $signed(av) · $signed(mult)` (64 b) |
 | S3 | `x = (av == INT32_MIN && mult == INT32_MIN) ? INT32_MAX : (prod + 2^30)[62:31]` |
 | S4 | `mask = (1 << rs) − 1`; `r = (x >>> rs) + (((x & mask) > ((mask >> 1) + (x < 0))) ? 1 : 0)` |
-| S5 | `v = sext33(r) + sext33(y_zp)`; `y = v < act_min ? act_min : (v > act_max ? act_max : v)`; out byte = y[7:0] |
+| S5 | `v = sext33(r) + sext33(y_zp)`; `y = v < sext33(act_min) ? act_min : (v > sext33(act_max) ? act_max : v)` — **signed** compares (the 8-bit ports are two's complement; cast with `$signed`); out byte = y[7:0] |
 
 S3's closed form equals SRDHM's truncating-nudge form (proof in mg_int8.h lines 62-67). The
 special case compares S1's `av` and the mult (both carried to S3). One 32×32 multiplier (4
@@ -697,7 +724,8 @@ for the chosen architecture ("os", P = 8) the predicted per-command STAMP and wh
 that parses the `op_*` calls of the two `model.c` files. Tests: `tb/unit/test_m1_model.py`.
 
 Parameters (defaults): `P`, `lanes = 4`, `lam = 1`, `credits = 2`, `L_mac = 2`, `L_rq = 6`,
-`x_align = 0` (x_base mod 4 of the network input), `wbuf_rows = 512`, `pbuf = 512`,
+`x_align` (x_base mod 4 of the network input, read from the firmware link map — the regenerated
+test-set arrays and `s_out` are `__attribute__((aligned(4)))`, so 0 is expected and asserted at bind time), `wbuf_rows = 512`, `pbuf = 512`,
 `t_drv_chain`, `t_drv_patch` (driver constants, below), `sw_cycles` (dict: measured baseline
 cycles per software op, from the profile build of the baseline on the Step 3 SoC).
 
@@ -743,7 +771,8 @@ compiled driver's instruction sequence with PicoRV32's CPI table (load 5, store 
 branch 3/5, jal 3, jalr 6) and recorded with the predictions. Predicted accelerated
 `model_run` = Σ software ops (`sw_cycles`, identical code to the baseline) + Σ_chains
 (`T_chain + t_drv_chain + patches·t_drv_patch`). Predicted speedup = measured baseline
-`model_run` / that.
+`model_run` / that. Scoring (SPEC C4b) uses accelerator + driver cycles only; the software term
+is a measurement carried through for the speedup figure.
 
 ### 9.6 Outputs and protocol
 - `results/m1_predictions.csv`: `model, op, kind, arch, P, lam, H, W, C, O, KH, KW, SH, SW, PH,
@@ -799,6 +828,10 @@ executor of descriptor semantics (§6.2, §7.1, reusing `int8ops.requant`) equal
 also use to localise failures.
 
 ### 10.4 SoC and full system (`tb/soc/`, `sim/`)
+Test sets: mcugrad's generated `testset.c` (1000 / 400 images) does not fit 1 MiB RAM and would
+take ~10^11 cycles; `sw/gen_testset.py` regenerates them with `emit_testset(..., n)` from the same
+quantized images (n = 10 for timing, n = 100 for C2c), arrays `__attribute__((aligned(4)))`,
+and `-DBENCH_RUNS=10` (timing) / `-DBENCH_RUNS=1 -DBENCH_DUMP_ARGMAX` (C2c).
 cocotb: firmware smoke tests (putchar, tohost, rdcycle, accelerator register access, one
 small command). Verilator C++: baseline and accelerated builds of both networks; C2c (100
 images, output bytes printed with `BENCH_DUMP_ARGMAX` and compared with `sim.run_int8`); C1/C5
@@ -830,7 +863,7 @@ images, output bytes printed with `BENCH_DUMP_ARGMAX` and compared with `sim.run
 | Fmax limited by the 32×32 multiply or PSETUP | add a register stage (S2a/S2b) or split PSETUP into 2 cycles **before tag m1**, else report the change as post-hoc |
 | Aligner/border reads outside a tensor | guard rule §6.4; RAM err → ERR, never silent |
 | Software fallback dominates mnist (Amdahl) | C5 threshold accounts for it; optional passes SPEC §3 |
-| Verilator time for 10×10 baseline cifar (≈ 5·10^9 cycles) | deterministic; if > 2 h, run images in parallel processes (same binary, different image index) |
+| Verilator time for 10×10 baseline cifar (≈ 3-7·10^9 cycles, ≈ 10-60 min at 2-5 MHz) | deterministic; run it once per build; no parallel-image fallback (it would break bench_main's protocol) |
 | PicoRV32 bus adapter adds latency vs native memory | same SoC for both builds, so the ratio is fair; adapter timing documented §4.3 |
 | Model and RTL timing diverge | the model implements §7 literally; the ctrl unit test checks the request stream; mismatch above 20 % is reported, not tuned away |
 

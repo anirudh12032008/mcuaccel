@@ -109,3 +109,18 @@ settling 10x is addressed by framing (SPEC section 8): the contribution is the p
 model (C4), whole-network bit-exactness with fallback layers (C2), the MAC-width saturation curve
 (C5) and measured Amdahl shares, not the 10x itself. The 100x statement (C1b) is kept because it
 is the number the design equations imply and a miss would be informative.
+
+## D15 Orchestrator: red-team amendments to SPEC/DESIGN before any RTL (2026-10-10)
+The plan red-team (Opus, read-only) found 1 blocker, 8 major, 12 minor issues. Resolutions:
+test sets regenerated at 10/100 images, 4-byte aligned (blocker); C4 split into per-command at
+every P and per-network on accelerator+driver only, RTL scored at its first full measurement with
+later timing changes logged (closes the "conformance, not prediction" and circularity findings);
+C5 made descriptive except for C4-at-every-P, mechanism (dw/requant/WLOAD bound, not port
+saturation) stated in advance; "single-port BRAM" wording corrected to a private port of a
+dual-port RAM; optional backend passes pre-registered OFF for scored builds; driver written before
+m1; memory barriers and uintptr_t in the driver; guard rule made a link-time property; abort
+recovery enumerated; signed compares in requant S5; STAMP cross-checked against CYCLES and VCD;
+fallback-code identity checked by objdump hash; max_cycles default raised; no parallel-image
+fallback; `make reproduce` must include experiments. Rejected: a denser P grid (DSP budget; P*
+on the doubling grid is reported descriptively instead); external timestamping of m1 (no remote;
+hash recorded, manual step in HARDWARE_TODO.md).

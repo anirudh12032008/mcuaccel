@@ -16,7 +16,7 @@ module list, test plan), docs/DECISIONS.md (D1-D14) before touching anything.
 ## Steps
 - [x] Step 0  Setup (b9056dc, b3df26a, ebed0de): toolchain, CLAUDE.md, LICENSE, CI, Makefile, smoke tests
 - [x] Step 1  Research (2412938): docs/PRIOR_ART.md (39 sources), paper/refs.bib; claim in docs/SPEC.md
-- [x] Step 2  Design: docs/SPEC.md v1 + D14, docs/DESIGN.md v1, this plan; red-team of the plan running
+- [x] Step 2  Design: SPEC v1.1, DESIGN v1.1 (red-team D15 applied: 1 blocker, 8 major, 12 minor), this plan
 - [ ] Step 3  Walking skeleton (SoC + Verilator harness + baseline firmware + accel stub + backend
       executor + M1 model skeleton + synth of the stub), all in `make test`
 - [ ] Step 4  Build milestones
@@ -62,6 +62,8 @@ Gate: `make test` green with SoC cocotb smoke, backend executor tests, m1 model 
 cycles for both networks in results/baseline_*.json.
 
 ### M1 (after T3.2, T3.4)
+- T1.0 (S) sw/driver/mcuaccel.{h,c} (DESIGN §6.5: barriers, uintptr_t, poll) written and measured on
+  the STUB accelerator before m1 so M1's driver constants come from the compiled code (D15).
 - T1.1 (S) finalize m1.py with measured sw_cycles and driver constants; write
   results/m1_predictions.csv, results/m1_summary.json, figures; T1.2 (O) red-team M1 (model vs
   DESIGN §7 equations, hand recomputation of 3 layers). ORCH tags m1. No datapath RTL before this.
@@ -93,6 +95,7 @@ cycles for both networks in results/baseline_*.json.
 - T7.1 (S) paper/main.tex IEEEtran + experiments/make_macros.py -> paper/numbers.tex; figures from
   results/. T7.2 (O then Fable) paper reviewer: every number traced, every citation opened.
 ### Step 8 ship
+- T8.0 `make reproduce` = sims + experiments + synth + macros + paper (D15); clean-clone check script.
 - T8.1 (S) README quickstart, architecture diagram, results table, measured-vs-pending list;
   HARDWARE_TODO.md (FPGA wall-clock + power procedure); FINAL_REPORT.md. ORCH tags v0.1.0.
 
@@ -100,4 +103,5 @@ cycles for both networks in results/baseline_*.json.
 Step 3: T3.1-T3.6 launched in parallel (2026-10-10). Integrate, run `make test`, commit each.
 
 ## Log
+- 2026-10-10 Plan red-team done; D15 applied to SPEC/DESIGN (C4/C5 reworked, test sets, driver before m1).
 - 2026-10-10 Steps 0-2 done. Claim framing D14. Probe: PicoRV32 1853 LUT4 / 858 FF / 4 DSP / ~85 MHz.
