@@ -1,0 +1,3 @@
+[submodule "third_party/mcugrad"]
+	path = third_party/mcugrad
+	url = https://github.com/anirudh12032008/mcugrad.git
