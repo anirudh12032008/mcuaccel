@@ -52,9 +52,13 @@ caller, counting only what is NOT overlapped with the accelerator:
     pointer, sw: alu alu store = 3+3+5 = 11 cycles.
 These are estimates, refined in M1 proper from the compiled driver.
 
-Baseline inputs (optional, absence tolerated): results/baseline_<model>.json
-{"cycles_median": int, ...} and results/baseline_profile_<model>.json
-{"ops": [{"index": i, "name": ..., "cycles": float}, ...]} (index = op_<i> number).
+Measured inputs (optional, absence tolerated; provenance recorded in the summary):
+  results/baseline_<model>.json         {"mcugrad_result": {"cycles_median": ...}, "x_align": ...}
+  results/baseline_profile_<model>.json {"ops": [{"op": i, "cycles_per_inference": ...}, ...]}
+  results/baseline_overhead.json        {"cycles_median": 120}  bench_main window, both builds
+  results/driver_overhead.json          {"drv_chain": .., "drv_patch": ..}  measured on the stub
+When driver_overhead.json is present its drv_chain / drv_patch replace the CPI estimate above
+(provenance "measured on stub"); otherwise the estimate is used ("CPI estimate").
 """
 import argparse
 import csv
@@ -348,27 +352,59 @@ def predict(model_name, arch, P, lam=1, sw_cycles=None, x_align=0, **kw):
 # ---------------------------------------------------------------- baselines, summary
 
 
+def _json(path):
+    try:
+        return json.loads(Path(path).read_text())
+    except (OSError, ValueError):
+        return None
+
+
 def load_baseline(model, results_dir=ROOT / "results"):
-    """(cycles_median or None, {op_index: cycles}); missing or malformed files give (None, {})."""
-    cyc, ops = None, {}
+    """(cycles_median or None, {op: cycles_per_inference}, x_align or None, info dict).
+    Real JSON shapes of experiments/run_baseline.py; missing or malformed files give Nones."""
+    d = Path(results_dir)
+    base = _json(d / f"baseline_{model}.json") or {}
+    prof = _json(d / f"baseline_profile_{model}.json") or {}
     try:
-        cyc = json.loads((Path(results_dir) / f"baseline_{model}.json").read_text())["cycles_median"]
-    except (OSError, KeyError, ValueError):
-        pass
+        cyc = int(base["mcugrad_result"]["cycles_median"])
+    except (KeyError, TypeError, ValueError):
+        cyc = None
     try:
-        prof = json.loads((Path(results_dir) / f"baseline_profile_{model}.json").read_text())
-        ops = {int(o["index"]): float(o["cycles"]) for o in prof["ops"]}
-    except (OSError, KeyError, ValueError, TypeError):
-        pass
-    return cyc, ops
+        ops = {int(o["op"]): float(o["cycles_per_inference"]) for o in prof["ops"]}
+    except (KeyError, TypeError, ValueError):
+        ops = {}
+    info = dict(baseline=dict(commit=base.get("commit"), images=base.get("images"),
+                              runs=base.get("runs"), date=base.get("date")) if base else None,
+                profile=dict(commit=prof.get("commit"), images=prof.get("images"),
+                             runs=prof.get("runs"), date=prof.get("date")) if prof else None)
+    return cyc, ops, base.get("x_align"), info
+
+
+def load_window(results_dir=ROOT / "results"):
+    """bench_main window overhead (cycles, identical in both builds) or 0 when unmeasured."""
+    j = _json(Path(results_dir) / "baseline_overhead.json")
+    try:
+        return int(j["cycles_median"]), True
+    except (TypeError, KeyError, ValueError):
+        return 0, False
+
+
+def load_driver(results_dir=ROOT / "results"):
+    """(t_drv_chain, t_drv_patch, provenance). Measured on the stub when results/driver_overhead.json
+    exists, else the CPI estimate."""
+    j = _json(Path(results_dir) / "driver_overhead.json")
+    try:
+        return int(j["drv_chain"]), int(j["drv_patch"]), "measured on stub"
+    except (TypeError, KeyError, ValueError):
+        return T_DRV_CHAIN, T_DRV_PATCH, "CPI estimate"
 
 
 def p_star(totals):
-    """SPEC C5: smallest P with total <= 1.10 * total(P=16)."""
+    """SPEC C5: smallest P with total <= 1.10 * total(P=16); totals = {P: cycles}."""
     return min(p for p in totals if totals[p] <= 1.10 * totals[16])
 
 
-def summarize(model_name, arch, P, cfg=None, sw_cycles=None, baseline=None, rows=None):
+def summarize(model_name, arch, P, cfg=None, sw_cycles=None, baseline=None, rows=None, window=0):
     """DESIGN 9.6 summary entry for one model x arch x P."""
     cfg = cfg or Cfg()
     rows = rows if rows is not None else predict(model_name, arch, P, **asdict(cfg))
@@ -393,10 +429,13 @@ def summarize(model_name, arch, P, cfg=None, sw_cycles=None, baseline=None, rows
                   for r in rows if r["op"] == L["op"]
                   for f in ("from_input", "writes_output") if L.get(f))
     drv = len(chains) * cfg.t_drv_chain + patches * cfg.t_drv_patch
-    total = accel + sw + drv
+    total = accel + sw + drv + window
     tc = sum(r["t_compute"] for r in rows)
-    return dict(accel_cycles=accel, sw_cycles=sw, driver_cycles=drv, predicted_model_run=total,
+    return dict(accel_cycles=accel, sum_stamp=sum(r["t_cmd"] for r in rows), sw_cycles=sw,
+                driver_cycles=drv, bench_window_cycles=window,
+                accel_plus_driver_cycles=accel + drv, predicted_model_run=total,
                 n_chains=len(chains), n_commands=len(rows), n_patches=patches,
+                sw_ops=[v["op"] for v in per_op if v["where"] == "sw"],
                 sw_complete=all(v["cycles"] is not None for v in per_op if v["where"] == "sw"),
                 baseline_cycles=baseline,
                 predicted_speedup=(baseline / total) if baseline else None,
@@ -415,28 +454,36 @@ def _commit():
 
 
 def run_all(out_dir, cfg=None, results_dir=None):
-    """Write m1_predictions.csv and m1_summary.json; return the summary dict."""
-    cfg, out_dir = cfg or Cfg(), Path(out_dir)
+    """Write m1_predictions.csv and m1_summary.json; return the summary dict. Measured driver
+    constants replace the CPI estimate unless `cfg` is passed explicitly."""
+    out_dir = Path(out_dir)
     results_dir = Path(results_dir or out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    chain, patch, drv_prov = load_driver(results_dir)
+    if cfg is None:
+        cfg = Cfg(t_drv_chain=chain, t_drv_patch=patch)
+    else:
+        drv_prov = "explicit Cfg" if (cfg.t_drv_chain, cfg.t_drv_patch) != (chain, patch) else drv_prov
+    window, window_ok = load_window(results_dir)
     all_rows, models, measured = [], {}, {}
     for m in LAYERS:
-        base, ops = load_baseline(m, results_dir)
+        base, ops, xa, info = load_baseline(m, results_dir)
         sw_ops = [L["op"] for L in LAYERS[m] if L["kind"] not in ACCEL_KINDS]
         measured[m] = dict(baseline_cycles="measured" if base else "absent (speedup null)",
                            sw_cycles=("measured (profile)" if sw_ops and all(o in ops for o in sw_ops)
-                                      else "absent: 0 used"))
+                                      else "absent: 0 used"),
+                           x_align_from_baseline=xa, **info)
         models[m] = dict(baseline_cycles=base, archs={})
         for arch in ARCHS:
-            ent, totals = {}, {}
+            ent, tot, stamp = {}, {}, {}
             for P in PS:
                 rows = predict(m, arch, P, **asdict(cfg))
                 all_rows += rows
-                ent[str(P)] = summarize(m, arch, P, cfg, ops, base, rows)
-                totals[P] = ent[str(P)]["predicted_model_run"]
-            models[m]["archs"][arch] = dict(P=ent, p_star=p_star(totals),
-                                            p_star_accel_only=p_star(
-                                                {p: ent[str(p)]["accel_cycles"] for p in PS}))
+                ent[str(P)] = summarize(m, arch, P, cfg, ops, base, rows, window)
+                tot[P] = ent[str(P)]["predicted_model_run"]
+                stamp[P] = ent[str(P)]["sum_stamp"]
+            models[m]["archs"][arch] = dict(P=ent, p_star=p_star(stamp),
+                                            p_star_end_to_end=p_star(tot))
     with open(out_dir / "m1_predictions.csv", "w", newline="") as f:
         w = csv.DictWriter(f, COLUMNS, extrasaction="ignore")
         w.writeheader()
@@ -446,7 +493,11 @@ def run_all(out_dir, cfg=None, results_dir=None):
                    parameters=asdict(cfg) | {"Ps": list(PS), "cpi": CPI,
                                              "drv_chain_seq": DRV_CHAIN_SEQ,
                                              "drv_patch_seq": DRV_PATCH_SEQ},
-                   inputs=dict(accelerator="modelled (DESIGN 7)", driver="modelled (CPI table)",
+                   inputs=dict(accelerator="modelled (DESIGN 7)", driver=drv_prov,
+                               bench_window_cycles=window if window_ok else "absent: 0 used",
+                               p_star_definition="SPEC C5: smallest P with sum(STAMP) <= 1.10 * "
+                                                 "sum(STAMP)(P=16), accelerator only; "
+                                                 "p_star_end_to_end uses predicted_model_run",
                                layers="DESIGN 2 table, checked against model.c by test",
                                per_model=measured),
                    models=models)
@@ -457,9 +508,15 @@ def run_all(out_dir, cfg=None, results_dir=None):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", default=str(ROOT / "results"))
-    ap.add_argument("--x-align", type=int, default=0)
+    ap.add_argument("--results", default=None, help="dir with baseline/driver JSON (default: --out)")
+    ap.add_argument("--x-align", type=int, default=None, help="default: x_align of the baseline JSON (0)")
     a = ap.parse_args()
-    s = run_all(a.out, Cfg(x_align=a.x_align))
+    rd = Path(a.results or a.out)
+    xa = a.x_align
+    if xa is None:   # network-input alignment of the measured firmware (cifar op_0 reads it)
+        xa = load_baseline("cifar_mobilenet", rd)[2] or 0
+    c, pt, _ = load_driver(rd)
+    s = run_all(a.out, Cfg(x_align=xa, t_drv_chain=c, t_drv_patch=pt), rd)
     for m, md in s["models"].items():
         for arch, ad in md["archs"].items():
             print(m, arch, "P*=", ad["p_star"],

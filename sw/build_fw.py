@@ -68,6 +68,24 @@ def build(model: str, images: int, runs: int, profile: bool = False, model_dir: 
             "flags": " ".join(FLAGS + defs), "compiler": compiler_version()}
 
 
+def build_app(srcs: list[str], out: str, defs: list[str] | None = None) -> dict:
+    """Bare-metal app (no bench_main): crt0 + link.ld + `srcs`, the same CC/FLAGS/link/elf2hex as
+    build(). Used by sw/apps/*.c (e.g. drv_timing). Returns {elf, hex, map, dir, flags, compiler}."""
+    os.makedirs(out, exist_ok=True)
+    common = os.path.join(ROOT, "sw", "common")
+    elf, hexf, mapf = (os.path.join(out, "fw" + e) for e in (".elf", ".hex", ".map"))
+    defs = defs or []
+    cmd = [CC, *FLAGS, *defs, f"-I{os.path.join(ROOT, 'sw', 'driver')}", "-T", os.path.join(common, "link.ld"),
+           f"-Wl,-Map={mapf}", "-o", elf, *srcs, os.path.join(common, "crt0.S"), "-lgcc"]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode or r.stderr.strip():
+        sys.exit(f"app build failed or warned:\n{' '.join(cmd)}\n{r.stderr}")
+    subprocess.run([sys.executable, os.path.join(ROOT, "sw", "tools", "elf2hex.py"), elf, hexf,
+                    "--size", str(RAM_BYTES)], check=True)
+    return {"elf": elf, "hex": hexf, "map": mapf, "dir": out, "flags": " ".join(FLAGS + defs),
+            "compiler": compiler_version()}
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("model", choices=list(gen_testset.SPEC))

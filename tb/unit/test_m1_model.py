@@ -138,3 +138,67 @@ def test_summary_and_pstar_smoke(tmp_path):
     assert e["P"]["8"]["predicted_speedup"] is None
     assert e["P"]["8"]["n_chains"] == 2 and e["p_star"] in m1.PS
     assert (tmp_path / "m1_predictions.csv").exists()
+
+
+def _write_results(d, base, ops, window=120, drv=None):
+    import json
+    for m in MODELS:
+        (d / f"baseline_{m}.json").write_text(json.dumps(
+            {"mcugrad_result": {"cycles_median": base[m]}, "x_align": 0, "images": 10, "runs": 10}))
+        (d / f"baseline_profile_{m}.json").write_text(json.dumps(
+            {"ops": [{"op": o, "name": "x", "kernel": "k", "cycles_per_inference": c,
+                      "share": 0.0} for o, c in ops[m].items()]}))
+    (d / "baseline_overhead.json").write_text(json.dumps({"cycles_median": window}))
+    if drv:
+        (d / "driver_overhead.json").write_text(json.dumps(drv))
+
+
+SYN_OPS = {"mnist_cnn": {0: 100.5, 1: 9e6, 2: 2000.25, 3: 9e6, 4: 3000.0, 5: 400.0, 7: 5e5},
+           "cifar_mobilenet": {**{i: 1e6 for i in range(13)}, 13: 777.5, 15: 3e4}}
+SYN_BASE = {"mnist_cnn": 12_000_000, "cifar_mobilenet": 70_000_000}
+
+
+def test_summary_software_term_is_profile_sum_of_fallback_ops(tmp_path):
+    _write_results(tmp_path, SYN_BASE, SYN_OPS, drv={"drv_chain": 70, "drv_patch": 9})
+    s = m1.run_all(tmp_path)
+    fallback = {"mnist_cnn": (0, 2, 4, 5), "cifar_mobilenet": (13,)}
+    assert s["inputs"]["driver"] == "measured on stub"
+    for m, ops in fallback.items():
+        assert sorted(L["op"] for L in m1.LAYERS[m] if L["kind"] not in m1.ACCEL_KINDS) == sorted(ops)
+        want = sum(SYN_OPS[m][o] for o in ops)       # conv / fc ops are NOT in the software term
+        for P in m1.PS:
+            e = s["models"][m]["archs"]["os"]["P"][str(P)]
+            assert e["sw_cycles"] == pytest.approx(want)
+            assert e["sw_complete"] and e["driver_cycles"] == 70 * e["n_chains"] + 9 * e["n_patches"]
+            assert e["predicted_model_run"] == pytest.approx(
+                e["sw_cycles"] + e["accel_cycles"] + e["driver_cycles"] + 120)
+            assert e["accel_plus_driver_cycles"] == e["accel_cycles"] + e["driver_cycles"]
+            assert e["predicted_speedup"] == pytest.approx(SYN_BASE[m] / e["predicted_model_run"])
+
+
+def test_real_results_software_term_and_patches():
+    """The committed results/: fallback sum equals the profile JSON; patch counts at P=8."""
+    import json
+    res = ROOT / "results"
+    if not (res / "baseline_profile_mnist_cnn.json").exists():
+        pytest.skip("no profile results")
+    for m, ops in (("mnist_cnn", (0, 2, 4, 5)), ("cifar_mobilenet", (13,))):
+        prof = json.loads((res / f"baseline_profile_{m}.json").read_text())
+        want = sum(o["cycles_per_inference"] for o in prof["ops"] if o["op"] in ops)
+        cyc, got, xa, _ = m1.load_baseline(m, res)
+        assert sum(got[o] for o in ops) == pytest.approx(want) and xa == 0 and cyc > 0
+        e = m1.summarize(m, "os", 8, m1.Cfg(), got, cyc)
+        assert e["sw_cycles"] == pytest.approx(want)
+    # patched descriptor fields per call at P=8 (DESIGN 6.5): mnist writes `output` once (op_7,
+    # its op_1 reads the arena, not `input`); cifar reads `input` (op_0) and writes `output` (op_15)
+    pat = {m: m1.summarize(m, "os", 8)["n_patches"] for m in MODELS}
+    assert pat == {"mnist_cnn": 1, "cifar_mobilenet": 2}
+
+
+def test_pstar_uses_sum_stamp(tmp_path):
+    s = m1.run_all(tmp_path)
+    for m in MODELS:
+        e = s["models"][m]["archs"]["os"]
+        st = {p: e["P"][str(p)]["sum_stamp"] for p in m1.PS}
+        assert e["p_star"] == min(p for p in st if st[p] <= 1.10 * st[16])
+        assert e["P"]["8"]["sum_stamp"] == sum(r["t_cmd"] for r in m1.predict(m, "os", 8))

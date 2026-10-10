@@ -1,0 +1,67 @@
+{
+  "kind": "driver fixed cost measured on the walking-skeleton STUB accelerator (T1.0)",
+  "note": "The stub returns DONE one cycle after START and fetches no descriptor, so drv_chain (= median chain window minus the empty rdcycle-pair window) is the pure driver cost of one mcuaccel_run call including its call-site; with the real accelerator the CPU polls while it runs and only the exit phase of the poll loop is added. drv_patch = (p5 - p1)/4 cycles per patched descriptor field; patch_slope_lsq is the least-squares slope over 1, 2 and 5 fields. Codegen is the compiler's: the call site hoisted &ad into a register (mv, 1 ALU) where a straight-line model_run needs lui+addi (2 ALU), and fields beyond the second need a lui+addi address each.",
+  "drv_chain": 71,
+  "drv_patch": 15,
+  "drv_rdcycle": 4,
+  "medians": {
+    "rdcycle": 4,
+    "chain": 75,
+    "p1": 86,
+    "p2": 93,
+    "p5": 146
+  },
+  "min": {
+    "rdcycle": 4,
+    "chain": 75,
+    "p1": 86,
+    "p2": 93,
+    "p5": 146
+  },
+  "max": {
+    "rdcycle": 4,
+    "chain": 75,
+    "p1": 86,
+    "p2": 93,
+    "p5": 146
+  },
+  "cpi_estimate": {
+    "drv_chain": 54,
+    "drv_patch": 11,
+    "source": "model/m1.py CPI table (DESIGN 9.5), the pre-measurement estimate"
+  },
+  "patch_slope_lsq": 15.615,
+  "reps": 100,
+  "disassembly": [
+    "800005ac: lui a4,0x30000",
+    "800005b0: addi a5,a4,0",
+    "800005b4: sw a0,16(a4)",
+    "800005b8: addi a4,zero,1",
+    "800005bc: sw a4,8(a5)",
+    "800005c0: addi a3,a5,12",
+    "800005c4: lw a5,0(a3)",
+    "800005c8: andi a4,a5,1",
+    "800005cc: bne a4,zero,800005c4 <mcuaccel_run+0x18>",
+    "800005d0: andi a5,a5,4",
+    "800005d4: beq a5,zero,800005ec <mcuaccel_run+0x40>",
+    "800005d8: lui a4,0xad",
+    "800005dc: lui a5,0x10000",
+    "800005e0: addi a4,a4,-799",
+    "800005e4: sw a4,4(a5)",
+    "800005e8: jal zero,800005e8 <mcuaccel_run+0x3c>",
+    "800005ec: jalr zero,0(ra)"
+  ],
+  "poll_loop": [
+    "lw a5,0(a3)",
+    "andi a4,a5,1",
+    "bne a4,zero,800005c4 <mcuaccel_run+0x18>"
+  ],
+  "poll_loop_string": "lw a5,0(a3); andi a4,a5,1; bne a4,zero,800005c4 <mcuaccel_run+0x18>",
+  "sim_cycles": 99586,
+  "commit": "5175006ba7b266cd2edf3635f86f422366c018b9",
+  "date": "2026-10-10T13:05:37+00:00",
+  "compiler": "riscv-none-elf-gcc (xPack GNU RISC-V Embedded GCC arm64) 15.2.0",
+  "flags": "-O2 -march=rv32im_zicsr -mabi=ilp32 -nostdlib -ffreestanding -fno-builtin -Wall -Wextra -Wl,--no-warn-rwx-segments -Wl,--gc-sections",
+  "picorv32_config": "ENABLE_COUNTERS=1 ENABLE_COUNTERS64=1 ENABLE_REGS_16_31=1 ENABLE_REGS_DUALPORT=1 LATCHED_MEM_RDATA=0 TWO_STAGE_SHIFT=1 BARREL_SHIFTER=1 TWO_CYCLE_COMPARE=0 TWO_CYCLE_ALU=0 COMPRESSED_ISA=0 CATCH_MISALIGN=1 CATCH_ILLINSN=1 ENABLE_PCPI=0 ENABLE_MUL=0 ENABLE_FAST_MUL=1 ENABLE_DIV=1 ENABLE_IRQ=0 ENABLE_TRACE=0 PROGADDR_RESET=0x80000000 STACKADDR=0x80100000 (SPEC section 7)",
+  "accelerator": "walking-skeleton stub rtl/accel/mcuaccel_top.sv (BUSY one cycle after START)"
+}
