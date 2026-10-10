@@ -189,8 +189,9 @@ predicted = the row of `results/m1_predictions.csv` as committed at tag `m1`, jo
 (model, op, P, split index). At P = 8 no command is split (17 rows per sweep point: 3 mnist +
 14 cifar); a measured command with no matching row, or vice versa, counts as a violation.
 (b) **Per network, accelerator + driver only.** For P = 8, `|pred − meas| / meas ≤ 10 %` with
-meas = measured accelerated `model_run` cycles minus the sum of the software fallback ops measured
-in the accelerated profile build, and pred = Σ chains + driver cycles from the m1 summary. The
+meas = median over the 10 images of (the `model_run` interval − the 120-cycle bench window − Σ of
+the software fallback ops' rdcycle intervals), all taken per image in ONE accelerated profile
+build, and pred = `c4b_pred_cycles` (Σ chains + driver, no window) from the m1 summary. The
 software ops are measurements and are reported but not scored (they would make the bound circular).
 Any violated row refutes C4; all rows are reported either way, as is the signed error distribution.
 
@@ -208,10 +209,11 @@ predictions, and may be taken at any time. The `m1` commit hash and the sha256 o
 `results/m1_predictions.csv` are written into the paper and FINAL_REPORT.md; because this
 repository has no remote, publishing them externally is a manual step listed in HARDWARE_TODO.md.
 
-**Known model biases written down before m1** (DESIGN §7.4): the +1 PSETUP cycle per pixel is
-hidden behind the requantizer in requant-bound layers (≈ +3 % on cifar op_2/4/6); the last tile's
-W_t and NV are counted both in T_tile and in FLUSH (≤ P + 3 cycles per command); driver constants
-are estimated from the compiled driver's instruction sequence with PicoRV32's CPI table.
+**Known model biases written down before m1** (DESIGN §7.4, also listed in the m1 summary): the
++1 PSETUP cycle per pixel is over-predicted where a layer is requant or credit bound (mnist op_1
++3.4 %, cifar op_2 +3.0 % at P = 8; up to +3 % on cifar op_0/4/6 at P = 16; others < 0.5 %); FLUSH
+over-predicted by 2 + W_last cycles per command; driver under-predicted by ≈ 40 cycles per network;
+`*_WAIT` phases exact only if fetch idle is combinational as specified.
 
 ### C5 — where the speedup stops scaling (descriptive, with one falsifiable part)
 

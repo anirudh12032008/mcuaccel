@@ -468,6 +468,11 @@ for each descriptor:
                wr += KW
         rowA += XROW
       first = first issued MAC quad of the tile; last = last one.
+  Normative issue rule: in ISSUE `rd_valid` is high in every cycle except when the last request of
+  a tile is waiting for a credit; row, tile and pixel changes cost 0 cycles (addresses are computed
+  incrementally one cycle ahead), and the only non-issuing cycle per pixel is the single PSETUP
+  cycle. A `*_WAIT` state lasts exactly the cycle of the last outstanding response (fetch `idle` is
+  combinational, §8.4), so DESC/WLOAD/PLOAD cost (words·λ + 1) each.
       Issuing a request with last = 1 requires credit > 0; it decrements credit and pushes
       tile info {ch0 = conv ? tP : 4t, NV, yaddr = ypix + ch0} to the requantizer.
   FLUSH  wait until MAC, requant, writer idle and no request outstanding   2λ + 10 + NV_last
@@ -503,8 +508,17 @@ T_tile = max(6, 8, 6) = 8 (requant bound); op_12 (C = 128): max(34, 8, 6) = 34 (
 
 ### 7.4 Known model biases (written before m1)
 
-- The +1 PSETUP cycle per pixel is hidden behind the requantizer when a layer is requant bound
-  (T_tile = NV): ≈ +3 % on cifar op_2/4/6. The model keeps the +1 (conservative).
+- The +1 PSETUP cycle per pixel is hidden behind the requantizer where a layer is requant or
+  credit bound; the model keeps the +1 (conservative). Over-prediction by command (red-team
+  recomputation): mnist op_1 +3.4 % (P = 8, 16), cifar op_2 +3.0 % (P = 8, 16), cifar op_4 +3.0 %
+  (P = 16), cifar op_0 +1.9 % (P = 16), cifar op_6 +1.3 % (P = 16), all others < 0.5 %.
+- FLUSH: the real remainder after the last issue is NV + 10 cycles; the model's W_last + 2λ + 10 +
+  NV over-predicts by 2 + W_last (≤ 7 at P = 16).
+- `*_WAIT` phases: +0 cycles if fetch `idle` is combinational as specified (§8.4); a registered idle
+  would add ≤ 4 cycles per command (0.6 % worst case, cifar op_15 at P = 16).
+- Driver: drv_chain = 71 was measured on the stub (first poll sees DONE); a real chain adds ≈ 6-7
+  cycles of phase wait, +3 for call-site addressing, and the per-call bind check (≈ 8-10) is not
+  modelled: ≈ 40 cycles under-prediction on mnist (0.2 %).
 - The last tile's W_t and NV are counted in both T_tile and FLUSH (≤ P + 3 cycles per command).
 - Driver constants (§9.5) are estimated from the compiled driver's instructions with PicoRV32's
   CPI table; measured on the stub accelerator before m1 where possible.
@@ -574,7 +588,7 @@ module mcuaccel_fetch (
   input  logic [31:0] wr_data, output logic wr_accept,
   output logic resp_valid, resp_we, resp_err,
   output logic [31:0] resp_rdata, resp_addr, output logic [19:0] resp_tag,
-  output logic idle,                       // nothing outstanding and no request held
+  output logic idle,                       // combinational: !(outstanding && !m_rvalid) && !held
   /* master m_* */);
 ```
 `can = !outstanding || m_rvalid` (rule 3). When `can`, raise `m_req` for the write if
@@ -601,7 +615,8 @@ module mcuaccel_ctrl #(parameter int P = 8) (
   input  logic credit_ret);
 ```
 States: IDLE, DESC, DESC_WAIT, WLOAD, WLOAD_WAIT, PLOAD, PLOAD_WAIT, PSETUP, ISSUE, FLUSH,
-STAMP, STAMP_WAIT, ABORT. `*_WAIT` = until `fetch_idle` (all responses in; one bubble, in the
+STAMP, STAMP_WAIT, ABORT. PSETUP is exactly one cycle (normative; if Fmax forces a split, it must
+be done before tag m1 or reported as a logged timing change per SPEC C4); ISSUE is bubble-free (§7.1). `*_WAIT` = until `fetch_idle` (all responses in; one bubble, in the
 model's `+1`). Descriptor words are captured from DESC responses (`tag.dest == DESC`). Loop
 counters per §7.1, all incremental; four `mul4` shift-add products in PSETUP: `ky0·XROW`,
 `kx0·(dw ? XPIX : C)`, `kx1·C`, `ky0·(dw ? KW : RQ)` (k ≤ 15, written as 4 conditional adds,
@@ -740,7 +755,7 @@ cycles per software op, from the profile build of the baseline on the Step 3 SoC
 Exactly §7: iterate pixels and tiles, evaluate `R(pix)`, `W_t`, `T_tile`, `T_pix`, `T_cmd`;
 split commands per §6.4 limits (each split command pays DESC/WLOAD/PLOAD/FLUSH/STAMP).
 Outputs per command: `t_desc, t_wload, t_pload, t_compute, t_flush, t_cmd (= STAMP)`,
-`bus_rd = 17 + Wwords + 3·NCH + Σ R`, `bus_wr = Σ W_t + 1`, `macs` (in-bounds),
+`bus_rd = 17 + Wwords + 3·NCH + NT·Σ_pix R` (x is re-fetched per tile), `bus_wr = Σ W_t + 1`, `macs` (in-bounds),
 `util = macs / (4P · t_compute)`.
 
 Symbolic application to the two networks (aligned, λ = 1, NV = P when NCH ≥ P):
@@ -773,9 +788,10 @@ unchanged, x read once, writes overlap compute. Dw: identical to "os". Bus words
 
 ### 9.5 Driver and software terms
 `t_drv_chain` = cycles of `mcuaccel_run` outside the accelerator (2 stores, poll loop exit,
-call/return) and `t_drv_patch` per patched descriptor field: estimated in M1 from the
-compiled driver's instruction sequence with PicoRV32's CPI table (load 5, store 5, ALU 3,
-branch 3/5, jal 3, jalr 6) and recorded with the predictions. Predicted accelerated
+call/return) and `t_drv_patch` per patched descriptor field: MEASURED on the stub accelerator
+(results/driver_overhead.json: 71 and 15 cycles); the CPI-table estimate (54 / 11) is recorded as
+the unused estimate. The predicted `model_run` also adds the 120-cycle bench window present in
+both builds. Predicted accelerated
 `model_run` = Σ software ops (`sw_cycles`, identical code to the baseline) + Σ_chains
 (`T_chain + t_drv_chain + patches·t_drv_patch`). Predicted speedup = measured baseline
 `model_run` / that. Scoring (SPEC C4b) uses accelerator + driver cycles only; the software term
