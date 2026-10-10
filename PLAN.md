@@ -100,8 +100,15 @@ cycles for both networks in results/baseline_*.json.
   HARDWARE_TODO.md (FPGA wall-clock + power procedure); FINAL_REPORT.md. ORCH tags v0.1.0.
 
 ## Next action
-Step 3: T3.1-T3.6 launched in parallel (2026-10-10). Integrate, run `make test`, commit each.
+Step 3 nearly done (2026-10-10 evening): T3.1 SoC (7da607d), T3.2 harness+baselines (81a5e61),
+T3.3 backend executor (aef9183), T3.4 model (a68fd79) committed. In flight: T3.6 synth flow on the
+stub; T1.0 driver + T1.1 predictions; final cifar baseline 10x10 run (overwrites
+results/baseline_cifar_mobilenet.json; check images=10 runs=10 x_align=0); cifar int8 graph cache
+(build/graphs/cifar_mobilenet.json, then `make test-slow`). Then: red-team M1 (T1.2), tag m1,
+start M2 (two implementers in worktrees).
 
 ## Log
+- 2026-10-10 Baselines measured: mnist 12.19M cycles/inf (10x3), cifar 72.16M (2x1, rerun pending);
+  fallback ops mnist 433k cycles, cifar avgpool 63k. M1 provisional: accel 18.5k / 135.7k cycles at P=8.
 - 2026-10-10 Plan red-team done; D15 applied to SPEC/DESIGN (C4/C5 reworked, test sets, driver before m1).
 - 2026-10-10 Steps 0-2 done. Claim framing D14. Probe: PicoRV32 1853 LUT4 / 858 FF / 4 DSP / ~85 MHz.
