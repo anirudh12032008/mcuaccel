@@ -1,0 +1,114 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{graphicx,booktabs,xcolor,amsmath,cite,url}
+\def\UrlBreaks{\do\/\do\-\do\.\do\_}
+\graphicspath{{../results/}}
+\newcommand{\todo}[1]{{\color{red}\textbf{[#1]}}}
+\input{numbers}
+\newcommand{\tabtodo}{\renewcommand{\todo}[1]{{\color{red}\textbf{?}}}}% compact pending marker inside tables
+\newcommand{\sys}{\textsc{mcuaccel}}
+\newcommand{\row}[1]{\csname Pv#1\endcsname & \csname PredSpeedupMnistP#1\endcsname & \csname MeasSpeedupMnistP#1\endcsname & \csname PredSpeedupCifarP#1\endcsname & \csname MeasSpeedupCifarP#1\endcsname\\}
+
+\begin{document}
+\title{A Pre-Registered Cost Model for a Small Bit-Exact int8 CNN Accelerator on a RISC-V Microcontroller SoC}
+\author{\IEEEauthorblockN{Anonymous for review}}
+\maketitle
+
+\begin{abstract}
+We present \sys{}, an int8 convolution, depthwise and fully connected accelerator memory-mapped into a PicoRV32 SoC, together with a backend for \texttt{mcugrad} that emits accelerator command descriptors and driver C while keeping every other operator in the original software kernels. The accelerator targets bit-exactness with the TFLite-style integer reference. Its cycle counts are predicted by an analytic port-bound model whose predictions were committed to git (tag \texttt{m1}, \MOneCommitShort) before any datapath RTL existed. At $P=\PDefault$ the model predicts a speedup of \PredSpeedupMnistPeight$\times$ on \texttt{mnist\_cnn} and \PredSpeedupCifarPeight$\times$ on \texttt{cifar\_mobilenet} over software baselines of \BaselineCyclesMnist{} and \BaselineCyclesCifar{} cycles per inference. Measured: \MeasSpeedupMnistPeight$\times$ and \MeasSpeedupCifarPeight$\times$. Claim C1 is \VerdictCone{} and C4a is \VerdictCfourA. All cycle counts are Verilator cycles, not FPGA wall-clock.
+\end{abstract}
+
+\section{Introduction}
+Quantized CNNs cost tens of millions of cycles per image on microcontroller-class cores. A dedicated int8 accelerator beating a scalar in-order RISC-V core by an order of magnitude or more is well established \cite{genc2021gemmini,prakash2023cfu,moreau2018vta}; reproducing that is not our contribution. We ask instead how well a simple analytic model, written down \emph{before} the RTL, predicts the cycle counts of a small memory-bound accelerator, with tolerances fixed in advance. The claims below are pre-registered in \texttt{docs/SPEC.md}; the predictions are frozen at tag \texttt{m1} (commit \texttt{\MOneCommitShort}, \texttt{m1\_predictions.csv} sha256 prefix \texttt{\MOneCsvShaShort}).
+
+\begin{description}\setlength{\itemsep}{0pt}
+\item[C1] Speedup at $P=\PDefault$ is at least \ThreshCone$\times$ on both networks, end to end with fallback layers and driver. \textbf{C1b}: at least \ThreshConeB$\times$ on \texttt{cifar\_mobilenet}.
+\item[C2] Bit-exactness: zero mismatching bytes on \RandomLayers{} random layers (C2a), in every intermediate tensor of both networks (C2b), and in final outputs for \ImagesCtwoC{} images per network on the full SoC (C2c).
+\item[C3] At $P=\PDefault$ the accelerator uses at most \BudgetLut{} LUT4, \BudgetMult{} \texttt{MULT18X18D} and \BudgetBram{} \texttt{DP16KD} on an ECP5 LFE5U-85F.
+\item[C4] The frozen model predicts every accelerator command within \ThreshFourA\,\% (C4a, all $P$) and each network's accelerator-plus-driver time within \ThreshFourB\,\% (C4b).
+\item[C5] The saturation width of the $P$ sweep is reported, predicted versus measured; its mechanism was stated in advance.
+\end{description}
+
+\section{Background and Related Work}
+\textbf{Quantization.} The numerical contract is the integer-only scheme of Jacob et al.~\cite{jacob2018quantization} as implemented in gemmlowp~\cite{gemmlowp_fixedpoint} and specified by LiteRT~\cite{litert_quantspec}: a saturating rounding doubling high multiply followed by a rounding divide by a power of two. \textbf{MCU inference.} TFLite Micro~\cite{david2021tflm}, CMSIS-NN~\cite{lai2018cmsisnn} and MCUNet~\cite{lin2020mcunet} provide software kernels; \texttt{mcugrad}~\cite{mcugrad_repo} is the compiler whose int8 simulator is our specification.
+\textbf{Accelerators.} Eyeriss~\cite{chen2016eyeriss}, the TPU~\cite{jouppi2017tpu}, NVDLA~\cite{nvdla_hw}, VTA~\cite{moreau2018vta}, Gemmini~\cite{genc2021gemmini} and CFU Playground~\cite{prakash2023cfu} show large speedups over in-order cores; FINN~\cite{umuroglu2017finn} and PULP-NN~\cite{garofalo2019pulpnn} target FPGA and multicore MCU settings. None of their RTL is used here. \textbf{Models.} Earlier analytic models~\cite{zhang2015optimizing,alwani2016fused} and the roofline model~\cite{williams2009roofline} were fitted alongside their designs; ours was frozen first. The CPU is PicoRV32~\cite{picorv32} on a Lattice ECP5~\cite{lattice_ecp5}, with the bus protocol of corv32~\cite{corv32_repo}.
+
+\section{Architecture}
+The CPU reaches a dual-port RAM through an adapter and interconnect; the accelerator is a second bus master on the RAM's other port (a private \PortBits-bit port, one word per cycle, one outstanding request), so no arbiter is needed. The CPU writes a descriptor address and a start bit, then polls a status register (Fig.~\ref{fig:sys}).
+
+\begin{figure}[t]\centering\small
+\fbox{\parbox{0.93\columnwidth}{\centering
+PicoRV32 $\to$ adapter $\to$ interconnect $\to$ \{RAM port A, console, accelerator registers\}\\[2pt]
+fetch (only master) $\to$ ctrl (descriptor FSM, loop nest) $\to$ align $\to$ MAC array ($P$ outputs $\times$ \Lanes{} lanes) $\to$ requant $\to$ writer $\to$ RAM port B}}
+\caption{System block diagram (schematic; \texttt{docs/DESIGN.md} Sec.~1).}\label{fig:sys}
+\end{figure}
+
+\textbf{Dataflow.} The array is output-stationary over one output pixel and a tile of $P$ output channels. In NHWC layout the in-bounds part of a kernel row is contiguous, so each cycle one four-byte activation word meets one weight-buffer row of $\Lanes\cdot P$ bytes and performs $\Lanes\cdot P$ multiply-accumulates; every channel count uses one mechanism. Depthwise layers get only \Lanes{} useful MACs per cycle. Weights and per-channel parameters are loaded once per command into local buffers (\WbufRows{} rows). A single requantizer emits one byte per cycle using the specification's SRDHM/RDBPOT rule; accumulators are 32 bit and the backend enforces a no-wrap bound.
+
+\textbf{Interface.} A command is a \DescWords-word descriptor in RAM (geometry, strides, addresses, zero points, clamp). Descriptors chain by pointer and the accelerator writes a cycle stamp into each. Anything outside the conv/depthwise/fully-connected envelope falls back to software.
+
+\section{Backend and Driver}
+The backend (\texttt{backend/mcuaccel\_backend}) consumes mcugrad's int8 graph, packs weights and parameters, splits layers that exceed buffer limits, builds descriptors, and emits a \texttt{model.c} with the same \texttt{model\_run} API; unsupported ops are the identical mcugrad kernels. A pure-Python executor of the descriptor semantics, tested equal to the integer reference, is the oracle for the RTL's request stream. The driver writes the descriptor address, starts the chain, polls, and patches only the fields that depend on the network input and output. Its cost, measured on the walking-skeleton stub, is \DrvChain{} cycles per call plus \DrvPatch{} per patched field.
+
+\section{Methodology}
+\textbf{Pre-registration.} Tag \texttt{m1} precedes every commit that adds a datapath or sequencer. The model is not changed to match the RTL, nor the RTL tuned to the model: the RTL is scored at its first full measurement and later cycle-changing edits are logged with before/after values. Predicted rows are those of \texttt{m1\_predictions.csv} with architecture \texttt{os} (\MOneRowsPeight{} commands at $P=\PDefault$).
+
+\textbf{Timing protocol.} Inference time is the \texttt{rdcycle} interval around \texttt{model\_run} on the SoC, including software layers, descriptor patching, polling and driver cost, over \BaselineImagesMnist{} fixed test images and \BaselineRunsMnist{} timed runs after a warm-up (decision D17: the simulator is deterministic, so more runs add nothing). We report the median of per-run per-image medians with min and max. The bench window costs \BenchWindow{} cycles in both builds. Cycle counts come from Verilator simulation of the full SoC at a nominal \ClockMHzMnist{} MHz.
+
+\textbf{Fairness.} The baseline is mcugrad's generated \texttt{model.c}, unchanged, built with the same compiler and flags on the same SoC with the accelerator present and idle. The accelerated build contains the same fallback kernels, checked by comparing per-op profile cycles of the two builds. Optional backend passes are off in every scored build.
+
+\section{Results}
+\textbf{Baseline.} Table~\ref{tab:base} gives the software baseline. Convolution and fully connected layers account for \ProfileAccelShareMnist\,\% (mnist) and \ProfileAccelShareCifar\,\% (cifar) of baseline cycles in the profile build, which bounds the Amdahl ceiling.
+
+\begin{table}[t]\centering\caption{Software baseline on the SoC (cycles per inference).}\label{tab:base}
+\tabtodo\begin{tabular}{lrrr}\toprule
+Network & median & min & max\\\midrule
+\texttt{mnist\_cnn} & \BaselineCyclesMnist & \BaselineMinMnist & \BaselineMaxMnist\\
+\texttt{cifar\_mobilenet} & \BaselineCyclesCifar & \BaselineMinCifar & \BaselineMaxCifar\\\bottomrule
+\end{tabular}\end{table}
+
+\textbf{C1/C1b: speedup.} Table~\ref{tab:speed} compares the frozen prediction with measurement. At $P=\PDefault$ the prediction puts the software ops at \PredSwShareMnistPeight\,\% (mnist) and \PredSwShareCifarPeight\,\% (cifar) of the accelerated run: pooling and layout ops that stay in software dominate MNIST, whose predicted speedup saturates near \PredSpeedupMnistPsixteen$\times$ at the largest $P$. C1 is \VerdictCone; C1b is \VerdictConeB.
+
+\begin{table}[t]\centering\caption{Speedup versus $P$: frozen prediction and measurement.}\label{tab:speed}
+\small\tabtodo\begin{tabular}{rrrrr}\toprule
+& \multicolumn{2}{c}{mnist} & \multicolumn{2}{c}{cifar}\\
+$P$ & pred. & meas. & pred. & meas.\\\midrule
+\row{one}\row{two}\row{four}\row{eight}\row{sixteen}\bottomrule
+\end{tabular}\end{table}
+
+\textbf{C2: bit-exactness.} Random layers: \MeasCtwoALayers{} run, \MeasCtwoAMismatch{} mismatching bytes (C2a \VerdictCtwoA). Intermediate tensors: \MeasCtwoBImages{} images, \MeasCtwoBMismatch{} mismatches. Full SoC: \MeasCtwoCImages{} images, \MeasCtwoCMismatch{} mismatches.
+
+\textbf{C3: resources.} Table~\ref{tab:syn} reports the Yosys/nextpnr-ecp5 flow on the LFE5U-85F. The accelerator at $P=\PDefault$ uses \SynAccelPeightLut{} LUT4, \SynAccelPeightMult{} \texttt{MULT18X18D} and \SynAccelPeightBram{} \texttt{DP16KD}; C3 is \VerdictCthree.
+
+\begin{table}[t]\centering\caption{Synthesis (seed one for resources, Fmax median over seeds).}\label{tab:syn}
+\footnotesize\tabtodo\begin{tabular}{lrrrr}\toprule
+Design & LUT4 & MULT & BRAM & Fmax MHz\\\midrule
+PicoRV32 & \SynPicorvLut & \SynPicorvMult & \SynPicorvBram & \SynPicorvFmax\\
+Accelerator, $P=\PDefault$ & \SynAccelPeightLut & \SynAccelPeightMult & \SynAccelPeightBram & \SynAccelPeightFmax\\
+SoC, no accelerator & \SynSocNoAccelLut & \SynSocNoAccelMult & \SynSocNoAccelBram & \SynSocNoAccelFmax\\
+SoC with accelerator & \SynSocPeightLut & \SynSocPeightMult & \SynSocPeightBram & \SynSocPeightFmax\\\bottomrule
+\end{tabular}\end{table}
+
+\textbf{C4/C5: prediction accuracy.} Table~\ref{tab:cmd} lists predicted command cycles at $P=\PDefault$ against the stamp measurement. Over the commands of the sweep the maximum absolute error is \MeasCfourMaxErr\,\%, the median signed error \MeasCfourMedianErr\,\%, with \MeasCfourViolations{} tolerance violations out of \MeasCfourRows{} rows (C4a \VerdictCfourA). Per network, accelerator plus driver, the signed error is \MeasCfourBErrMnist\,\% (mnist) and \MeasCfourBErrCifar\,\% (cifar). Figure~\ref{fig:p} shows predicted per-command cycles versus $P$. The predicted saturation width is \PredPstarMnist{} (mnist) and \PredPstarCifar{} (cifar) on the grid, where \PMax{} means not reached, against measured \PstarMeasMnist{} and \PstarMeasCifar. The model attributes the flattening to the depthwise layers, the single requantizer and the weight load, not to the port.
+
+\begin{figure*}[t]\centering
+\includegraphics[width=0.8\textwidth]{m1_cycles_vs_P.png}
+\caption{Predicted per-command stamp cycles versus $P$ (model at tag \texttt{m1}; \texttt{os} is the built architecture, \texttt{lb} and \texttt{acc} are modelled only). Measured overlay: \todo{figure from results/m6\_pred\_vs\_meas.csv after M6}.}\label{fig:p}
+\end{figure*}
+
+\begin{table}[t]\centering\caption{Per-command cycles at $P=\PDefault$ (pred.\ from tag \texttt{m1}; red ? = not yet measured).}\label{tab:cmd}
+\footnotesize
+\input{tab_pred_cmds}
+\end{table}
+
+\section{Discussion and Limitations}
+All cycle counts come from Verilator simulation; the FPGA is used only for synthesis figures (LUT, DSP, BRAM, Fmax). No FPGA wall-clock or power measurement exists yet; the procedure is in \texttt{HARDWARE\_TODO.md}, and wall-time speedup would be the cycle speedup scaled by the Fmax ratio of the SoC with and without the accelerator. The memory model is zero-wait on-chip RAM; an external memory would change the port-bound assumption. The accelerator covers convolution, depthwise (multiplier one) and fully connected layers only; pooling and layout ops stay in software and cap MNIST by Amdahl's law. The model has biases documented before \texttt{m1}, for example one extra setup cycle per pixel where a layer is requantizer bound. Only two networks are evaluated. The repository has no remote, so the \texttt{m1} hash has not been timestamped externally; this is a manual step.
+
+\section{Conclusion}
+We built a small int8 accelerator and its backend and score an analytic model that was frozen before the RTL. The outcomes of the pre-registered claims are those in the tables above; they update from \texttt{results/} through \texttt{experiments/make\_macros.py}.
+
+\section*{Acknowledgment}
+AI assistance (Anthropic's Claude) was used to draft code and text; the authors take responsibility for all content.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+\end{document}
