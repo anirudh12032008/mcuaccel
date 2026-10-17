@@ -481,7 +481,7 @@ def _commit():
     try:
         git = lambda *a: subprocess.run(["git", *a], cwd=ROOT, capture_output=True, text=True,
                                         check=True).stdout.strip()
-        return git("rev-parse", "HEAD") + (" (dirty)" if git("status", "--porcelain") else "")
+        return git("rev-parse", "HEAD") + (" (dirty)" if git("status", "--porcelain", "--untracked-files=no") else "")
     except (OSError, subprocess.CalledProcessError):
         return "unknown"
 
