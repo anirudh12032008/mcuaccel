@@ -20,10 +20,14 @@ module list, test plan), docs/DECISIONS.md (D1-D14) before touching anything.
 - [ ] Step 3  Walking skeleton (SoC + Verilator harness + baseline firmware + accel stub + backend
       executor + M1 model skeleton + synth of the stub), all in `make test`
 - [ ] Step 4  Build milestones
-  - [ ] M1 model/m1.py, results/m1_predictions.csv + m1_summary.json; tag m1 BEFORE datapath RTL (C4)
+  - [x] M1 model/m1.py, results/m1_predictions.csv + m1_summary.json; tag m1 BEFORE datapath RTL (C4).
+        Red-team T1.2: 0 equation errors, 3 hand recomputations match; stale outputs fixed (1a63b3f).
+        csv sha256 fd94f39a…; generated at 1f4fa47 (clean). Predicted speedup P=8: mnist 27.0, cifar 363.1.
   - [ ] M2 rtl/accel/* per DESIGN §8, unit tests vs int8ops (tag m2)
   - [ ] M3 tb/accel: 1000 random layers, whole networks, chains, errors; results/m3_bitexact.csv (tag m3)
   - [ ] M4 backend: packing, splitting, descriptors, model.c emit, driver; executor == int8ops (tag m4)
+        emit.py + host bit-exactness + fairness tests done (5af3876), red-team T4.3 0 blockers, fixes 44fd6a8.
+        Open: T4.2 transpose folding (optional, default off). Tag m4 after M5 builds run on the real RTL.
   - [ ] M5 SoC: both builds of both networks in Verilator; C2c; first C1/C1b measurements (tag m5)
   - [ ] M6 syn/ + experiments/: C3, C4, C5, P ablation, pred-vs-meas, variance (tag m6)
   - [ ] Stretch: Tiny Tapeout-sized variant (P=1 or 2) through LibreLane/sky130, if time allows
@@ -100,14 +104,13 @@ cycles for both networks in results/baseline_*.json.
   HARDWARE_TODO.md (FPGA wall-clock + power procedure); FINAL_REPORT.md. ORCH tags v0.1.0.
 
 ## Next action
-Step 3 nearly done (2026-10-10 evening): T3.1 SoC (7da607d), T3.2 harness+baselines (81a5e61),
-T3.3 backend executor (aef9183), T3.4 model (a68fd79) committed. In flight: T3.6 synth flow on the
-stub; T1.0 driver + T1.1 predictions; final cifar baseline 10x10 run (overwrites
-results/baseline_cifar_mobilenet.json; check images=10 runs=10 x_align=0); cifar int8 graph cache
-(build/graphs/cifar_mobilenet.json, then `make test-slow`). Then: red-team M1 (T1.2), tag m1,
-start M2 (two implementers in worktrees).
+2026-10-17: m1 tagged. M2 in flight: T2.1 datapath (align, mac_array, requant, writer, wbuf, pbuf)
+and T2.2 control (fetch, ctrl, real top) in parallel on disjoint files against the tests-first unit
+tests (ee60992); then T2.3 red-team. In parallel: T7.1 paper skeleton + experiments/make_macros.py.
+After M2: M3 campaign (tb/accel exists), M5 firmware builds of the emitted model.c.
 
 ## Log
+- 2026-10-17 m1 tagged. cifar baseline 10x3 = 72,157,425 cycles/inf (runs identical). M4 emitter done.
 - 2026-10-10 Baselines measured: mnist 12.19M cycles/inf (10x3), cifar 72.16M (2x1, rerun pending);
   fallback ops mnist 433k cycles, cifar avgpool 63k. M1 provisional: accel 18.5k / 135.7k cycles at P=8.
 - 2026-10-10 Plan red-team done; D15 applied to SPEC/DESIGN (C4/C5 reworked, test sets, driver before m1).

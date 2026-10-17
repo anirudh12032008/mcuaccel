@@ -1,0 +1,2977 @@
+{
+ "commit": "1f4fa477cd158bdaa73b8e1dc482c91441955dd7",
+ "date": "2026-10-17",
+ "parameters": {
+  "lam": 1,
+  "credits": 2,
+  "l_mac": 2,
+  "flush_const": 10,
+  "x_align": 0,
+  "y_align": 0,
+  "wbuf_rows": 512,
+  "pbuf": 512,
+  "t_drv_chain": 71,
+  "t_drv_patch": 15,
+  "Ps": [
+   1,
+   2,
+   4,
+   8,
+   16
+  ],
+  "cpi": {
+   "load": 5,
+   "store": 5,
+   "alu": 3,
+   "br_nt": 3,
+   "br_t": 5,
+   "jal": 3,
+   "jalr": 6
+  },
+  "lanes": 4,
+  "L_rq": 6,
+  "flush_const_note": "flush_const 10 = L_rq 6 + 4 (DESIGN 7.2)",
+  "drv_chain_seq": [
+   [
+    "alu",
+    2
+   ],
+   [
+    "jal",
+    1
+   ],
+   [
+    "alu",
+    1
+   ],
+   [
+    "store",
+    1
+   ],
+   [
+    "alu",
+    1
+   ],
+   [
+    "store",
+    1
+   ],
+   [
+    "wait",
+    0
+   ],
+   [
+    "load",
+    1
+   ],
+   [
+    "alu",
+    1
+   ],
+   [
+    "br_nt",
+    1
+   ],
+   [
+    "alu",
+    1
+   ],
+   [
+    "br_nt",
+    1
+   ],
+   [
+    "jalr",
+    1
+   ]
+  ],
+  "drv_patch_seq": [
+   [
+    "alu",
+    2
+   ],
+   [
+    "store",
+    1
+   ]
+  ],
+  "drv_seq_note": "CPI instruction sequence is an unused estimate; measured values from results/driver_overhead.json are used"
+ },
+ "inputs": {
+  "accelerator": "modelled (DESIGN 7)",
+  "driver": "measured on stub",
+  "bench_window_cycles": 120,
+  "p_star_definition": "SPEC C5: smallest P with sum(STAMP) <= 1.10 * sum(STAMP)(P=16), accelerator only; p_star_end_to_end uses predicted_model_run",
+  "layers": "DESIGN 2 table, checked against model.c by test",
+  "per_model": {
+   "mnist_cnn": {
+    "baseline_cycles": "measured",
+    "sw_cycles": "measured (profile)",
+    "x_align_from_baseline": 0,
+    "baseline": {
+     "commit": "aef9183befbb5593cd8f29dba4ee26079cf86945",
+     "images": 10,
+     "runs": 3,
+     "date": "2026-10-10T11:18:46+00:00"
+    },
+    "profile": {
+     "commit": "7da607d7200c552b41297e2817fa2493049d0cb8",
+     "images": 2,
+     "runs": 1,
+     "date": "2026-10-10T11:27:42+00:00"
+    }
+   },
+   "cifar_mobilenet": {
+    "baseline_cycles": "measured",
+    "sw_cycles": "measured (profile)",
+    "x_align_from_baseline": 0,
+    "baseline": {
+     "commit": "44fd6a8902946f233b5ef21b02aab553c453f649",
+     "images": 10,
+     "runs": 3,
+     "date": "2026-10-10T19:34:32+00:00"
+    },
+    "profile": {
+     "commit": "7da607d7200c552b41297e2817fa2493049d0cb8",
+     "images": 2,
+     "runs": 1,
+     "date": "2026-10-10T12:01:42+00:00"
+    }
+   }
+  }
+ },
+ "biases": [
+  "PSETUP: the +1 cycle per pixel is hidden behind the requantizer where a layer is requant or credit bound; the model keeps the +1 (conservative). Over-prediction by command: mnist op_1 +3.4 % (P=8,16), cifar op_2 +3.0 % (P=8,16), cifar op_4 +3.0 % (P=16), cifar op_0 +1.9 % (P=16), cifar op_6 +1.3 % (P=16), all others < 0.5 %",
+  "FLUSH: the real remainder after the last issue is NV + 10 cycles; the model's W_last + 2*lam + 10 + NV counts the last tile's W_t and NV in both T_tile and FLUSH and over-predicts by 2 + W_last cycles per command (<= P + 3; <= 7 at P=16)",
+  "*_WAIT phases: +0 cycles if fetch idle is combinational as specified (DESIGN 8.4); a registered idle would add <= 4 cycles per command (0.6 % worst case, cifar op_15 at P=16)",
+  "Driver: drv_chain = 71 was measured on the stub (first poll sees DONE); a real chain adds ~6-7 cycles of phase wait, +3 for call-site addressing, and the per-model_run-call bind check (~8-10 cycles) is not modelled: ~40 cycles under-prediction on mnist (0.2 %)",
+  "STAMP is self-reported by the ctrl counter; M5/M6 assert per chain that CYCLES == sum(STAMP + lam + 1) + 2 and count at least three commands independently from a VCD",
+  "(T1.2) C4(b) measurement side: the profile macros (MCUACCEL_PROF_END 64-bit accumulate, ~30-40 cycles per op), the call/return around each accelerated chain function and the model_run prologue land in the measured interval but not in c4b_pred_cycles: ~200-500 cycles under-prediction (~1-2 % on mnist, < 0.5 % on cifar)",
+  "(T1.2) y_align = 0 is assumed (bench_main's s_out has no alignment attribute and is not extracted from the link map); a misaligned output costs <= 1 cycle per tile of the final fc",
+  "(T1.2) software-op cycles: the profile build is 0.46 % faster than the uninstrumented cifar baseline on the same 2 images, so the compiled fallback code is not identical across builds; these cycles are measurements, not scored",
+  "bus_rd counts NT * sum_pix R (x re-fetched per tile)"
+ ],
+ "models": {
+  "mnist_cnn": {
+   "baseline_cycles": 12188028,
+   "archs": {
+    "os": {
+     "P": {
+      "1": {
+       "accel_cycles": 98332,
+       "sum_stamp": 98312,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 288,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 98620,
+       "c4b_pred_cycles": 98620,
+       "predicted_model_run": 531982.3333333333,
+       "n_chains": 3,
+       "n_commands": 7,
+       "n_patches": 5,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 22.91058788293095,
+       "macs": 266432,
+       "bus_rd": 87797,
+       "bus_wr": 9425,
+       "util": 0.695957453477802,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 39283
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 54903
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 4140
+        }
+       ]
+      },
+      "2": {
+       "accel_cycles": 50904,
+       "sum_stamp": 50888,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 258,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 51162,
+       "c4b_pred_cycles": 51162,
+       "predicted_model_run": 484524.3333333333,
+       "n_chains": 3,
+       "n_commands": 5,
+       "n_patches": 3,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 25.15462518910299,
+       "macs": 266432,
+       "bus_rd": 45111,
+       "bus_wr": 4714,
+       "util": 0.688896243587622,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 20076
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 27736
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 3086
+        }
+       ]
+      },
+      "4": {
+       "accel_cycles": 27711,
+       "sum_stamp": 27697,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 243,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 27954,
+       "c4b_pred_cycles": 27954,
+       "predicted_model_run": 461316.3333333333,
+       "n_chains": 3,
+       "n_commands": 4,
+       "n_patches": 2,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 26.420109411546235,
+       "macs": 266432,
+       "bus_rd": 24258,
+       "bus_wr": 2359,
+       "util": 0.6717495663399088,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 10502
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 14154
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 3049
+        }
+       ]
+      },
+      "8": {
+       "accel_cycles": 18508,
+       "sum_stamp": 18496,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 228,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 18736,
+       "c4b_pred_cycles": 18736,
+       "predicted_model_run": 452098.3333333333,
+       "n_chains": 3,
+       "n_commands": 3,
+       "n_patches": 1,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 26.958798786399715,
+       "macs": 266432,
+       "bus_rd": 14411,
+       "bus_wr": 2358,
+       "util": 0.5613538295577131,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 7146
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 7758
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 3598
+        }
+       ]
+      },
+      "16": {
+       "accel_cycles": 15168,
+       "sum_stamp": 15156,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 228,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 15396,
+       "c4b_pred_cycles": 15396,
+       "predicted_model_run": 448758.3333333333,
+       "n_chains": 3,
+       "n_commands": 3,
+       "n_patches": 1,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 27.15944662123266,
+       "macs": 266432,
+       "bus_rd": 11039,
+       "bus_wr": 2358,
+       "util": 0.3635172895564094,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 7170
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 4582
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 3410
+        }
+       ]
+      }
+     },
+     "p_star": 16,
+     "p_star_end_to_end": 2
+    },
+    "lb": {
+     "P": {
+      "1": {
+       "accel_cycles": 74631,
+       "sum_stamp": 74611,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 288,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 74919,
+       "c4b_pred_cycles": 74919,
+       "predicted_model_run": 508281.3333333333,
+       "n_chains": 3,
+       "n_commands": 7,
+       "n_patches": 5,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 23.9789014482793,
+       "macs": 266432,
+       "bus_rd": 28271,
+       "bus_wr": 9425,
+       "util": 0.9250340249423659,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 18675
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 51795
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 4155
+        }
+       ]
+      },
+      "2": {
+       "accel_cycles": 38563,
+       "sum_stamp": 38547,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 258,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 38821,
+       "c4b_pred_cycles": 38821,
+       "predicted_model_run": 472183.3333333333,
+       "n_chains": 3,
+       "n_commands": 5,
+       "n_patches": 3,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 25.81206734672267,
+       "macs": 266432,
+       "bus_rd": 15348,
+       "bus_wr": 4714,
+       "util": 0.9250340249423659,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 9380
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 26084
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 3093
+        }
+       ]
+      },
+      "4": {
+       "accel_cycles": 22703,
+       "sum_stamp": 22689,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 243,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 22946,
+       "c4b_pred_cycles": 22946,
+       "predicted_model_run": 456308.3333333333,
+       "n_chains": 3,
+       "n_commands": 4,
+       "n_patches": 2,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 26.710071041145426,
+       "macs": 266432,
+       "bus_rd": 9377,
+       "bus_wr": 2359,
+       "util": 0.8418179060714828,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 6414
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 13230
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 3053
+        }
+       ]
+      },
+      "8": {
+       "accel_cycles": 16803,
+       "sum_stamp": 16791,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 228,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 17031,
+       "c4b_pred_cycles": 17031,
+       "predicted_model_run": 450393.3333333333,
+       "n_chains": 3,
+       "n_commands": 3,
+       "n_patches": 1,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 27.060853476220785,
+       "macs": 266432,
+       "bus_rd": 6971,
+       "bus_wr": 2358,
+       "util": 0.6342652548183134,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 6390
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 6806
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 3601
+        }
+       ]
+      },
+      "16": {
+       "accel_cycles": 13559,
+       "sum_stamp": 13547,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 228,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 13787,
+       "c4b_pred_cycles": 13787,
+       "predicted_model_run": 447149.3333333333,
+       "n_chains": 3,
+       "n_commands": 3,
+       "n_patches": 1,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 27.257175827911333,
+       "macs": 266432,
+       "bus_rd": 5638,
+       "bus_wr": 2358,
+       "util": 0.42294016052016664,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 6414
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 3728
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 3411
+        }
+       ]
+      }
+     },
+     "p_star": 16,
+     "p_star_end_to_end": 2
+    },
+    "acc": {
+     "P": {
+      "1": {
+       "accel_cycles": 75138,
+       "sum_stamp": 75118,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 288,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 75426,
+       "c4b_pred_cycles": 75426,
+       "predicted_model_run": 508788.3333333333,
+       "n_chains": 3,
+       "n_commands": 7,
+       "n_patches": 5,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 23.955006829952207,
+       "macs": 266432,
+       "bus_rd": 10691,
+       "bus_wr": 9425,
+       "util": 0.9185663260380897,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 19235
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 51767
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 4130
+        }
+       ]
+      },
+      "2": {
+       "accel_cycles": 39308,
+       "sum_stamp": 39292,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 258,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 39566,
+       "c4b_pred_cycles": 39566,
+       "predicted_model_run": 472928.3333333333,
+       "n_chains": 3,
+       "n_commands": 5,
+       "n_patches": 3,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 25.771405815539353,
+       "macs": 266432,
+       "bus_rd": 10265,
+       "bus_wr": 4714,
+       "util": 0.9062806139109612,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 10052
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 26168
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 3082
+        }
+       ]
+      },
+      "4": {
+       "accel_cycles": 23565,
+       "sum_stamp": 23551,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 243,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 23808,
+       "c4b_pred_cycles": 23808,
+       "predicted_model_run": 457170.3333333333,
+       "n_chains": 3,
+       "n_commands": 4,
+       "n_patches": 2,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 26.659708890413565,
+       "macs": 266432,
+       "bus_rd": 10444,
+       "bus_wr": 2359,
+       "util": 0.80666569781524,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 7142
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 13370
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 3047
+        }
+       ]
+      },
+      "8": {
+       "accel_cycles": 17721,
+       "sum_stamp": 17709,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 228,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 17949,
+       "c4b_pred_cycles": 17949,
+       "predicted_model_run": 451311.3333333333,
+       "n_chains": 3,
+       "n_commands": 3,
+       "n_patches": 1,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 27.00580973666368,
+       "macs": 266432,
+       "bus_rd": 11015,
+       "bus_wr": 2358,
+       "util": 0.592808828764685,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 7146
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 6974
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 3595
+        }
+       ]
+      },
+      "16": {
+       "accel_cycles": 15168,
+       "sum_stamp": 15156,
+       "sw_cycles": 433242.3333333333,
+       "driver_cycles": 228,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 15396,
+       "c4b_pred_cycles": 15396,
+       "predicted_model_run": 448758.3333333333,
+       "n_chains": 3,
+       "n_commands": 3,
+       "n_patches": 1,
+       "sw_ops": [
+        0,
+        2,
+        4,
+        5
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 12188028,
+       "predicted_speedup": 27.15944662123266,
+       "macs": 266432,
+       "bus_rd": 11039,
+       "bus_wr": 2358,
+       "util": 0.3635172895564094,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23333.0
+        },
+        {
+         "op": 1,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 7170
+        },
+        {
+         "op": 2,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 258576.66666666666
+        },
+        {
+         "op": 3,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 4582
+        },
+        {
+         "op": 4,
+         "kind": "maxpool",
+         "where": "sw",
+         "cycles": 127399.66666666667
+        },
+        {
+         "op": 5,
+         "kind": "transpose",
+         "where": "sw",
+         "cycles": 23933.0
+        },
+        {
+         "op": 7,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 3410
+        }
+       ]
+      }
+     },
+     "p_star": 16,
+     "p_star_end_to_end": 2
+    }
+   }
+  },
+  "cifar_mobilenet": {
+   "baseline_cycles": 72157425,
+   "archs": {
+    "os": {
+     "P": {
+      "1": {
+       "accel_cycles": 582730,
+       "sum_stamp": 582676,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 582902,
+       "c4b_pred_cycles": 582902,
+       "predicted_model_run": 645778.0,
+       "n_chains": 2,
+       "n_commands": 25,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 111.7371991613217,
+       "macs": 1776560,
+       "bus_rd": 529223,
+       "bus_wr": 50467,
+       "util": 0.7790303427880846,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 196611
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 10238
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 41475
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 19438
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 74371
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 5014
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 37667
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 9206
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 71046
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2582
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 37452
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4438
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 72472
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 716
+        }
+       ]
+      },
+      "2": {
+       "accel_cycles": 322700,
+       "sum_stamp": 322660,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 322872,
+       "c4b_pred_cycles": 322872,
+       "predicted_model_run": 385748.0,
+       "n_chains": 2,
+       "n_commands": 18,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 187.05845526094757,
+       "macs": 1776560,
+       "bus_rd": 292000,
+       "bus_wr": 27927,
+       "util": 0.7156115260922525,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 98932
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 10238
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 20996
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 19438
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 37508
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 5014
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 19236
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 9206
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 36132
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2582
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 19944
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4438
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 38480
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 552
+        }
+       ]
+      },
+      "4": {
+       "accel_cycles": 192822,
+       "sum_stamp": 192788,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 192994,
+       "c4b_pred_cycles": 192994,
+       "predicted_model_run": 255870.0,
+       "n_chains": 2,
+       "n_commands": 15,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 282.0081486692461,
+       "macs": 1776560,
+       "bus_rd": 173477,
+       "bus_wr": 16658,
+       "util": 0.6152477946717496,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 50094
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 10238
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 10758
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 19438
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 19078
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 5014
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 10022
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 9206
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 18726
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2582
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 11190
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4438
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 21484
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 550
+        }
+       ]
+      },
+      "8": {
+       "accel_cycles": 135704,
+       "sum_stamp": 135672,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 135876,
+       "c4b_pred_cycles": 135876,
+       "predicted_model_run": 198752.0,
+       "n_chains": 2,
+       "n_commands": 14,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 363.0525730558686,
+       "macs": 1776560,
+       "bus_rd": 114320,
+       "bus_wr": 16657,
+       "util": 0.45049741958518613,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 27726
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 10238
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8714
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 19438
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 10890
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 5014
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 5930
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 9206
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 10538
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2582
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 7098
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4438
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 13242
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 646
+        }
+       ]
+      },
+      "16": {
+       "accel_cycles": 112340,
+       "sum_stamp": 112308,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 112512,
+       "c4b_pred_cycles": 112512,
+       "predicted_model_run": 175388.0,
+       "n_chains": 2,
+       "n_commands": 14,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 411.4159748671517,
+       "macs": 1776560,
+       "bus_rd": 84670,
+       "bus_wr": 16657,
+       "util": 0.2781214932670728,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 17650
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 10238
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8722
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 19438
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8850
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 5014
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 4914
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 9206
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 6450
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2582
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 5058
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4438
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 9154
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 622
+        }
+       ]
+      }
+     },
+     "p_star": 16,
+     "p_star_end_to_end": 16
+    },
+    "lb": {
+     "P": {
+      "1": {
+       "accel_cycles": 539709,
+       "sum_stamp": 539655,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 539881,
+       "c4b_pred_cycles": 539881,
+       "predicted_model_run": 602757.0,
+       "n_chains": 2,
+       "n_commands": 25,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 119.71229699530657,
+       "macs": 1776560,
+       "bus_rd": 390929,
+       "bus_wr": 50467,
+       "util": 0.8426137075079018,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 143619
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 11006
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 42243
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 21230
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 75139
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 5462
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 38627
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 10166
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 71942
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2822
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 38412
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4934
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 73368
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 735
+        }
+       ]
+      },
+      "2": {
+       "accel_cycles": 287477,
+       "sum_stamp": 287437,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 287649,
+       "c4b_pred_cycles": 287649,
+       "predicted_model_run": 350525.0,
+       "n_chains": 2,
+       "n_commands": 18,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 205.8552884958277,
+       "macs": 1776560,
+       "bus_rd": 210277,
+       "bus_wr": 27927,
+       "util": 0.807236667526963,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 71924
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 8990
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 21252
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 14318
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 37764
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4470
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 19684
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 6838
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 36580
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2342
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 20424
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 3398
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 38928
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 561
+        }
+       ]
+      },
+      "4": {
+       "accel_cycles": 161915,
+       "sum_stamp": 161881,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 162087,
+       "c4b_pred_cycles": 162087,
+       "predicted_model_run": 224963.0,
+       "n_chains": 2,
+       "n_commands": 15,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 320.752412618964,
+       "macs": 1776560,
+       "bus_rd": 120040,
+       "bus_wr": 16658,
+       "util": 0.7423862534683917,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 36078
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 7982
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 10758
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 10926
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 19078
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 3974
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 10214
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 5302
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 18918
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2102
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 11430
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2886
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 21708
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 555
+        }
+       ]
+      },
+      "8": {
+       "accel_cycles": 105635,
+       "sum_stamp": 105603,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 105807,
+       "c4b_pred_cycles": 105807,
+       "predicted_model_run": 168683.0,
+       "n_chains": 2,
+       "n_commands": 14,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 427.76939584901857,
+       "macs": 1776560,
+       "bus_rd": 75434,
+       "bus_wr": 16657,
+       "util": 0.5958923223888286,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 18422
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 7478
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8522
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 9326
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 10762
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 3726
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 5994
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4598
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 10602
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2102
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 7210
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2886
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 13354
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 649
+        }
+       ]
+      },
+      "16": {
+       "accel_cycles": 89113,
+       "sum_stamp": 89081,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 89285,
+       "c4b_pred_cycles": 89285,
+       "predicted_model_run": 152161.0,
+       "n_chains": 2,
+       "n_commands": 14,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 474.21760503677024,
+       "macs": 1776560,
+       "bus_rd": 53503,
+       "bus_wr": 16657,
+       "util": 0.3624756793460519,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 16658
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 7226
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8498
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 8526
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8626
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 3726
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 4882
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4598
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 6450
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2102
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 5106
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2886
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 9202
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 623
+        }
+       ]
+      }
+     },
+     "p_star": 16,
+     "p_star_end_to_end": 16
+    },
+    "acc": {
+     "P": {
+      "1": {
+       "accel_cycles": 501568,
+       "sum_stamp": 501514,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 501740,
+       "c4b_pred_cycles": 501740,
+       "predicted_model_run": 564616.0,
+       "n_chains": 2,
+       "n_commands": 25,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 127.79911479660512,
+       "macs": 1776560,
+       "bus_rd": 76985,
+       "bus_wr": 50467,
+       "util": 0.9083416333133588,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 144131
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 10238
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 33283
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 19438
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 66179
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 5014
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 33571
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 9206
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 66950
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2582
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 35404
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4438
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 70424
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 706
+        }
+       ]
+      },
+      "2": {
+       "accel_cycles": 282119,
+       "sum_stamp": 282079,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 282291,
+       "c4b_pred_cycles": 282291,
+       "predicted_model_run": 345167.0,
+       "n_chains": 2,
+       "n_commands": 18,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 209.050763833159,
+       "macs": 1776560,
+       "bus_rd": 73282,
+       "bus_wr": 27927,
+       "util": 0.8232712120144879,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 72692
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 10238
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 16900
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 19438
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 33412
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 5014
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 17188
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 9206
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 34084
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2582
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 18920
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4438
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 37456
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 547
+        }
+       ]
+      },
+      "4": {
+       "accel_cycles": 172531,
+       "sum_stamp": 172497,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 172703,
+       "c4b_pred_cycles": 172703,
+       "predicted_model_run": 235579.0,
+       "n_chains": 2,
+       "n_commands": 15,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 306.2982056974518,
+       "macs": 1776560,
+       "bus_rd": 72015,
+       "bus_wr": 16658,
+       "util": 0.6931845849382886,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 36974
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 10238
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8710
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 19438
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 17030
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 5014
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8998
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 9206
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 17702
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2582
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 10678
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4438
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 20972
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 547
+        }
+       ]
+      },
+      "8": {
+       "accel_cycles": 122357,
+       "sum_stamp": 122325,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 122529,
+       "c4b_pred_cycles": 122529,
+       "predicted_model_run": 185405.0,
+       "n_chains": 2,
+       "n_commands": 14,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 389.1881286912435,
+       "macs": 1776560,
+       "bus_rd": 71614,
+       "bus_wr": 16657,
+       "util": 0.505214352664962,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 19502
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 10238
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8714
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 19438
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8842
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 5014
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 4906
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 9206
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 9514
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2582
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 6586
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4438
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 12730
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 643
+        }
+       ]
+      },
+      "16": {
+       "accel_cycles": 110292,
+       "sum_stamp": 110260,
+       "sw_cycles": 62756.0,
+       "driver_cycles": 172,
+       "bench_window_cycles": 120,
+       "accel_plus_driver_cycles": 110464,
+       "c4b_pred_cycles": 110464,
+       "predicted_model_run": 173340.0,
+       "n_chains": 2,
+       "n_commands": 14,
+       "n_patches": 2,
+       "sw_ops": [
+        13
+       ],
+       "sw_complete": true,
+       "baseline_cycles": 72157425,
+       "predicted_speedup": 416.2768258913119,
+       "macs": 1776560,
+       "bus_rd": 71614,
+       "bus_wr": 16657,
+       "util": 0.2839479337152209,
+       "ops": [
+        {
+         "op": 0,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 17650
+        },
+        {
+         "op": 1,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 10238
+        },
+        {
+         "op": 2,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8722
+        },
+        {
+         "op": 3,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 19438
+        },
+        {
+         "op": 4,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8850
+        },
+        {
+         "op": 5,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 5014
+        },
+        {
+         "op": 6,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 4914
+        },
+        {
+         "op": 7,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 9206
+        },
+        {
+         "op": 8,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 5426
+        },
+        {
+         "op": 9,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 2582
+        },
+        {
+         "op": 10,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 4546
+        },
+        {
+         "op": 11,
+         "kind": "dw",
+         "where": "accel",
+         "cycles": 4438
+        },
+        {
+         "op": 12,
+         "kind": "conv",
+         "where": "accel",
+         "cycles": 8642
+        },
+        {
+         "op": 13,
+         "kind": "avgpool",
+         "where": "sw",
+         "cycles": 62756.0
+        },
+        {
+         "op": 15,
+         "kind": "fc",
+         "where": "accel",
+         "cycles": 622
+        }
+       ]
+      }
+     },
+     "p_star": 16,
+     "p_star_end_to_end": 8
+    }
+   }
+  }
+ }
+}
