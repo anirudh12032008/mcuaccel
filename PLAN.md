@@ -23,7 +23,8 @@ module list, test plan), docs/DECISIONS.md (D1-D14) before touching anything.
   - [x] M1 model/m1.py, results/m1_predictions.csv + m1_summary.json; tag m1 BEFORE datapath RTL (C4).
         Red-team T1.2: 0 equation errors, 3 hand recomputations match; stale outputs fixed (1a63b3f).
         csv sha256 fd94f39a…; generated at 1f4fa47 (clean). Predicted speedup P=8: mnist 27.0, cifar 363.1.
-  - [ ] M2 rtl/accel/* per DESIGN §8, unit tests vs int8ops (tag m2)
+  - [x] M2 rtl/accel/* per DESIGN §8, unit tests vs int8ops (tag m2). Datapath 53be20a, control a2e8c4b,
+        red-team T2.3: 1 blocker (credit leak after abort) + credit-loop latency fixed in 31cb76a (D20).
   - [ ] M3 tb/accel: 1000 random layers, whole networks, chains, errors; results/m3_bitexact.csv (tag m3)
   - [ ] M4 backend: packing, splitting, descriptors, model.c emit, driver; executor == int8ops (tag m4)
         emit.py + host bit-exactness + fairness tests done (5af3876), red-team T4.3 0 blockers, fixes 44fd6a8.
@@ -110,6 +111,7 @@ tests (ee60992); then T2.3 red-team. In parallel: T7.1 paper skeleton + experime
 After M2: M3 campaign (tb/accel exists), M5 firmware builds of the emitted model.c.
 
 ## Log
+- 2026-10-19 m2 tagged. Pre-fix synth P=8: 7297 LUT4 > C3's 6000 (provisional, rerun on 31cb76a).
 - 2026-10-17 m1 tagged. cifar baseline 10x3 = 72,157,425 cycles/inf (runs identical). M4 emitter done.
 - 2026-10-10 Baselines measured: mnist 12.19M cycles/inf (10x3), cifar 72.16M (2x1, rerun pending);
   fallback ops mnist 433k cycles, cifar avgpool 63k. M1 provisional: accel 18.5k / 135.7k cycles at P=8.
