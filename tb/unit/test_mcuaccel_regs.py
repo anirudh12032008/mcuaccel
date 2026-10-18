@@ -109,6 +109,12 @@ async def start_done_clear_counters(dut):
     assert st.n == 2
     assert (await m.read(STATUS))[0] == 0
     assert (await m.read(CYCLES))[0] == 0 and (await m.read(NCMD))[0] == 0
+    assert (await m.read(ERR_ADDR))[0] == 0  # held until the next START or CLEAR (DESIGN 6.1)
+    dut.err_addr.value = 0xDEAD_BEE4
+    await pulse(dut, "err")
+    assert (await m.read(ERR_ADDR))[0] == 0xDEAD_BEE4
+    await m.write(CTRL, 2)  # CLEAR
+    assert (await m.read(ERR_ADDR))[0] == 0
     # START + CLEAR in one write behaves like START
     await m.write(CTRL, 3)
     assert st.n == 3

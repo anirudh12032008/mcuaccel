@@ -76,6 +76,7 @@ module mcuaccel_regs #(
 
   always_ff @(posedge clk) begin
     if (rst) err_addr_q <= 32'd0;
+    else if (start || clear) err_addr_q <= 32'd0;
     else if (err) err_addr_q <= err_addr;
   end
 endmodule

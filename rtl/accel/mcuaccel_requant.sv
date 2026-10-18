@@ -46,6 +46,7 @@ module mcuaccel_requant #(
   wire        last_i  = (idx == nv_h - 5'd1);
   wire [32*NA-1:0] a_head = a_vec[a_rp];
   wire        pop     = issue && last_i;
+  assign credit_ret = pop;   // DESIGN 7.2: usable by the ctrl in the cycle after the pop
 
   assign pb_re    = issue;
   assign pb_raddr = t_ch0[t_rp] + {4'd0, idx};
@@ -62,9 +63,8 @@ module mcuaccel_requant #(
   always_ff @(posedge clk) begin
     if (rst) begin
       t_wp <= 1'b0; t_rp <= 1'b0; a_wp <= 1'b0; a_rp <= 1'b0;
-      t_cnt <= 2'd0; a_cnt <= 2'd0; idx <= 5'd0; credit_ret <= 1'b0;
+      t_cnt <= 2'd0; a_cnt <= 2'd0; idx <= 5'd0;
     end else begin
-      credit_ret <= pop;
       if (tile_push) t_wp <= !t_wp;
       if (acc_valid) a_wp <= !a_wp;
       t_cnt <= t_cnt + {1'b0, tile_push} - {1'b0, pop};
@@ -186,5 +186,5 @@ module mcuaccel_requant #(
   end
 
   assign idle = (t_cnt == 2'd0) && (a_cnt == 2'd0) && !a_v && !b_v && !c_v && !d_v && !e_v
-                && !out_valid && !credit_ret;
+                && !out_valid;
 endmodule

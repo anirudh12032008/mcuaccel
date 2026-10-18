@@ -36,7 +36,7 @@ module mcuaccel_fetch (
   // no new request in the cycle an error response is delivered: nothing is accessed after a fault
   assign can       = !outstanding || (m_rvalid && !m_err);
   assign sel_wr    = hold ? hold_wr : wr_valid;
-  assign m_req     = hold || (can && (wr_valid || rd_valid));
+  assign m_req     = !rst && (hold || (can && (wr_valid || rd_valid)));
   assign m_we      = sel_wr;
   assign m_addr    = sel_wr ? wr_addr : rd_addr;
   assign m_be      = sel_wr ? wr_be : 4'hF;

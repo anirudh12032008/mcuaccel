@@ -26,6 +26,7 @@ from accel.gen_layers import Item, build_image, gen_chain, make_layer  # noqa: E
 pytestmark = H.PYTESTMARK
 NCHAIN = H.env_int("MCUACCEL_CHAINS", 12)
 NERR = H.env_int("MCUACCEL_ERR_CHAINS", 4)
+SLOW = H.env_int("MCUACCEL_SLOW", 0)
 
 
 def stalls_for(i):
@@ -95,6 +96,47 @@ async def errors(dut):
 
 
 @cocotb.test()
+async def error_sweep(dut):
+    """Error at EVERY bus access index of a small layer, then a recovery chain without reset:
+    ERR set, BUSY dropped, ctrl credit back at 2, recovery bit-exact (credit-return race at abort)."""
+    import types
+    b = await H.Bench.create(dut)
+    c = b.check
+    ram = b.ram
+    orig = type(ram)._access
+    st = {"n": None, "i": 0}
+
+    def acc(self, addr, we, be, wdata):
+        st["i"] += 1
+        if st["n"] is not None and st["i"] == st["n"] and not self.hit:
+            self.hit = True
+            self.log.append((addr, we))
+            return 0, 1
+        return orig(self, addr, we, be, wdata)
+    ram._access = types.MethodType(acc, ram)
+    r = np.random.default_rng(7)
+    L = make_layer(r, "conv", 3, 3, 4, 16, 1, 1, 1, 1, 0, 0)
+    x = r.integers(-128, 128, 3 * 3 * 4).astype(np.int8).tobytes()
+    img = build_image([Item(L, x, 0, 0)], b.P, 1)
+    dry = await b.run_image(img, seed=1)
+    b.check_normal(dry, img, "sweep dry run")
+    ntot = st["i"]
+    step = 1 if SLOW else 1 + ntot // 40          # fast subset unless MCUACCEL_SLOW
+    for n in range(1, ntot + 1, step):
+        st["n"], st["i"] = n, 0
+        res = await b.run_image(img, seed=2, max_cycles=20000)
+        cr = int(dut.u_ctrl.credit.value)
+        st["n"] = None
+        rec = await b.run_image(img, seed=3, reset=False, max_cycles=20000)
+        lab = f"fault@access {n}/{ntot}"
+        c(not res.timed_out and res.status == H.ERR, f"{lab}: status {res.status:#x} timeout={res.timed_out}")
+        c(cr == 2, f"{lab}: credit {cr} after abort")
+        c(not rec.timed_out, f"{lab}: recovery hung (BUSY stuck)")
+        b.check_normal(rec, img, f"{lab}: recovery")
+    b.finish("error_sweep")
+
+
+@cocotb.test()
 async def start_while_busy(dut):
     b = await H.Bench.create(dut)
     c = b.check
@@ -124,7 +166,7 @@ def test_chains_errors():
     import json
     for P in H.ps_list():
         H.run_sim("test_chains_errors", P=P)
-        for name in ("chains", "errors", "start_while_busy"):
+        for name in ("chains", "errors", "error_sweep", "start_while_busy"):
             s = H.read_summary(name)
             print(f"{name.upper()} P={P}: runs={s['runs']} problems={len(s['problems'])}")
             if not s["stub"]:

@@ -516,9 +516,10 @@ T_tile = max(6, 8, 6) = 8 (requant bound); op_12 (C = 128): max(34, 8, 6) = 34 (
   credit bound; the model keeps the +1 (conservative). Over-prediction by command (red-team
   recomputation): mnist op_1 +3.4 % (P = 8, 16), cifar op_2 +3.0 % (P = 8, 16), cifar op_4 +3.0 %
   (P = 16), cifar op_0 +1.9 % (P = 16), cifar op_6 +1.3 % (P = 16), all others < 0.5 %.
-- FLUSH: the real remainder after the last issue is NV + 10 cycles; the model's W_last + 2λ + 10 +
+- FLUSH: the real remainder after the last issue is NV + 11 cycles (measured, lone tile); the model's W_last + 2λ + 10 +
   NV counts the last tile's W_t and NV in both T_tile and FLUSH and over-predicts by 2 + W_last
-  cycles per command (≤ P + 3; ≤ 7 at P = 16).
+  cycles per command (≤ P + 3; ≤ 7 at P = 16); written before m1 for an NV + 10 remainder; with the
+  measured NV + 11 the over-prediction is 1 + W_last (post-m1 note, the model is unchanged).
 - `*_WAIT` phases: +0 cycles if fetch `idle` is combinational as specified (§8.4); a registered idle
   would add ≤ 4 cycles per command (0.6 % worst case, cifar op_15 at P = 16).
 - Driver: drv_chain = 71 was measured on the stub (first poll sees DONE); a real chain adds ≈ 6-7

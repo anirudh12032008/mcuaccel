@@ -155,3 +155,19 @@ separate accelerated driver header (duplicates the register map).
 (7) T4.3: the emitted model.c carries `MCUACCEL_P`, checked against CONFIG at bind (a P sweep
 would otherwise run P=8 firmware on a P=4 build silently). (8) T4.3: the M5 fairness check is a
 measured per-op cycle comparison of the profile builds, not an objdump hash (kernels are inlined).
+
+## D20 Orchestrator: M2 red-team fixes, one of which changes timing toward DESIGN 7.2 (2026-10-19)
+T2.3 found a blocker (a credit returned in the ABORT cycle left ctrl at 3 credits; the next chain
+overfilled the 2-deep requant FIFOs and FLUSH never ended) and that the credit loop had two
+register stages, so a credit-stalled request issued 2 cycles after the requantizer pop instead of
+the 1 cycle DESIGN 7.2 specifies. Options: keep the registered credit_ret and log the slower
+timing as the design; make credit_ret combinational so the RTL matches the normative DESIGN text.
+Choice: combinational (`credit_ret = pop`), plus credit reset to 2 on start and credit_ret ignored
+in ABORT, m_req gated by rst, ERR_ADDR cleared on START/CLEAR. Reason: the target is DESIGN 7.2,
+written before m1; the model was not consulted. SPEC C4 logging: no full STAMP measurement
+(m6_pred_vs_meas.csv) existed before this change, so the scored RTL is the fixed one. For
+transparency, the uncommitted P = 8 smoke runs on the pre-fix RTL (a2e8c4b + working tree,
+2026-10-19) gave C4(b) errors of -1.01 % (mnist: meas 18,928 vs pred 18,736) and +0.44 % (cifar:
+meas 135,281 vs pred 135,876). Red-team timing shape (P = 4, conv 1x1, C = 4, O = 32, 4x4): ISSUE
+588 -> 494 cycles, command total 770 -> 676.
+

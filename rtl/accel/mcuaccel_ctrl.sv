@@ -367,7 +367,7 @@ module mcuaccel_ctrl #(
       chain_done <= 1'b0;
       err        <= 1'b0;
       tile_push  <= lastacc && !errnow;
-      credit     <= credit - 2'(lastacc) + 2'(credit_ret);
+      if (state != S_ABORT) credit <= credit - 2'(lastacc) + 2'(credit_ret);
       if (chain_done || err) busy <= 1'b0;
       if (shift && fc != 2'd3) fc <= fc + 2'd1;
       if (state != S_STAMP && state != S_STAMP_WAIT) cnt <= cnt + 32'd1;
@@ -391,6 +391,7 @@ module mcuaccel_ctrl #(
         S_IDLE: begin
           if (start && !busy) begin
             busy  <= 1'b1;
+            credit <= 2'd2;
             daddr <= desc_addr;
             ra    <= desc_addr;
             ld_i  <= 10'd0;
