@@ -42,3 +42,17 @@ Rows with `"note": "walking-skeleton stub"` (designs `accel` and `soc`, while th
 show that the flow runs end to end. Do not quote them; real accelerator rows come after M2. The
 `picorv32` and `soc_noaccel` rows do not involve the accelerator and are real baseline measurements
 (single seed; Fmax claims need seeds 1..10).
+
+## M6 sweep (T6.1)
+
+Driver: `experiments/run_syn_sweep.sh [JOBS]` (accel P=8 and soc P=8 seeds 1..10, accel P in {1,2,4,16}
+seeds 1..3, picorv32 and soc_noaccel seeds 1..10; at most JOBS (default 3) synth.sh flows at once).
+`SKIP="accel 8 1"` drops one job line. Environment: `source scripts/env.sh`, `HOME=.cache/home`
+(set by synth.sh); Yosys 0.69+187 (2f08661dd), nextpnr-ecp5 0.11.1-47-ge2fe86b3, OSS CAD Suite
+from `../corv32/tools`. One run is about 9 min wall on the loaded dev machine (load average >300).
+
+`results/syn/stub/` holds superseded data, kept on purpose: the walking-skeleton stub rows, the
+single-seed picorv32/soc_noaccel probes, and `accel_P8_prefix_rtl.jsonl` (seeds 1..9 of the real
+datapath RTL before the credit_ret / m_req / ERR_ADDR fix; not final, do not quote).
+Pre-fix accel P=8 (9 seeds): LUT4(TRELLIS_COMB) 7297 in every seed, FF 3543, DP16KD 11,
+MULT18X18D 36, Fmax median 60.65 (59.25..62.49) MHz.
