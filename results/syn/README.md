@@ -56,3 +56,12 @@ single-seed picorv32/soc_noaccel probes, and `accel_P8_prefix_rtl.jsonl` (seeds 
 datapath RTL before the credit_ret / m_req / ERR_ADDR fix; not final, do not quote).
 Pre-fix accel P=8 (9 seeds): LUT4(TRELLIS_COMB) 7297 in every seed, FF 3543, DP16KD 11,
 MULT18X18D 36, Fmax median 60.65 (59.25..62.49) MHz.
+
+### Post-fix results (RTL at tag m2, 31cb76a; `rtl/accel` identical across the commits recorded in the rows)
+accel P=8 and picorv32, soc_noaccel: seeds 1..10; accel P in {1,2,4,16}: seeds 1..3. LUT4/FF/BRAM/DSP
+are identical across seeds (Yosys is deterministic); only Fmax varies with the nextpnr seed.
+`soc` (soc_top with the accelerator, 256 KiB RAM): NO ROWS. Yosys `memory_libmap` prints "using FF
+mapping for memory soc_top.u_ram.mem" when port b is live (the true-dual-port, per-byte-enable
+`always_ff` in rtl/soc/soc_ram.sv, lines 55-62), turning 256 KiB into about 2M flip-flops; the Yosys run
+did not finish in over 30 min and could not fit the device anyway. With the accelerator tied off
+(`soc_noaccel`) the same RAM maps to 128 DP16KD. `soc_noaccel` rows carry the commits a2e8c4b/f22f185.
