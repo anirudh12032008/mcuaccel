@@ -33,7 +33,7 @@ from common.ram_slave import RamSlave  # noqa: E402
 from accel.gen_layers import RAM_BASE, RAM_SIZE, ROOT  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-OUT = ROOT / "build" / "accel"
+OUT = Path(os.environ.get("MCUACCEL_OUT", ROOT / "build" / "accel"))
 ALLOW_STUB = os.environ.get("MCUACCEL_ALLOW_STUB") == "1"
 REAL_RTL = (ROOT / "rtl/accel/mcuaccel_ctrl.sv").exists()
 STUB_MODE = ALLOW_STUB and not REAL_RTL

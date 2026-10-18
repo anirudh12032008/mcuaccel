@@ -71,6 +71,11 @@ async def whole_network(dut):
     nimg = n_images()
     models = [m for m in os.environ.get("MCUACCEL_MODELS", ",".join(MODELS)).split(",") if m]
     report = {}
+    bad = {"bytes": 0}                      # byte-level tally for C2b (results/m5_bitexact.json)
+
+    def nbad(a, c):
+        return sum(1 for u, v in zip(a, c) if u != v) + abs(len(a) - len(c))
+
     nodes_csv = H.OUT / "m3_network_nodes.csv"
     nodes_csv.write_text("model,image,node,op,accelerated,cycles,mismatches\n")
     for name in models:
@@ -102,15 +107,18 @@ async def whole_network(dut):
                                                     ya=ni % 4, stalls=(ii % 2 == 1), seed=ii * 1000 + ni)
                     b.check_normal(res, img, f"{name} img {ii} node {ni} ({node.op})")
                     cyc, mm_here = res.cycles, res.mismatches
+                    bad["bytes"] += mm_here
                     # RTL vs int8ops on the RTL path's own input
                     loc = run_node(g, node, rtl_env, sim)[node.outputs[0]]
                     ok = array("b", y) == loc
                     local_bad += not ok
+                    bad["bytes"] += nbad(array("b", y), loc)
                     b.check(ok, f"{name} img {ii} node {ni}: RTL output != int8ops on same input")
                     rtl_env[node.outputs[0]] = array("b", y)
                 else:
                     rtl_env.update(run_node(g, node, rtl_env, sim))
                 for o in node.outputs:       # every tensor of the reference path
+                    bad["bytes"] += nbad(rtl_env[o], ref_env[o])
                     b.check(rtl_env[o] == ref_env[o],
                             f"{name} img {ii}: tensor {o} (node {ni}, {node.op}) differs from the reference run")
                 with open(nodes_csv, "a") as f:
@@ -119,11 +127,14 @@ async def whole_network(dut):
             full = sim.run_int8(g, {in_name: (xq, shape)})     # monolithic reference
             for o in g.outputs:
                 b.check(full[o] == ref_env[o], f"{name} img {ii}: node-by-node reference != run_int8")
+                bad["bytes"] += nbad(full[o], rtl_env[o])
                 b.check(full[o] == rtl_env[o], f"{name} img {ii}: final output {o} differs from run_int8")
             dut._log.info("%s img %d: final output %s, argmax %d, node-local mismatches %d", name, ii,
                           list(rtl_env[g.outputs[0]]), max(range(len(rtl_env[g.outputs[0]])),
                           key=lambda k: rtl_env[g.outputs[0]][k]), local_bad)
         report[name] = f"{len(imgs)} images, {nacc} accelerated node executions"
+        report.setdefault("_images", {})[name] = len(imgs)
+    report["_mismatch_bytes"] = bad["bytes"]
     (H.OUT / "whole_network_report.json").write_text(json.dumps(report, indent=1))
     b.finish("whole_network")
 

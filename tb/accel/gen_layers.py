@@ -131,7 +131,10 @@ def gen_chain(seed, n=None, dependent=None):
             items.append(Item(L, x, xa, ya))
         else:
             p = items[-1].L
-            L = gen_next(r, p.OH, p.OW, p.O)
+            try:
+                L = gen_next(r, p.OH, p.OW, p.O)
+            except AssertionError:               # e.g. C = 600 (split-forcing O) makes any conv exceed the limits
+                break                            # chain is cut short: ncmds follows len(items)
             if L.mode == "dw":
                 items[-1].ya = 0                 # dw needs a 4-byte aligned input
             items.append(Item(L, None, 0, int(r.integers(0, 4))))
