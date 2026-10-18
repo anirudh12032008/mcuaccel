@@ -10,10 +10,19 @@ extern char _sdata[], _ebss[];
 
 void *plat_stack_lo, *plat_stack_hi;
 
+#ifdef MCUACCEL_PROFILE
+#include "profile.h"
+uint32_t prof_clog[PROF_CLOG_MAX];
+uint32_t prof_clog_n;
+#endif
+
 uint32_t bench_cycles(void)
 {
     uint32_t c;
     __asm__ volatile("rdcycle %0" : "=r"(c));
+#ifdef MCUACCEL_PROFILE
+    if (prof_clog_n < PROF_CLOG_MAX) prof_clog[prof_clog_n++] = c;
+#endif
     return c;
 }
 

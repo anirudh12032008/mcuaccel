@@ -34,7 +34,9 @@ def patch(src: str) -> str:
            f'const int prof_op[{n}] = {{{", ".join(str(o[0]) for o in ops)}}};\n'
            f'const char *const prof_name[{n}] = {{{", ".join(chr(34) + o[1] + chr(34) for o in ops)}}};\n'
            f'const char *const prof_kernel[{n}] = {{{", ".join(chr(34) + o[2] + chr(34) for o in ops)}}};\n\n')
-    return head + tbl + "void model_run(" + "\n".join(out) + tail
+    tbl += (f"uint32_t prof_hist[PROF_MAX_INF][PROF_NMAX];\nuint32_t prof_inf;\n"
+            f'_Static_assert({n} <= PROF_NMAX, "raise PROF_NMAX");\n\n')
+    return head + tbl + "void model_run(" + "\n".join(out).replace("{", "{ MCUACCEL_PROF_INF_BEGIN();", 1) + tail
 
 
 if __name__ == "__main__":
