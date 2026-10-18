@@ -56,8 +56,8 @@ def build_firmware():
 def test_soc_smoke():
     hexf = build_firmware()
     srcs = [PICO] + rtl("soc/soc_top.sv", "soc/soc_picorv32_adapter.sv", "soc/soc_interconnect.sv",
-                        "soc/soc_ram.sv", "soc/soc_console.sv", "accel/mcuaccel_top.sv",
-                        "accel/mcuaccel_regs.sv")
+                        "soc/soc_ram.sv", "soc/soc_console.sv",
+                        *sorted(p.relative_to(ROOT / "rtl").as_posix() for p in (ROOT / "rtl/accel").glob("*.sv")))
     run_cocotb("soc_top", srcs, "test_soc_smoke", Path(__file__).parent, "soc_smoke",
                plusargs=[f"+ram={hexf}"])
     print("SMOKE_CYCLES =", (BUILD / "cycles.txt").read_text().strip())

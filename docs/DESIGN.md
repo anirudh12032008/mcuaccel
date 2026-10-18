@@ -604,13 +604,15 @@ module mcuaccel_fetch (
 (`hold` register) until `m_gnt` (rule 2) even if a write appears. Accept = `m_req && m_gnt`;
 capture `{tag, we, addr}`; `resp_* = m_rvalid, m_rdata, m_err` + captured fields. Requesters
 keep `*_valid` and their payload stable until `*_accept`.
+No new request is raised in the cycle an `m_err` response is delivered (so nothing is accepted
+after a fault; the tb/accel error test requires zero bus accesses after it).
 
 ### 8.5 `mcuaccel_ctrl` (sequencer)
 ```systemverilog
 module mcuaccel_ctrl #(parameter int P = 8) (
   input  logic clk, rst,
   input  logic start, input logic [31:0] desc_addr,
-  output logic busy, cmd_done, chain_done, err, output logic [31:0] err_addr,
+  output logic busy, cmd_done, chain_done, err, dp_abort, output logic [31:0] err_addr,
   output logic rd_valid, output logic [31:0] rd_addr, output logic [19:0] rd_tag,
   input  logic rd_accept,
   output logic st_valid, output logic [31:0] st_addr, st_data, input logic st_accept,
@@ -622,6 +624,8 @@ module mcuaccel_ctrl #(parameter int P = 8) (
   output logic [31:0] tile_yaddr,
   input  logic credit_ret);
 ```
+`dp_abort` is high in ABORT; the top uses it to reset mac_array/requant/writer and gate the
+writer's `wr_valid`, so nothing reaches RAM after an error (added in M2, T2.2).
 States: IDLE, DESC, DESC_WAIT, WLOAD, WLOAD_WAIT, PLOAD, PLOAD_WAIT, PSETUP, ISSUE, FLUSH,
 STAMP, STAMP_WAIT, ABORT. PSETUP is exactly one cycle (normative; if Fmax forces a split, it must
 be done before tag m1 or reported as a logged timing change per SPEC C4); ISSUE is bubble-free (§7.1). `*_WAIT` = until `fetch_idle` (all responses in; one bubble, in the
