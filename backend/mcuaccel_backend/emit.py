@@ -163,7 +163,10 @@ static union {{ int8_t b[MODEL_ARENA_BYTES]; int64_t align; }} mg_arena_u;
     out += consts
     out.append("/* ---- descriptor chains (address fields are offsets until bound) ---- */")
     out += ad_decl
-    out.append("static int ad_bound;\n\nstatic void ad_bind(void)\n{\n    mcuaccel_check_p(MCUACCEL_P);\n" + "\n".join(bind) + "\n    ad_bound = 1;\n}\n")
+    out.append("static int ad_bound;\n\nstatic void ad_bind(void)\n{\n    mcuaccel_check_p(MCUACCEL_P);\n" + "\n".join(bind) + "\n    ad_bound = 1;\n}\n\n"
+               "/* returns its argument so `input` stays in a0 for the first op: its profiled call site then matches the baseline's (D19) */\n"
+               "__attribute__((noinline)) static const int8_t *ad_bind_once(const int8_t *input)\n"
+               "{\n    if (!ad_bound) {\n        ad_bind();\n    }\n    return input;\n}\n")
     out.append("/* ---- one function per op / accelerated chain ---- */")
     body = []
     for i, n, acc in items:
@@ -179,7 +182,7 @@ static union {{ int8_t b[MODEL_ARENA_BYTES]; int64_t align; }} mg_arena_u;
         decl = ", ".join({"input": "const int8_t *input", "output": "int8_t *output"}[s] for s in params) or "void"
         out.append(f"static void {fname}({decl})\n{{\n    /* {n.outputs[0]} = {n.op}({ins}) */\n    {fb[i]}\n}}\n")
         body.append(f"    {fname}({', '.join(params)});")
-    out.append("void model_run(const int8_t *input, int8_t *output)\n{\n    if (!ad_bound) {\n        ad_bind();\n    }\n"
+    out.append("void model_run(const int8_t *input, int8_t *output)\n{\n    input = ad_bind_once(input);\n"
                + "\n".join(body) + "\n}\n")
     return {"model.h": files["model.h"], "model.c": "\n".join(out)}
 

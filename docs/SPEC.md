@@ -124,7 +124,8 @@ output bytes of `model_run` equal `sim.run_int8(graph, ...)` and equal the basel
   (`-DMCUACCEL_PROFILE`) reads `rdcycle` around every `op_*` call (instrumentation cost
   reported); (b) each accelerator command: the hardware STAMP word the accelerator writes into
   its descriptor (cycles from descriptor fetch to stamp issue, DESIGN §6.3).
-- **Baseline** (D6): mcugrad's own generated `model.c` (unchanged, `mg_int8.c` kernels),
+- **Baseline** (D6, D19): mcugrad's own generated `model.c` (source text unchanged, `mg_int8.c`
+  kernels; the build pins inlining identically in both builds: `mg_*` always_inline, `op_*` noinline),
   `riscv-none-elf-gcc -O2 -march=rv32im_zicsr -mabi=ilp32` (zicsr for `rdcycle`), on the same SoC (accelerator present
   and idle), same clock, same images, same bench_main. Label: "PicoRV32 (corv32-bus SoC)".
 - **Accelerated build**: the backend's `model.c` (same `model_run` API, same flags) in which

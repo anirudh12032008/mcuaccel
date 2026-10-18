@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Build a benchmark firmware image for the PicoRV32 SoC.
     build_fw.py <model> [--images 10] [--runs 3] [--profile] [--model-dir DIR] [--out DIR] [-D NAME[=VAL]]...
-model.c/model.h come unchanged from third_party/mcugrad/firmware/generated/<model> (the baseline,
-D6) unless --profile (model.c patched by patch_profile.py) or --model-dir (backend output).
+model.c/model.h come from third_party/mcugrad/firmware/generated/<model> (the baseline, D6/D19) unless
+--profile (model.c patched by patch_profile.py) or --model-dir (backend output). In every build the mg_* kernels are
+always_inline and the op_* functions noinline (D19), so the fallback ops are the same machine code in both builds.
 Writes <out>/{fw.elf,fw.hex,fw.map}; prints the hex path."""
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -23,6 +25,16 @@ FLAGS = ["-O2", "-march=rv32im_zicsr", "-mabi=ilp32", "-nostdlib", "-ffreestandi
 BOARD = "picorv32-soc"
 
 
+INLINE, NOINLINE = "static inline __attribute__((always_inline)) ", "__attribute__((noinline)) static "
+
+
+def pin_inlining(mc: str) -> str:
+    """D19: kernels always_inline into their op, op_* noinline, so each fallback op_* is compiled from
+    its own text only (no cross-op inlining/cloning decisions) and is the same machine code in both builds."""
+    mc = re.sub(r"^static (void mg_)", INLINE + r"\1", mc, flags=re.M)
+    return re.sub(r"^static (void op_\d+_)", NOINLINE + r"\1", mc, flags=re.M)
+
+
 def compiler_version() -> str:
     return subprocess.run([CC, "--version"], capture_output=True, text=True).stdout.splitlines()[0]
 
@@ -35,11 +47,12 @@ def build(model: str, images: int, runs: int, profile: bool = False, model_dir: 
     gen_testset.gen(model, images, out)
     shutil.copy(os.path.join(src, "model.h"), out)
     mc = open(os.path.join(src, "model.c")).read()
+    if not stub:
+        mc = pin_inlining(patch_profile.patch(mc) if profile else mc)
     with open(os.path.join(out, "model.c"), "w") as f:
-        f.write('#include "model.h"\nvoid model_run(const int8_t *i, int8_t *o) { (void)i; (void)o; }\n' if stub
-                else patch_profile.patch(mc) if profile else mc)
+        f.write('#include "model.h"\nvoid model_run(const int8_t *i, int8_t *o) { (void)i; (void)o; }\n' if stub else mc)
     common = os.path.join(ROOT, "sw", "common")
-    srcs = [os.path.join(out, "model.c"), os.path.join(out, "testset.c"),
+    srcs = [os.path.join(out, "model.c"), os.path.join(out, "testset.c")] + [
             os.path.join(MG, "common", "bench_main.c"), os.path.join(common, "platform.c"),
             os.path.join(common, "main_bench.c"), os.path.join(common, "crt0.S"),
             os.path.join(ROOT, "sw", "driver", "mcuaccel.c")]

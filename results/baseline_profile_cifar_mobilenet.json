@@ -7,136 +7,136 @@
       "op": 0,
       "name": "conv2d_fused",
       "kernel": "mg_conv2d_nhwc_s8",
-      "cycles_total": 54446213,
-      "cycles_per_inference": 18148737.666666668,
-      "share": 0.25267090094277633
+      "cycles_total": 53084948,
+      "cycles_per_inference": 17694982.666666668,
+      "share": 0.25581898648114487
     },
     {
       "op": 1,
       "name": "conv2d_fused",
       "kernel": "mg_dwconv2d_nhwc_s8",
-      "cycles_total": 6435492,
-      "cycles_per_inference": 2145164.0,
-      "share": 0.029865466706564685
+      "cycles_total": 5519082,
+      "cycles_per_inference": 1839694.0,
+      "share": 0.026596728766623823
     },
     {
       "op": 2,
       "name": "conv2d_fused",
       "kernel": "mg_conv1x1_nhwc_s8",
-      "cycles_total": 15584611,
-      "cycles_per_inference": 5194870.333333333,
-      "share": 0.07232417986927211
+      "cycles_total": 15296215,
+      "cycles_per_inference": 5098738.333333333,
+      "share": 0.07371321562371475
     },
     {
       "op": 3,
       "name": "conv2d_fused",
       "kernel": "mg_dwconv2d_nhwc_s8",
-      "cycles_total": 14263354,
-      "cycles_per_inference": 4754451.333333333,
-      "share": 0.06619256523214484
+      "cycles_total": 12262302,
+      "cycles_per_inference": 4087434.0,
+      "share": 0.059092639020117625
     },
     {
       "op": 4,
       "name": "conv2d_fused",
       "kernel": "mg_conv1x1_nhwc_s8",
-      "cycles_total": 27346226,
-      "cycles_per_inference": 9115408.666666666,
-      "share": 0.1269068164723371
+      "cycles_total": 27057827,
+      "cycles_per_inference": 9019275.666666666,
+      "share": 0.13039300480283328
     },
     {
       "op": 5,
       "name": "conv2d_fused",
       "kernel": "mg_dwconv2d_nhwc_s8",
-      "cycles_total": 3735767,
-      "cycles_per_inference": 1245255.6666666667,
-      "share": 0.017336735864481385
+      "cycles_total": 3093431,
+      "cycles_per_inference": 1031143.6666666666,
+      "share": 0.014907396785419368
     },
     {
       "op": 6,
       "name": "conv2d_fused",
       "kernel": "mg_conv1x1_nhwc_s8",
-      "cycles_total": 13696400,
-      "cycles_per_inference": 4565466.666666667,
-      "share": 0.06356147722657297
+      "cycles_total": 13543796,
+      "cycles_per_inference": 4514598.666666667,
+      "share": 0.0652682219040204
     },
     {
       "op": 7,
       "name": "conv2d_fused",
       "kernel": "mg_dwconv2d_nhwc_s8",
-      "cycles_total": 8753864,
-      "cycles_per_inference": 2917954.6666666665,
-      "share": 0.040624436149682905
+      "cycles_total": 7779816,
+      "cycles_per_inference": 2593272.0,
+      "share": 0.03749131757894524
     },
     {
       "op": 8,
       "name": "conv2d_fused",
       "kernel": "mg_conv1x1_nhwc_s8",
-      "cycles_total": 25443879,
-      "cycles_per_inference": 8481293.0,
-      "share": 0.11807851228163448
+      "cycles_total": 25291263,
+      "cycles_per_inference": 8430421.0,
+      "share": 0.12187984562946315
     },
     {
       "op": 9,
       "name": "conv2d_fused",
       "kernel": "mg_dwconv2d_nhwc_s8",
-      "cycles_total": 2382812,
-      "cycles_per_inference": 794270.6666666666,
-      "share": 0.011058018944628135
+      "cycles_total": 1879442,
+      "cycles_per_inference": 626480.6666666666,
+      "share": 0.009057123830847414
     },
     {
       "op": 10,
       "name": "conv2d_fused",
       "kernel": "mg_conv1x1_nhwc_s8",
-      "cycles_total": 12787766,
-      "cycles_per_inference": 4262588.666666667,
-      "share": 0.0593447400329827
+      "cycles_total": 12694778,
+      "cycles_per_inference": 4231592.666666667,
+      "share": 0.06117676222576567
     },
     {
       "op": 11,
       "name": "conv2d_fused",
       "kernel": "mg_dwconv2d_nhwc_s8",
-      "cycles_total": 5719471,
-      "cycles_per_inference": 1906490.3333333333,
-      "share": 0.0265425970119553
+      "cycles_total": 5212806,
+      "cycles_per_inference": 1737602.0,
+      "share": 0.025120769594477715
     },
     {
       "op": 12,
       "name": "conv2d_fused",
       "kernel": "mg_conv1x1_nhwc_s8",
-      "cycles_total": 24584930,
-      "cycles_per_inference": 8194976.666666667,
-      "share": 0.11409235042141663
+      "cycles_total": 24491747,
+      "cycles_per_inference": 8163915.666666667,
+      "share": 0.11802693853430203
     },
     {
       "op": 13,
       "name": "avgpool2d",
       "kernel": "mg_avgpool2d_nhwc_s8",
-      "cycles_total": 188268,
-      "cycles_per_inference": 62756.0,
-      "share": 0.0008737034691227213
+      "cycles_total": 188292,
+      "cycles_per_inference": 62764.0,
+      "share": 0.0009073884484639171
     },
     {
       "op": 15,
       "name": "matmul_fused",
       "kernel": "mg_fc_s8",
-      "cycles_total": 113667,
-      "cycles_per_inference": 37889.0,
-      "share": 0.0005274993744277963
+      "cycles_total": 114060,
+      "cycles_per_inference": 38020.0,
+      "share": 0.0005496607738607822
     }
   ],
-  "sum_op_cycles_per_inference": 71827573.33333333,
-  "profile_build_cycles_median": 71827951,
+  "sum_op_cycles_per_inference": 69169935.0,
+  "profile_build_cycles_median": 69171255,
   "accuracy": 1.0,
-  "sim_cycles": 215783885,
-  "wall_s": 1796.09,
-  "sim_cpu_s": 49.83,
-  "commit": "7da607d7200c552b41297e2817fa2493049d0cb8",
-  "date": "2026-10-10T12:01:42+00:00",
+  "sim_cycles": 207880716,
+  "wall_s": 413.37,
+  "sim_cpu_s": 82.73,
+  "commit": "f9ef16f4d583f45dda46a78effd5532d1bba22ba",
+  "date": "2026-10-18T23:32:17+00:00",
   "compiler": "riscv-none-elf-gcc (xPack GNU RISC-V Embedded GCC arm64) 15.2.0",
   "flags": "-O2 -march=rv32im_zicsr -mabi=ilp32 -nostdlib -ffreestanding -fno-builtin -Wall -Wextra -Wl,--no-warn-rwx-segments -Wl,--gc-sections -DBENCH_BOARD=\"picorv32-soc\" -DBENCH_RUNS=1 -DMCUACCEL_PROFILE",
   "picorv32_config": "ENABLE_COUNTERS=1 ENABLE_COUNTERS64=1 ENABLE_REGS_16_31=1 ENABLE_REGS_DUALPORT=1 LATCHED_MEM_RDATA=0 TWO_STAGE_SHIFT=1 BARREL_SHIFTER=1 TWO_CYCLE_COMPARE=0 TWO_CYCLE_ALU=0 COMPRESSED_ISA=0 CATCH_MISALIGN=1 CATCH_ILLINSN=1 ENABLE_PCPI=0 ENABLE_MUL=0 ENABLE_FAST_MUL=1 ENABLE_DIV=1 ENABLE_IRQ=0 ENABLE_TRACE=0 PROGADDR_RESET=0x80000000 STACKADDR=0x80100000 (SPEC section 7)",
   "images": 2,
   "runs": 1,
-  "image_bytes": 86442,
+  "image_bytes": 104044,
   "x_align": 0
 }

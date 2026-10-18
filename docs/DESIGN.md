@@ -428,8 +428,10 @@ code: the accelerated build's fallback kernels must be the same machine code as 
 M5 checks it by measurement: both builds are also made with `-DMCUACCEL_PROFILE` and every
 fallback `op_*` must report identical per-op cycles in both (the simulator is deterministic; an
 objdump hash of `mg_*` symbols would pass vacuously because -O2 inlines the kernels into
-`model_run`, T4.3). If they differ, both builds compile the kernels in one shared translation unit
-with `__attribute__((noinline))` (recorded in DECISIONS). The emitted file also carries
+`model_run`, T4.3). They differed by a few cycles per op, so both builds pin inlining at build time (`mg_*`
+always_inline, `op_*` noinline, source text unchanged) and the emitted code calls
+`input = ad_bind_once(input)` to keep `input` in a0 as in the baseline; with that the per-op
+cycles are equal (D19; the shared noinline translation unit was tried and rejected as 71 % slower). The emitted file also carries
 `#define MCUACCEL_P <P>`; `ad_bind` compares it with CONFIG[7:0] and fails with the fail code on
 a mismatch (firmware emitted for one P never silently runs on another).
 

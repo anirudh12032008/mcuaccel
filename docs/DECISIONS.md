@@ -171,3 +171,36 @@ transparency, the uncommitted P = 8 smoke runs on the pre-fix RTL (a2e8c4b + wor
 meas 135,281 vs pred 135,876). Red-team timing shape (P = 4, conv 1x1, C = 4, O = 32, 4x4): ISSUE
 588 -> 494 cycles, command total 770 -> 676.
 
+
+## D19 Orchestrator: fallback-kernel fairness via pinned inlining; baseline re-measured (2026-10-19)
+Problem: the M5 profile builds (`run_soc.py --profile`) showed the same fallback op costing a constant
+few cycles more or less in the accelerated build than in the baseline (mnist transposes +28/+4,
+maxpool op 2 +4, cifar avgpool +7), although the C text is identical (D18 test). Cause: GCC inlines
+and register-allocates `mg_*` into `op_*` and `op_*` into `model_run` differently when the file holds
+a different set of ops (e.g. a kernel called twice vs once), so identical text is not identical code.
+SPEC §7 / DESIGN 6.5 require identical machine code for fallback ops.
+Options: (a) all kernels external + `noinline` in one shared translation unit `mg_kernels.c` compiled
+for both builds (the SPEC §7 text). Built and measured: fairness passed after (c) below, but it
+removes constant propagation into the kernels, slowing everything: baseline mnist 13,579,626
+(+11%), accelerated mnist 771,918 (+71%), because fallback ops dominate the accelerated runtime.
+(b) leave as is, report the deltas: rejected, requirement is exact equality. (c) CHOSEN, in
+`sw/build_fw.py::pin_inlining`, applied to every build including the baseline: `mg_*` kernels
+`static inline __attribute__((always_inline))` (each kernel is inlined into its one `op_*`, with that
+op's constants) and `op_*` `__attribute__((noinline))`. Each fallback `op_*` is then compiled from
+its own text alone. Kernel and op source text is unchanged; only the attributes are added by a
+regex at build time (the files under third_party/mcugrad are untouched).
+Second source of difference, found with objdump: in the accelerated `model_run` the `ad_bind()`
+call before the first op clobbered a0, so a `mv a0,input` landed inside the first op's profiled
+interval (+4 cycles, op 0 mnist). Fix in `emit.py`: `input = ad_bind_once(input);` with
+`ad_bind_once` noinline and returning its argument, so `input` is in a0 as in the baseline.
+This amends D6 ("baseline = mcugrad model.c unchanged"): the baseline is now the same source with
+the two attribute changes above, re-measured at 10 images x 3 runs (D17), same flags and SoC.
+Before / after (cycles_median): baseline mnist 12,188,028 -> 11,383,383; baseline cifar
+72,157,425 -> 69,169,620; accelerated P=8 mnist 451,480 -> 243,059; cifar 197,617 -> 197,613.
+The mnist accelerated number nearly halves with no accelerator change: its runtime was dominated by
+the maxpool/transpose fallbacks, which the old inlining compiled badly; the speedup over baseline
+is 27.0x -> 46.8x on mnist (cifar 365x -> 350x). Anything quoting the old numbers is stale.
+Result: `m5_profile_*_P8.json` fairness pass, per-inference cycles of every fallback op equal in
+both builds (mnist ops 0,2,4,5; cifar op 13 avgpool; 3 inferences compared each).
+Not done: the objdump identity check of DESIGN 6.5 (cycle equality is the criterion, D18 (8)); the
+shared-TU wording in SPEC §7 / DESIGN 6.5 is not edited and should say "pinned inlining" instead.
