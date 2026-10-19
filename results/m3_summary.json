@@ -1,0 +1,182 @@
+{
+ "layers": {
+  "1": {
+   "rows": 1000,
+   "mismatch_bytes": 0,
+   "problems": 0,
+   "first_problems": []
+  },
+  "2": {
+   "rows": 1000,
+   "mismatch_bytes": 0,
+   "problems": 0,
+   "first_problems": []
+  },
+  "4": {
+   "rows": 1000,
+   "mismatch_bytes": 0,
+   "problems": 0,
+   "first_problems": []
+  },
+  "8": {
+   "rows": 1000,
+   "mismatch_bytes": 0,
+   "problems": 0,
+   "first_problems": []
+  },
+  "16": {
+   "rows": 1000,
+   "mismatch_bytes": 0,
+   "problems": 0,
+   "first_problems": []
+  }
+ },
+ "chains_errors": {
+  "1": {
+   "chains": {
+    "runs": 100,
+    "problems": 0,
+    "first_problems": []
+   },
+   "errors": {
+    "runs": 290,
+    "problems": 0,
+    "first_problems": []
+   },
+   "start_while_busy": {
+    "runs": 2,
+    "problems": 0,
+    "first_problems": []
+   }
+  },
+  "2": {
+   "chains": {
+    "runs": 100,
+    "problems": 0,
+    "first_problems": []
+   },
+   "errors": {
+    "runs": 290,
+    "problems": 0,
+    "first_problems": []
+   },
+   "start_while_busy": {
+    "runs": 2,
+    "problems": 0,
+    "first_problems": []
+   }
+  },
+  "4": {
+   "chains": {
+    "runs": 100,
+    "problems": 0,
+    "first_problems": []
+   },
+   "errors": {
+    "runs": 290,
+    "problems": 0,
+    "first_problems": []
+   },
+   "start_while_busy": {
+    "runs": 2,
+    "problems": 0,
+    "first_problems": []
+   }
+  },
+  "8": {
+   "chains": {
+    "runs": 100,
+    "problems": 0,
+    "first_problems": []
+   },
+   "errors": {
+    "runs": 290,
+    "problems": 0,
+    "first_problems": []
+   },
+   "start_while_busy": {
+    "runs": 2,
+    "problems": 0,
+    "first_problems": []
+   }
+  },
+  "16": {
+   "chains": {
+    "runs": 100,
+    "problems": 0,
+    "first_problems": []
+   },
+   "errors": {
+    "runs": 290,
+    "problems": 0,
+    "first_problems": []
+   },
+   "start_while_busy": {
+    "runs": 2,
+    "problems": 0,
+    "first_problems": []
+   }
+  }
+ },
+ "commit": "f9ef16f",
+ "rtl_accel_dirty": false,
+ "date": "2026-10-18T23:59:26+00:00",
+ "verilator": "Verilator 5.053 devel rev v5.052-119-g014c9820d (mod)",
+ "cocotb": "2.1.0",
+ "seeds": [
+  0,
+  999
+ ],
+ "Ps": [
+  1,
+  2,
+  4,
+  8,
+  16
+ ],
+ "chains_per_P": 100,
+ "error_chains_per_P": 10,
+ "quick": false,
+ "whole_network": {
+  "report": {
+   "mnist_cnn": "10 images, 30 accelerated node executions",
+   "_images": {
+    "mnist_cnn": 10,
+    "cifar_mobilenet": 10
+   },
+   "cifar_mobilenet": "10 images, 140 accelerated node executions",
+   "_mismatch_bytes": 0
+  },
+  "problems": []
+ },
+ "job_errors": [],
+ "job_secs": {
+  "layers_P1_s0": 86.4,
+  "layers_P1_s1": 78.8,
+  "layers_P1_s2": 121.0,
+  "layers_P1_s3": 104.9,
+  "chains_P1": 373.7,
+  "layers_P2_s0": 72.9,
+  "layers_P2_s1": 63.1,
+  "layers_P2_s2": 83.2,
+  "layers_P2_s3": 77.2,
+  "chains_P2": 284.4,
+  "layers_P4_s0": 62.9,
+  "layers_P4_s1": 66.9,
+  "layers_P4_s2": 119.2,
+  "layers_P4_s3": 113.2,
+  "chains_P4": 198.3,
+  "layers_P8_s0": 57.4,
+  "layers_P8_s1": 58.0,
+  "layers_P8_s2": 76.4,
+  "layers_P8_s3": 69.3,
+  "chains_P8": 174.5,
+  "layers_P16_s0": 59.0,
+  "layers_P16_s1": 53.7,
+  "layers_P16_s2": 71.9,
+  "layers_P16_s3": 69.8,
+  "chains_P16": 176.5,
+  "net_P8": 906.1
+ },
+ "wall_secs": 1567.4
+}

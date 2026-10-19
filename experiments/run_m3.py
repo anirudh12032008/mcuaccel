@@ -7,7 +7,7 @@ provenance), results/m5_bitexact.json c2b_* keys (c2c_* keys are preserved).
 Jobs run in at most 4 worker threads (each sim is its own subprocess), each with its own output dir under build/m3/.
 Usage: python experiments/run_m3.py [--quick]   (quick = 40 seeds, 2 images, for plumbing)
 """
-import argparse, csv, json, os, re, subprocess, sys, time
+import argparse, copy, csv, json, os, re, subprocess, sys, time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tb"))
 PS = [1, 2, 4, 8, 16]
+RUNNERS = {}
 SHARDS = 4
 WORK = ROOT / "build" / "m3"
 
@@ -26,8 +27,7 @@ def sim(module, P, job, env, testcase=None):
     out = WORK / job
     out.mkdir(parents=True, exist_ok=True)
     build = ROOT / "build" / f"accel_P{P}"
-    r = get_runner("verilator")
-    # built once by prebuild(); rebuilding inside parallel jobs races
+    r = copy.deepcopy(RUNNERS[P])        # per-job copy: a shared runner cross-wired concurrent jobs; built once by prebuild(); rebuilding inside parallel jobs races
     t = time.time()
     try:
         r.test(hdl_toplevel="mcuaccel_top", test_module=module, test_dir=str(ROOT / "tb/accel"),
@@ -60,10 +60,10 @@ def prebuild(P):
     from accel import harness as H  # noqa: F401
     from cocotb_tools.runner import get_runner
     build = ROOT / "build" / f"accel_P{P}"
-    get_runner("verilator").build(
-        sources=[str(s) for s in sorted((ROOT / "rtl/accel").glob("*.sv"))], hdl_toplevel="mcuaccel_top",
-        build_dir=build / "sim", parameters={"P": P}, always=False,
-        build_args=["-Wno-fatal", "--timing", str(ROOT / "syn/lint.vlt")])
+    RUNNERS[P] = r = get_runner("verilator")
+    r.build(sources=[str(s) for s in sorted((ROOT / "rtl/accel").glob("*.sv"))], hdl_toplevel="mcuaccel_top",
+            build_dir=build / "sim", parameters={"P": P}, always=False,
+            build_args=["-Wno-fatal", "--timing", str(ROOT / "syn/lint.vlt")])
 
 
 def jload(p):
