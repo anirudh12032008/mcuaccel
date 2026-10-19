@@ -3,6 +3,7 @@
     run_soc.py --model mnist_cnn --P 8 [--P 1 --P 2 ...] [--images 10 --runs 3]      timing  -> results/m5_accel_<model>_P<P>.json
     run_soc.py ... --profile [--prof-images 10 --prof-runs 1 --base-images 2]         -> results/m5_profile_<model>_P<P>.json
                                                                                       + results/m6_c4b.json (P=8 only)
+    run_soc.py ... --stamps [--images 10]                                              -> results/m6_stamps_<model>_P<P>.json
     run_soc.py ... --bitexact 100 [--bitexact-baseline]                               -> results/m5_bitexact.json
 Per P the emitted model.c (backend emit_dir) is built with build_fw and run on build/sim_P<P>/Vsoc_top
 (soc_top -GP=<P>). Defaults overwrite; nothing is skipped. A failing run exits non-zero with the
@@ -226,6 +227,46 @@ def profile(model: str, P: int, a, base_cache: dict) -> None:
         put("m6_c4b.json", cur)
 
 
+# ---------------------------------------------------------------- measured STAMPs (C4a, C5)
+def command_list(model: str, P: int) -> tuple[list, list]:
+    """-> ([[op, split index]] in execution order, commands per chain call); op = graph node index, as in m1_predictions.csv."""
+    from mcuaccel_backend.emit import plan
+    from mcuaccel_backend.graphs import load_int8_graph
+    from mcuaccel_backend.layers import from_node
+    from mcuaccel_backend.split import build_commands
+    g = load_int8_graph(model)
+    _, chains, _ = plan(g)
+    cmds, per_chain = [], []
+    for members in chains:
+        n0 = len(cmds)
+        for i in members:
+            cmds += [[i, k] for k in range(len(build_commands(from_node(g, g.nodes[i]), P, 0, 0, 0, 0, 0, 0x1000)))]
+        per_chain.append(len(cmds) - n0)
+    return cmds, per_chain
+
+
+def stamps(model: str, P: int, a) -> None:
+    """Instrumented build (-DMCUACCEL_STAMPS: the driver logs CYCLES and every descriptor's STAMP after each chain);
+    warm-up + `images` inferences (1 run). Not a timed build; headline cycles come from timing()."""
+    sim = sim_binary(P)
+    b = build_fw.build(model, a.images, 1, model_dir=emit(model, P), out=fw_dir(f"accel_P{P}_stamps", model, a.images, 1),
+                       defines=["MCUACCEL_STAMPS"])
+    r = run_sim(sim, b["hex"], a.max_cycles)
+    chains = [(int(c), int(cy), int(n), [int(v) for v in rest.split()])
+              for c, cy, n, rest in re.findall(r"^MCUACCEL_STAMPS chain=(\d+) cycles=(\d+) ncmd=(\d+) :((?: \d+)*)$", r["stdout"], re.M)]
+    cmds, per_chain = command_list(model, P)
+    nc = len(per_chain)
+    if "MCUACCEL_STAMPS_DONE" not in r["stdout"] or len(chains) != nc * (1 + a.images) or any(
+            len(st) != n or n != per_chain[j % nc] for j, (_, _, n, st) in enumerate(chains)):
+        sys.exit(f"STAMP log shape mismatch ({len(chains)} chain calls, want {nc} x {1 + a.images}); log {r['log']}")
+    out = {"model": model, "P": P, "kind": "STAMP/CYCLES log of an instrumented build (-DMCUACCEL_STAMPS), warm-up + images, 1 run; inference 0 = warm-up",
+           "commands": cmds, "commands_per_chain": per_chain,
+           "inferences": [[{"cycles": cy, "stamps": st} for (_, cy, _, st) in chains[k * nc:(k + 1) * nc]] for k in range(1 + a.images)],
+           "log": os.path.relpath(r["log"], ROOT), **meta(b, a.images, 1, P)}
+    path = put(f"m6_stamps_{model}_P{P}.json", out)
+    print(f"{model} P={P}: {len(cmds)} commands in {nc} chains, {1 + a.images} inferences -> {path}")
+
+
 # ---------------------------------------------------------------- bit-exactness (C2c)
 def ref_images(model: str, n: int) -> tuple[list, list]:
     """First n quantised test images from the committed testset.c head (the firmware's own images are
@@ -237,7 +278,7 @@ def ref_images(model: str, n: int) -> tuple[list, list]:
     nb = 1
     for d in shape:
         nb *= d
-    head = open(os.path.join(build_fw.MG, "generated", model, "testset.c")).read(n * nb * 6 + 4096).split("= {", 1)[1]
+    head = open(os.path.join(build_fw.MG, "generated", model, "testset.c")).read(n * nb * 8 + 8192).split("= {", 1)[1]
     v = [int(t) for t in re.findall(r"-?\d+", head)][: n * nb]
     assert len(v) == n * nb, "committed testset.c has fewer images than requested"
     xs = [array("b", v[i * nb:(i + 1) * nb]) for i in range(n)]
@@ -299,6 +340,7 @@ if __name__ == "__main__":
     ap.add_argument("--prof-images", type=int, default=10, help="accelerated profile build (C4b needs 10)")
     ap.add_argument("--base-images", type=int, default=2, help="baseline profile build (fairness only; slow)")
     ap.add_argument("--prof-runs", type=int, default=1)
+    ap.add_argument("--stamps", action="store_true", help="STAMP/CYCLES log for C4a/C5 (see experiments/compare_m1.py)")
     ap.add_argument("--bitexact", type=int, metavar="N", help="C2c over N images (SPEC: 100)")
     ap.add_argument("--bitexact-baseline", action="store_true", help="also run the baseline firmware on the N images (slow) and compare")
     ap.add_argument("--max-cycles", type=int, default=20_000_000_000)
@@ -306,7 +348,9 @@ if __name__ == "__main__":
     cache: dict = {}
     for m in a.model or MODELS:
         for P in a.P or [8]:
-            if a.profile:
+            if a.stamps:
+                stamps(m, P, a)
+            elif a.profile:
                 profile(m, P, a, cache)
             elif a.bitexact:
                 bitexact(m, P, a)

@@ -2,6 +2,9 @@
 #include <stdint.h>
 #include "platform.h"
 #include "platform_soc.h"
+#ifdef MCUACCEL_STAMPS
+#include "mcuaccel.h"
+#endif
 
 #define STACK_WINDOW 16384u
 
@@ -20,6 +23,9 @@ int main(void)
     mcugrad_bench_run();
 #ifdef MCUACCEL_PROFILE
     prof_dump();
+#endif
+#ifdef MCUACCEL_STAMPS
+    mcuaccel_stamps_dump();
 #endif
     return 0;
 }

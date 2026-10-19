@@ -247,8 +247,12 @@ for m, M in MODELS.items():
     else:
         todo(f"MeasCfourB{M}", f"C4b measured {m}", "results/m6_c4b.json")
         todo(f"MeasCfourBErr{M}", f"C4b error {m}", "results/m6_c4b.json")
-for nm in ("PstarMeasMnist", "PstarMeasCifar"):
-    todo(nm, "measured saturation width", "results/m5_accel_*_P*.json (sum STAMP)")
+c5 = load(R / "m6_c5.json")
+for nm, m in (("PstarMeasMnist", "mnist_cnn"), ("PstarMeasCifar", "cifar_mobilenet")):
+    if c5:
+        emit(nm, c5["models"][m]["measured_pstar"], f"results/m6_c5.json models.{m}.measured_pstar (16 = not reached)")
+    else:
+        todo(nm, "measured saturation width", "results/m6_c5.json (sum STAMP)")
 
 # ---- tables (generated, no typed numbers)
 with open(ROOT / "paper/tab_pred_cmds.tex", "w") as t:

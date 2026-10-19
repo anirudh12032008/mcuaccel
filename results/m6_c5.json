@@ -1,0 +1,75 @@
+{
+  "rule": "SPEC C5: P* = smallest P whose sum(STAMP) is within 10% of P=16 (16 = not reached on this grid); descriptive",
+  "stamp_source": "median over 10 timed images of the per-inference sum of every command's STAMP (m6_stamps_*.json)",
+  "models": {
+    "mnist_cnn": {
+      "measured_sum_stamp": {
+        "1": 98240.0,
+        "2": 50707.0,
+        "4": 27626.0,
+        "8": 17665.0,
+        "16": 14299.0
+      },
+      "predicted_sum_stamp": {
+        "1": 98312,
+        "2": 50888,
+        "4": 27697,
+        "8": 18496,
+        "16": 15156
+      },
+      "measured_pstar": 16,
+      "predicted_pstar": 16,
+      "measured_model_run_cycles": {
+        "1": 323671,
+        "2": 276129,
+        "4": 253024,
+        "8": 243059,
+        "16": 239693
+      },
+      "measured_pstar_end_to_end": 4,
+      "predicted_pstar_end_to_end": 2,
+      "sum_stamp_ratio_to_P16": {
+        "1": 6.8704,
+        "2": 3.5462,
+        "4": 1.932,
+        "8": 1.2354,
+        "16": 1.0
+      }
+    },
+    "cifar_mobilenet": {
+      "measured_sum_stamp": {
+        "1": 581949.0,
+        "2": 322472.0,
+        "4": 191898.0,
+        "8": 134457.0,
+        "16": 110490.0
+      },
+      "predicted_sum_stamp": {
+        "1": 582676,
+        "2": 322660,
+        "4": 192788,
+        "8": 135672,
+        "16": 112308
+      },
+      "measured_pstar": 16,
+      "predicted_pstar": 16,
+      "measured_model_run_cycles": {
+        "1": 645173,
+        "2": 385685,
+        "4": 255033,
+        "8": 197613,
+        "16": 173637
+      },
+      "measured_pstar_end_to_end": 16,
+      "predicted_pstar_end_to_end": 16,
+      "sum_stamp_ratio_to_P16": {
+        "1": 5.267,
+        "2": 2.9186,
+        "4": 1.7368,
+        "8": 1.2169,
+        "16": 1.0
+      }
+    }
+  },
+  "commit": "eca8a0621127d7606d160d137ab9ad0ecf727b14"
+}

@@ -1,0 +1,10 @@
+{
+  "mnist_cnn": {
+    "pred": 18736,
+    "meas": 18913
+  },
+  "cifar_mobilenet": {
+    "pred": 135876,
+    "meas": 135277
+  }
+}

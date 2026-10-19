@@ -1,0 +1,204 @@
+{
+  "model": "cifar_mobilenet",
+  "P": 8,
+  "kind": "PROFILE builds (-DMCUACCEL_PROFILE): rdcycle around each op_*/chain_* call plus per-inference history; instrumentation cost is inside the measured intervals (SPEC/T1.2 note). Headline cycles: m5_accel_*.json.",
+  "fairness": {
+    "pass": true,
+    "fallback_ops": [
+      [
+        13,
+        "avgpool2d"
+      ]
+    ],
+    "inferences_compared": 3,
+    "differing_ops": []
+  },
+  "c4b": {
+    "pred": 135876,
+    "meas": 135277,
+    "signed_error_pct": 0.443,
+    "within_10pct": true,
+    "bench_window_cycles": 120,
+    "pred_source": "git show m1:results/m1_summary.json models.<m>.archs.os.P.<P>.c4b_pred_cycles",
+    "per_image_meas": [
+      135277,
+      135277,
+      135277,
+      135277,
+      135277,
+      135277,
+      135277,
+      135277,
+      135277,
+      135277
+    ],
+    "interval_c1_minus_c0_per_timed_inference": [
+      198161,
+      198161,
+      198161,
+      198161,
+      198161,
+      198161,
+      198161,
+      198161,
+      198161,
+      198161
+    ],
+    "fallback_sum_per_image_run0": [
+      62764,
+      62764,
+      62764,
+      62764,
+      62764,
+      62764,
+      62764,
+      62764,
+      62764,
+      62764
+    ]
+  },
+  "accelerated_ops": [
+    {
+      "op": 0,
+      "name": "chain_0_0_12",
+      "kernel": "mcuaccel_run",
+      "cycles_total": 1473362,
+      "cycles_per_inference": 133942.0
+    },
+    {
+      "op": 13,
+      "name": "avgpool2d",
+      "kernel": "mg_avgpool2d_nhwc_s8",
+      "cycles_total": 690404,
+      "cycles_per_inference": 62764.0
+    },
+    {
+      "op": 15,
+      "name": "chain_1_15_15",
+      "kernel": "mcuaccel_run",
+      "cycles_total": 8030,
+      "cycles_per_inference": 730.0
+    }
+  ],
+  "accelerated_chains": [
+    [
+      0,
+      "chain_0_0_12"
+    ],
+    [
+      15,
+      "chain_1_15_15"
+    ]
+  ],
+  "baseline_ops": [
+    {
+      "op": 0,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv2d_nhwc_s8",
+      "cycles_total": 53084948
+    },
+    {
+      "op": 1,
+      "name": "conv2d_fused",
+      "kernel": "mg_dwconv2d_nhwc_s8",
+      "cycles_total": 5519082
+    },
+    {
+      "op": 2,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv1x1_nhwc_s8",
+      "cycles_total": 15296215
+    },
+    {
+      "op": 3,
+      "name": "conv2d_fused",
+      "kernel": "mg_dwconv2d_nhwc_s8",
+      "cycles_total": 12262302
+    },
+    {
+      "op": 4,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv1x1_nhwc_s8",
+      "cycles_total": 27057827
+    },
+    {
+      "op": 5,
+      "name": "conv2d_fused",
+      "kernel": "mg_dwconv2d_nhwc_s8",
+      "cycles_total": 3093431
+    },
+    {
+      "op": 6,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv1x1_nhwc_s8",
+      "cycles_total": 13543796
+    },
+    {
+      "op": 7,
+      "name": "conv2d_fused",
+      "kernel": "mg_dwconv2d_nhwc_s8",
+      "cycles_total": 7779816
+    },
+    {
+      "op": 8,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv1x1_nhwc_s8",
+      "cycles_total": 25291263
+    },
+    {
+      "op": 9,
+      "name": "conv2d_fused",
+      "kernel": "mg_dwconv2d_nhwc_s8",
+      "cycles_total": 1879442
+    },
+    {
+      "op": 10,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv1x1_nhwc_s8",
+      "cycles_total": 12694778
+    },
+    {
+      "op": 11,
+      "name": "conv2d_fused",
+      "kernel": "mg_dwconv2d_nhwc_s8",
+      "cycles_total": 5212806
+    },
+    {
+      "op": 12,
+      "name": "conv2d_fused",
+      "kernel": "mg_conv1x1_nhwc_s8",
+      "cycles_total": 24491747
+    },
+    {
+      "op": 13,
+      "name": "avgpool2d",
+      "kernel": "mg_avgpool2d_nhwc_s8",
+      "cycles_total": 188292
+    },
+    {
+      "op": 15,
+      "name": "matmul_fused",
+      "kernel": "mg_fc_s8",
+      "cycles_total": 114060
+    }
+  ],
+  "baseline_profile_images": 2,
+  "accelerated_profile_images": 10,
+  "profile_runs": 1,
+  "sim_cycles_accel": 2521100,
+  "sim_cycles_base": 207880716,
+  "logs": {
+    "accel": "build/fw/cifar_mobilenet_prof_accel_P8_i10_r1/fw.log",
+    "baseline": "build/fw/cifar_mobilenet_prof_base_i2_r1/fw.log"
+  },
+  "commit": "89953450e78213d418a7659d46e70b5808dc7d6a",
+  "tree_dirty": true,
+  "date": "2026-10-18T23:46:30+00:00",
+  "compiler": "riscv-none-elf-gcc (xPack GNU RISC-V Embedded GCC arm64) 15.2.0",
+  "flags": "-O2 -march=rv32im_zicsr -mabi=ilp32 -nostdlib -ffreestanding -fno-builtin -Wall -Wextra -Wl,--no-warn-rwx-segments -Wl,--gc-sections -DBENCH_BOARD=\"picorv32-soc\" -DBENCH_RUNS=1 -DMCUACCEL_PROFILE",
+  "picorv32_config": "ENABLE_COUNTERS=1 ENABLE_COUNTERS64=1 ENABLE_REGS_16_31=1 ENABLE_REGS_DUALPORT=1 LATCHED_MEM_RDATA=0 TWO_STAGE_SHIFT=1 BARREL_SHIFTER=1 TWO_CYCLE_COMPARE=0 TWO_CYCLE_ALU=0 COMPRESSED_ISA=0 CATCH_MISALIGN=1 CATCH_ILLINSN=1 ENABLE_PCPI=0 ENABLE_MUL=0 ENABLE_FAST_MUL=1 ENABLE_DIV=1 ENABLE_IRQ=0 ENABLE_TRACE=0 PROGADDR_RESET=0x80000000 STACKADDR=0x80100000 (SPEC section 7)",
+  "images": 10,
+  "runs": 1,
+  "image_bytes": 117228,
+  "x_align": 0
+}

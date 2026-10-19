@@ -48,4 +48,7 @@ uint32_t mcuaccel_read_cycles(void);
 /* NCMD register: commands completed in the last chain. */
 uint32_t mcuaccel_ncmd(void);
 
+/* -DMCUACCEL_STAMPS builds only: print the per-chain CYCLES and per-command STAMP log (C4a, C5). */
+void mcuaccel_stamps_dump(void);
+
 #endif

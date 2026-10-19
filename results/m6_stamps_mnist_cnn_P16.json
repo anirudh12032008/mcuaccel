@@ -1,0 +1,257 @@
+{
+  "model": "mnist_cnn",
+  "P": 16,
+  "kind": "STAMP/CYCLES log of an instrumented build (-DMCUACCEL_STAMPS), warm-up + images, 1 run; inference 0 = warm-up",
+  "commands": [
+    [
+      1,
+      0
+    ],
+    [
+      3,
+      0
+    ],
+    [
+      7,
+      0
+    ]
+  ],
+  "commands_per_chain": [
+    1,
+    1,
+    1
+  ],
+  "inferences": [
+    [
+      {
+        "cycles": 6383,
+        "stamps": [
+          6380
+        ]
+      },
+      {
+        "cycles": 4518,
+        "stamps": [
+          4515
+        ]
+      },
+      {
+        "cycles": 3407,
+        "stamps": [
+          3404
+        ]
+      }
+    ],
+    [
+      {
+        "cycles": 6383,
+        "stamps": [
+          6380
+        ]
+      },
+      {
+        "cycles": 4518,
+        "stamps": [
+          4515
+        ]
+      },
+      {
+        "cycles": 3407,
+        "stamps": [
+          3404
+        ]
+      }
+    ],
+    [
+      {
+        "cycles": 6383,
+        "stamps": [
+          6380
+        ]
+      },
+      {
+        "cycles": 4518,
+        "stamps": [
+          4515
+        ]
+      },
+      {
+        "cycles": 3407,
+        "stamps": [
+          3404
+        ]
+      }
+    ],
+    [
+      {
+        "cycles": 6383,
+        "stamps": [
+          6380
+        ]
+      },
+      {
+        "cycles": 4518,
+        "stamps": [
+          4515
+        ]
+      },
+      {
+        "cycles": 3407,
+        "stamps": [
+          3404
+        ]
+      }
+    ],
+    [
+      {
+        "cycles": 6383,
+        "stamps": [
+          6380
+        ]
+      },
+      {
+        "cycles": 4518,
+        "stamps": [
+          4515
+        ]
+      },
+      {
+        "cycles": 3407,
+        "stamps": [
+          3404
+        ]
+      }
+    ],
+    [
+      {
+        "cycles": 6383,
+        "stamps": [
+          6380
+        ]
+      },
+      {
+        "cycles": 4518,
+        "stamps": [
+          4515
+        ]
+      },
+      {
+        "cycles": 3407,
+        "stamps": [
+          3404
+        ]
+      }
+    ],
+    [
+      {
+        "cycles": 6383,
+        "stamps": [
+          6380
+        ]
+      },
+      {
+        "cycles": 4518,
+        "stamps": [
+          4515
+        ]
+      },
+      {
+        "cycles": 3407,
+        "stamps": [
+          3404
+        ]
+      }
+    ],
+    [
+      {
+        "cycles": 6383,
+        "stamps": [
+          6380
+        ]
+      },
+      {
+        "cycles": 4518,
+        "stamps": [
+          4515
+        ]
+      },
+      {
+        "cycles": 3407,
+        "stamps": [
+          3404
+        ]
+      }
+    ],
+    [
+      {
+        "cycles": 6383,
+        "stamps": [
+          6380
+        ]
+      },
+      {
+        "cycles": 4518,
+        "stamps": [
+          4515
+        ]
+      },
+      {
+        "cycles": 3407,
+        "stamps": [
+          3404
+        ]
+      }
+    ],
+    [
+      {
+        "cycles": 6383,
+        "stamps": [
+          6380
+        ]
+      },
+      {
+        "cycles": 4518,
+        "stamps": [
+          4515
+        ]
+      },
+      {
+        "cycles": 3407,
+        "stamps": [
+          3404
+        ]
+      }
+    ],
+    [
+      {
+        "cycles": 6383,
+        "stamps": [
+          6380
+        ]
+      },
+      {
+        "cycles": 4518,
+        "stamps": [
+          4515
+        ]
+      },
+      {
+        "cycles": 3407,
+        "stamps": [
+          3404
+        ]
+      }
+    ]
+  ],
+  "log": "build/fw/mnist_cnn_accel_P16_stamps_i10_r1/fw.log",
+  "commit": "eca8a0621127d7606d160d137ab9ad0ecf727b14",
+  "tree_dirty": true,
+  "date": "2026-10-18T23:43:15+00:00",
+  "compiler": "riscv-none-elf-gcc (xPack GNU RISC-V Embedded GCC arm64) 15.2.0",
+  "flags": "-O2 -march=rv32im_zicsr -mabi=ilp32 -nostdlib -ffreestanding -fno-builtin -Wall -Wextra -Wl,--no-warn-rwx-segments -Wl,--gc-sections -DBENCH_BOARD=\"picorv32-soc\" -DBENCH_RUNS=1 -DMCUACCEL_STAMPS",
+  "picorv32_config": "ENABLE_COUNTERS=1 ENABLE_COUNTERS64=1 ENABLE_REGS_16_31=1 ENABLE_REGS_DUALPORT=1 LATCHED_MEM_RDATA=0 TWO_STAGE_SHIFT=1 BARREL_SHIFTER=1 TWO_CYCLE_COMPARE=0 TWO_CYCLE_ALU=0 COMPRESSED_ISA=0 CATCH_MISALIGN=1 CATCH_ILLINSN=1 ENABLE_PCPI=0 ENABLE_MUL=0 ENABLE_FAST_MUL=1 ENABLE_DIV=1 ENABLE_IRQ=0 ENABLE_TRACE=0 PROGADDR_RESET=0x80000000 STACKADDR=0x80100000 (SPEC section 7)",
+  "images": 10,
+  "runs": 1,
+  "image_bytes": 56108,
+  "x_align": 0
+}

@@ -1,0 +1,895 @@
+{
+  "c4a": {
+    "rows": 108,
+    "predicted_rows_os": 108,
+    "unmatched": [],
+    "n_error_gt_20pct": 0,
+    "violations_total": 0,
+    "max_abs_err_pct": 12.398,
+    "median_signed_err_pct": 0.243,
+    "by_P": {
+      "1": {
+        "rows": 32,
+        "max_abs_err_pct": 0.628,
+        "median_signed_err_pct": 0.022
+      },
+      "2": {
+        "rows": 23,
+        "max_abs_err_pct": 0.864,
+        "median_signed_err_pct": 0.021
+      },
+      "4": {
+        "rows": 19,
+        "max_abs_err_pct": 1.44,
+        "median_signed_err_pct": 0.196
+      },
+      "8": {
+        "rows": 17,
+        "max_abs_err_pct": 12.398,
+        "median_signed_err_pct": 0.311
+      },
+      "16": {
+        "rows": 17,
+        "max_abs_err_pct": 12.351,
+        "median_signed_err_pct": 0.34
+      }
+    },
+    "worst10": [
+      {
+        "model": "mnist_cnn",
+        "op": 1,
+        "cmd": 0,
+        "P": 8,
+        "pred_cycles": 7144,
+        "meas_cycles": 6356,
+        "err_pct": 12.3977
+      },
+      {
+        "model": "mnist_cnn",
+        "op": 1,
+        "cmd": 0,
+        "P": 16,
+        "pred_cycles": 7168,
+        "meas_cycles": 6380,
+        "err_pct": 12.3511
+      },
+      {
+        "model": "cifar_mobilenet",
+        "op": 0,
+        "cmd": 0,
+        "P": 16,
+        "pred_cycles": 17648,
+        "meas_cycles": 16616,
+        "err_pct": 6.2109
+      },
+      {
+        "model": "cifar_mobilenet",
+        "op": 2,
+        "cmd": 0,
+        "P": 16,
+        "pred_cycles": 8720,
+        "meas_cycles": 8452,
+        "err_pct": 3.1708
+      },
+      {
+        "model": "cifar_mobilenet",
+        "op": 2,
+        "cmd": 0,
+        "P": 8,
+        "pred_cycles": 8712,
+        "meas_cycles": 8452,
+        "err_pct": 3.0762
+      },
+      {
+        "model": "cifar_mobilenet",
+        "op": 4,
+        "cmd": 0,
+        "P": 16,
+        "pred_cycles": 8848,
+        "meas_cycles": 8584,
+        "err_pct": 3.0755
+      },
+      {
+        "model": "cifar_mobilenet",
+        "op": 0,
+        "cmd": 0,
+        "P": 8,
+        "pred_cycles": 27724,
+        "meas_cycles": 27029,
+        "err_pct": 2.5713
+      },
+      {
+        "model": "cifar_mobilenet",
+        "op": 6,
+        "cmd": 0,
+        "P": 16,
+        "pred_cycles": 4912,
+        "meas_cycles": 4840,
+        "err_pct": 1.4876
+      },
+      {
+        "model": "cifar_mobilenet",
+        "op": 0,
+        "cmd": 0,
+        "P": 4,
+        "pred_cycles": 50092,
+        "meas_cycles": 49381,
+        "err_pct": 1.4398
+      },
+      {
+        "model": "mnist_cnn",
+        "op": 3,
+        "cmd": 0,
+        "P": 16,
+        "pred_cycles": 4580,
+        "meas_cycles": 4515,
+        "err_pct": 1.4396
+      }
+    ],
+    "stamps_varying_across_images": [],
+    "verdict": "confirmed"
+  },
+  "cycles_identity_per_chain": [
+    {
+      "model": "mnist_cnn",
+      "P": 1,
+      "chain_calls": 33,
+      "identity_holds": 0,
+      "identity_fails": 33,
+      "delta_histogram": {
+        "-1": 33
+      },
+      "fails": [
+        {
+          "inference": 0,
+          "chain": 0,
+          "cycles": 39225,
+          "want": 39226,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 1,
+          "cycles": 54901,
+          "want": 54902,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 2,
+          "cycles": 4131,
+          "want": 4132,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 0,
+          "cycles": 39225,
+          "want": 39226,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 1,
+          "cycles": 54901,
+          "want": 54902,
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "model": "mnist_cnn",
+      "P": 2,
+      "chain_calls": 33,
+      "identity_holds": 0,
+      "identity_fails": 33,
+      "delta_histogram": {
+        "-1": 33
+      },
+      "fails": [
+        {
+          "inference": 0,
+          "chain": 0,
+          "cycles": 19905,
+          "want": 19906,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 1,
+          "cycles": 27734,
+          "want": 27735,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 2,
+          "cycles": 3081,
+          "want": 3082,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 0,
+          "cycles": 19905,
+          "want": 19906,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 1,
+          "cycles": 27734,
+          "want": 27735,
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "model": "mnist_cnn",
+      "P": 4,
+      "chain_calls": 33,
+      "identity_holds": 0,
+      "identity_fails": 33,
+      "delta_histogram": {
+        "-1": 33
+      },
+      "fails": [
+        {
+          "inference": 0,
+          "chain": 0,
+          "cycles": 10487,
+          "want": 10488,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 1,
+          "cycles": 14104,
+          "want": 14105,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 2,
+          "cycles": 3046,
+          "want": 3047,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 0,
+          "cycles": 10487,
+          "want": 10488,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 1,
+          "cycles": 14104,
+          "want": 14105,
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "model": "mnist_cnn",
+      "P": 8,
+      "chain_calls": 33,
+      "identity_holds": 0,
+      "identity_fails": 33,
+      "delta_histogram": {
+        "-1": 33
+      },
+      "fails": [
+        {
+          "inference": 0,
+          "chain": 0,
+          "cycles": 6359,
+          "want": 6360,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 1,
+          "cycles": 7718,
+          "want": 7719,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 2,
+          "cycles": 3597,
+          "want": 3598,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 0,
+          "cycles": 6359,
+          "want": 6360,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 1,
+          "cycles": 7718,
+          "want": 7719,
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "model": "mnist_cnn",
+      "P": 16,
+      "chain_calls": 33,
+      "identity_holds": 0,
+      "identity_fails": 33,
+      "delta_histogram": {
+        "-1": 33
+      },
+      "fails": [
+        {
+          "inference": 0,
+          "chain": 0,
+          "cycles": 6383,
+          "want": 6384,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 1,
+          "cycles": 4518,
+          "want": 4519,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 2,
+          "cycles": 3407,
+          "want": 3408,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 0,
+          "cycles": 6383,
+          "want": 6384,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 1,
+          "cycles": 4518,
+          "want": 4519,
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "model": "cifar_mobilenet",
+      "P": 1,
+      "chain_calls": 22,
+      "identity_holds": 0,
+      "identity_fails": 22,
+      "delta_histogram": {
+        "-1": 22
+      },
+      "fails": [
+        {
+          "inference": 0,
+          "chain": 0,
+          "cycles": 581286,
+          "want": 581287,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 1,
+          "cycles": 715,
+          "want": 716,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 0,
+          "cycles": 581286,
+          "want": 581287,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 1,
+          "cycles": 715,
+          "want": 716,
+          "delta": -1
+        },
+        {
+          "inference": 2,
+          "chain": 0,
+          "cycles": 581286,
+          "want": 581287,
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "model": "cifar_mobilenet",
+      "P": 2,
+      "chain_calls": 22,
+      "identity_holds": 0,
+      "identity_fails": 22,
+      "delta_histogram": {
+        "-1": 22
+      },
+      "fails": [
+        {
+          "inference": 0,
+          "chain": 0,
+          "cycles": 321959,
+          "want": 321960,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 1,
+          "cycles": 551,
+          "want": 552,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 0,
+          "cycles": 321959,
+          "want": 321960,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 1,
+          "cycles": 551,
+          "want": 552,
+          "delta": -1
+        },
+        {
+          "inference": 2,
+          "chain": 0,
+          "cycles": 321959,
+          "want": 321960,
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "model": "cifar_mobilenet",
+      "P": 4,
+      "chain_calls": 22,
+      "identity_holds": 0,
+      "identity_fails": 22,
+      "delta_histogram": {
+        "-1": 22
+      },
+      "fails": [
+        {
+          "inference": 0,
+          "chain": 0,
+          "cycles": 191381,
+          "want": 191382,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 1,
+          "cycles": 549,
+          "want": 550,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 0,
+          "cycles": 191381,
+          "want": 191382,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 1,
+          "cycles": 549,
+          "want": 550,
+          "delta": -1
+        },
+        {
+          "inference": 2,
+          "chain": 0,
+          "cycles": 191381,
+          "want": 191382,
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "model": "cifar_mobilenet",
+      "P": 8,
+      "chain_calls": 22,
+      "identity_holds": 0,
+      "identity_fails": 22,
+      "delta_histogram": {
+        "-1": 22
+      },
+      "fails": [
+        {
+          "inference": 0,
+          "chain": 0,
+          "cycles": 133842,
+          "want": 133843,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 1,
+          "cycles": 645,
+          "want": 646,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 0,
+          "cycles": 133842,
+          "want": 133843,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 1,
+          "cycles": 645,
+          "want": 646,
+          "delta": -1
+        },
+        {
+          "inference": 2,
+          "chain": 0,
+          "cycles": 133842,
+          "want": 133843,
+          "delta": -1
+        }
+      ]
+    },
+    {
+      "model": "cifar_mobilenet",
+      "P": 16,
+      "chain_calls": 22,
+      "identity_holds": 0,
+      "identity_fails": 22,
+      "delta_histogram": {
+        "-1": 22
+      },
+      "fails": [
+        {
+          "inference": 0,
+          "chain": 0,
+          "cycles": 109901,
+          "want": 109902,
+          "delta": -1
+        },
+        {
+          "inference": 0,
+          "chain": 1,
+          "cycles": 619,
+          "want": 620,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 0,
+          "cycles": 109901,
+          "want": 109902,
+          "delta": -1
+        },
+        {
+          "inference": 1,
+          "chain": 1,
+          "cycles": 619,
+          "want": 620,
+          "delta": -1
+        },
+        {
+          "inference": 2,
+          "chain": 0,
+          "cycles": 109901,
+          "want": 109902,
+          "delta": -1
+        }
+      ]
+    }
+  ],
+  "amdahl_P8": {
+    "mnist_cnn": {
+      "source": "results/m5_profile_mnist_cnn_P8.json (PROFILE build, instrumentation inside the intervals); per-op mean over warm-up + 10 timed inferences",
+      "interval_median_cycles": 244015.5,
+      "chains_cycles_mean": 17916.0,
+      "fallback_cycles_mean": 224953.81818181818,
+      "chains_share": 0.0737679145730148,
+      "fallback_share": 0.9262320854269852,
+      "other_cycles_mean_interval_minus_ops": 1121.7818181818293,
+      "ops": [
+        {
+          "op": 0,
+          "name": "transpose",
+          "kernel": "mg_transpose_nchw_to_nhwc_s8",
+          "cycles_mean": 23344.0
+        },
+        {
+          "op": 1,
+          "name": "chain_0_1_1",
+          "kernel": "mcuaccel_run",
+          "cycles_mean": 6437.0
+        },
+        {
+          "op": 2,
+          "name": "maxpool2d",
+          "kernel": "mg_maxpool2d_nhwc_s8",
+          "cycles_mean": 116904.45454545454
+        },
+        {
+          "op": 3,
+          "name": "chain_1_3_3",
+          "kernel": "mcuaccel_run",
+          "cycles_mean": 7797.0
+        },
+        {
+          "op": 4,
+          "name": "maxpool2d",
+          "kernel": "mg_maxpool2d_nhwc_s8",
+          "cycles_mean": 60753.36363636364
+        },
+        {
+          "op": 5,
+          "name": "transpose",
+          "kernel": "mg_transpose_nchw_to_nhwc_s8",
+          "cycles_mean": 23952.0
+        },
+        {
+          "op": 7,
+          "name": "chain_2_7_7",
+          "kernel": "mcuaccel_run",
+          "cycles_mean": 3682.0
+        }
+      ],
+      "fairness_pass": true,
+      "c4b": {
+        "pred": 18736,
+        "meas": 18913,
+        "signed_error_pct": -0.936,
+        "within_10pct": true
+      }
+    },
+    "cifar_mobilenet": {
+      "source": "results/m5_profile_cifar_mobilenet_P8.json (PROFILE build, instrumentation inside the intervals); per-op mean over warm-up + 10 timed inferences",
+      "interval_median_cycles": 198161.0,
+      "chains_cycles_mean": 134672.0,
+      "fallback_cycles_mean": 62764.0,
+      "chains_share": 0.6821045807248931,
+      "fallback_share": 0.3178954192751069,
+      "other_cycles_mean_interval_minus_ops": 725.0,
+      "ops": [
+        {
+          "op": 0,
+          "name": "chain_0_0_12",
+          "kernel": "mcuaccel_run",
+          "cycles_mean": 133942.0
+        },
+        {
+          "op": 13,
+          "name": "avgpool2d",
+          "kernel": "mg_avgpool2d_nhwc_s8",
+          "cycles_mean": 62764.0
+        },
+        {
+          "op": 15,
+          "name": "chain_1_15_15",
+          "kernel": "mcuaccel_run",
+          "cycles_mean": 730.0
+        }
+      ],
+      "fairness_pass": true,
+      "c4b": {
+        "pred": 135876,
+        "meas": 135277,
+        "signed_error_pct": 0.443,
+        "within_10pct": true
+      }
+    }
+  },
+  "variance": {
+    "mnist_cnn": {
+      "1": {
+        "cycles_min": 323429,
+        "cycles_mean": 323647,
+        "cycles_max": 323777,
+        "cycles_median": 323671,
+        "cycles_run_medians": "323671,323671,323671",
+        "speedup_median": 35.16961049955047,
+        "speedup_range_per_image_extremes": [
+          35.14410226791897,
+          35.2098389445597
+        ],
+        "correct": 10,
+        "n_images": 10,
+        "commit": "eca8a0621127d7606d160d137ab9ad0ecf727b14",
+        "tree_dirty": true
+      },
+      "2": {
+        "cycles_min": 275887,
+        "cycles_mean": 276105,
+        "cycles_max": 276235,
+        "cycles_median": 276129,
+        "cycles_run_medians": "276129,276129,276129",
+        "speedup_median": 41.22487315711135,
+        "speedup_range_per_image_extremes": [
+          41.19265118467971,
+          41.27734543490632
+        ],
+        "correct": 10,
+        "n_images": 10,
+        "commit": "eca8a0621127d7606d160d137ab9ad0ecf727b14",
+        "tree_dirty": true
+      },
+      "4": {
+        "cycles_min": 252782,
+        "cycles_mean": 253000,
+        "cycles_max": 253130,
+        "cycles_median": 253024,
+        "cycles_run_medians": "253024,253024,253024",
+        "speedup_median": 44.9893409320855,
+        "speedup_range_per_image_extremes": [
+          44.95260143009521,
+          45.050213227207635
+        ],
+        "correct": 10,
+        "n_images": 10,
+        "commit": "eca8a0621127d7606d160d137ab9ad0ecf727b14",
+        "tree_dirty": true
+      },
+      "8": {
+        "cycles_min": 242817,
+        "cycles_mean": 243035,
+        "cycles_max": 243165,
+        "cycles_median": 243059,
+        "cycles_run_medians": "243059,243059,243059",
+        "speedup_median": 46.83382635491794,
+        "speedup_range_per_image_extremes": [
+          46.794777208891084,
+          46.899035075797826
+        ],
+        "correct": 10,
+        "n_images": 10,
+        "commit": "eca8a0621127d7606d160d137ab9ad0ecf727b14",
+        "tree_dirty": true
+      },
+      "16": {
+        "cycles_min": 239451,
+        "cycles_mean": 239669,
+        "cycles_max": 239799,
+        "cycles_median": 239693,
+        "cycles_run_medians": "239693,239693,239693",
+        "speedup_median": 47.4915120591757,
+        "speedup_range_per_image_extremes": [
+          47.451624068490695,
+          47.55830211609056
+        ],
+        "correct": 10,
+        "n_images": 10,
+        "commit": "eca8a0621127d7606d160d137ab9ad0ecf727b14",
+        "tree_dirty": true
+      }
+    },
+    "cifar_mobilenet": {
+      "1": {
+        "cycles_min": 645173,
+        "cycles_mean": 645173,
+        "cycles_max": 645173,
+        "cycles_median": 645173,
+        "cycles_run_medians": "645173,645173,645173",
+        "speedup_median": 107.21096512098305,
+        "speedup_range_per_image_extremes": [
+          107.17162838494481,
+          107.23764788669085
+        ],
+        "correct": 8,
+        "n_images": 10,
+        "commit": "eca8a0621127d7606d160d137ab9ad0ecf727b14",
+        "tree_dirty": true
+      },
+      "2": {
+        "cycles_min": 385685,
+        "cycles_mean": 385685,
+        "cycles_max": 385685,
+        "cycles_median": 385685,
+        "cycles_run_medians": "385685,385685,385685",
+        "speedup_median": 179.34226117168154,
+        "speedup_range_per_image_extremes": [
+          179.27645876816572,
+          179.3868960421069
+        ],
+        "correct": 8,
+        "n_images": 10,
+        "commit": "eca8a0621127d7606d160d137ab9ad0ecf727b14",
+        "tree_dirty": true
+      },
+      "4": {
+        "cycles_min": 255033,
+        "cycles_mean": 255033,
+        "cycles_max": 255033,
+        "cycles_median": 255033,
+        "cycles_run_medians": "255033,255033,255033",
+        "speedup_median": 271.2183129242098,
+        "speedup_range_per_image_extremes": [
+          271.1188003121165,
+          271.285813992699
+        ],
+        "correct": 8,
+        "n_images": 10,
+        "commit": "eca8a0621127d7606d160d137ab9ad0ecf727b14",
+        "tree_dirty": true
+      },
+      "8": {
+        "cycles_min": 197613,
+        "cycles_mean": 197613,
+        "cycles_max": 197613,
+        "cycles_median": 197613,
+        "cycles_run_medians": "197613,197613,197613",
+        "speedup_median": 350.0256562068285,
+        "speedup_range_per_image_extremes": [
+          349.8972284212071,
+          350.11277092094144
+        ],
+        "correct": 8,
+        "n_images": 10,
+        "commit": "eca8a0621127d7606d160d137ab9ad0ecf727b14",
+        "tree_dirty": true
+      },
+      "16": {
+        "cycles_min": 173637,
+        "cycles_mean": 173637,
+        "cycles_max": 173637,
+        "cycles_median": 173637,
+        "cycles_run_medians": "173637,173637,173637",
+        "speedup_median": 398.35760811347814,
+        "speedup_range_per_image_extremes": [
+          398.2114468690429,
+          398.45675172918214
+        ],
+        "correct": 8,
+        "n_images": 10,
+        "commit": "eca8a0621127d7606d160d137ab9ad0ecf727b14",
+        "tree_dirty": true
+      }
+    }
+  },
+  "baseline": {
+    "mnist_cnn": {
+      "cycles_min": 11378852,
+      "cycles_mean": 11383695,
+      "cycles_max": 11387883,
+      "cycles_median": 11383383,
+      "cycles_run_medians": "11383383,11383383,11383383",
+      "runs": 3,
+      "n_images": 10
+    },
+    "cifar_mobilenet": {
+      "cycles_min": 69144241,
+      "cycles_mean": 69170372,
+      "cycles_max": 69186835,
+      "cycles_median": 69169620,
+      "cycles_run_medians": "69169620,69169620,69169620",
+      "runs": 3,
+      "n_images": 10
+    }
+  },
+  "provenance": {
+    "script": "experiments/compare_m1.py",
+    "predictions": "git show m1:results/m1_predictions.csv (arch os)",
+    "m1_commit": "6533b1e9f9f2b7c46bb8dbca5d205ab71fca11ff",
+    "head": "7fbe854be0b21915416a83f3cc684556bf90a339",
+    "stamp_runs_tree_dirty": true
+  }
+}
