@@ -25,7 +25,7 @@ module list, test plan), docs/DECISIONS.md (D1-D14) before touching anything.
         csv sha256 fd94f39a…; generated at 1f4fa47 (clean). Predicted speedup P=8: mnist 27.0, cifar 363.1.
   - [x] M2 rtl/accel/* per DESIGN §8, unit tests vs int8ops (tag m2). Datapath 53be20a, control a2e8c4b,
         red-team T2.3: 1 blocker (credit leak after abort) + credit-loop latency fixed in 31cb76a (D20).
-  - [ ] M3 tb/accel: 1000 random layers, whole networks, chains, errors; results/m3_bitexact.csv (tag m3)
+  - [x] M3 tb/accel: 1000 random layers x 5 P, whole networks, chains, errors: 0 mismatches (tag m3)
   - [ ] M4 backend: packing, splitting, descriptors, model.c emit, driver; executor == int8ops (tag m4)
         emit.py + host bit-exactness + fairness tests done (5af3876), red-team T4.3 0 blockers, fixes 44fd6a8.
         Open: T4.2 transpose folding (optional, default off). Tag m4 after M5 builds run on the real RTL.
