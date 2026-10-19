@@ -204,3 +204,30 @@ Result: `m5_profile_*_P8.json` fairness pass, per-inference cycles of every fall
 both builds (mnist ops 0,2,4,5; cifar op 13 avgpool; 3 inferences compared each).
 Not done: the objdump identity check of DESIGN 6.5 (cycle equality is the criterion, D18 (8)); the
 shared-TU wording in SPEC §7 / DESIGN 6.5 is not edited and should say "pinned inlining" instead.
+
+## D21 Orchestrator: post-hoc notes from the final claims red-team T6.3 (2026-10-19)
+T6.3 recomputed every claim from results/ independently. Findings that change no scored number:
+(A) C4a rows that exceeded their pre-registered bias (DESIGN 7.4): mnist op_1 at P = 8 and 16
+(measured over-prediction about 12.4 % against a registered 3.4 %) and cifar op_0 at P = 16 (6.2 %
+against 1.9 %). Root cause: when the port term lam*(R+W) ties the requant term NV, the write of the
+previous tile is granted during PSETUP, so PSETUP is hidden at ties as well as at strictly requant
+bound pixels, which 7.4 counted only. (B) `CYCLES == sum(STAMP + lam + 1) + 1` on all 275 chain calls,
+not `+ 2` as the frozen check (and commit d189571's message, which said 550 calls) stated; the START
+acceptance cycle is not BUSY, RTL and STAMP are correct, DESIGN 7.2's `+ 2` is the CPU-visible term
+and C4b is unaffected (at most 3 cycles per inference). (C) The first independent STAMP check
+(D15 asked for at least three): a bus-level count equals STAMP on mnist op_1 P=8 (6356), mnist op_3
+P=8 (7715), cifar op_0 P=16 (16616).
+(A, continued) The script that scores this rule (results/deviations.json) lists six rows over the registered
+bias + 0.5 pp, not three: the three above plus mnist op_3 P=16, cifar op_0 P=4 and P=8; they were not probed.
+Options: (a) fix the model and rescore; (b) leave the model outputs as scored and add the
+explanation; (c) loosen the check to `+ 1` silently. Choice: (b), plus keep the frozen `+ 2` check
+in experiments/compare_m1.py and add the `+ 1` check beside it. Reason: SPEC C4 scores the frozen
+m1 predictions; the model may be fixed post-hoc but is not, so the original numbers stand and the
+paper/DESIGN 7.5 carry the post-hoc explanation. C4a stays confirmed (all rows within 20 %).
+Also from T6.3, applied to the tooling: the m1 predicted speedups were computed against the
+pre-D19 baselines, so the paper adds a post-hoc row (frozen C4b prediction + measured new
+fallback-op cycles + bench window) next to the measurement; C2c is confirmed only with the baseline
+firmware comparison for both networks; synthesis rows are deduplicated per seed and limited to the
+newest RTL version of each file (documented in experiments/status.py); baseline JSON `kind` names D19
+and records `tree_dirty`; values quoted from D19/D20 live in results/deviations.json, written by
+experiments/make_deviations.py (which asserts they appear in this file).

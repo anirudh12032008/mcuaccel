@@ -16,8 +16,9 @@ def results():
     rows = []
     for m in MODELS:
         b, a, ps = baseline(m), accel(m, 8), predicted_speedup(m)
-        rows.append((m, n(b), n(a), n(b / a if b and a else None, 1), n(ps, 1)))
-    t.append(table(["network", "baseline cycles (median)", "accelerated cycles, P=8", "speedup", "pre-registered prediction"], rows))
+        rows.append((m, n(b), n(a), n(b / a if b and a else None, 1), n(ps, 1), n(posthoc_speedup(m), 1)))
+    t.append(table(["network", "baseline cycles (median)", "accelerated cycles, P=8", "speedup",
+                    "pre-registered prediction (vs the pre-D19 baselines)", "post-hoc rescoring"], rows))
     rows = []
     for m in MODELS:
         rows.append([m] + [n(baseline(m) / accel(m, P) if baseline(m) and accel(m, P) else None, 1) for P in PS])
@@ -28,7 +29,7 @@ def results():
         rs, r = syn_row(d, P)
         f = n(statistics.median(x["fmax_mhz"] for x in rs) if rs else None, 1)
         rows.append((lab, n(r and r["lut4"]), n(r and r["ff"]), n(r and r["mult18x18d"]), n(r and r["dp16kd"]), f, len(rs) or "pending"))
-    t.append("ECP5 LFE5U-85F, Yosys + nextpnr, 50 MHz target (LUT4/FF/MULT/BRAM from seed 1, Fmax median over seeds):\n\n" +
+    t.append("ECP5 LFE5U-85F, Yosys + nextpnr, 50 MHz target (LUT4/FF/MULT/BRAM from the lowest seed of the newest RTL version, Fmax median over its distinct seeds):\n\n" +
              table(["design", "LUT4", "FF", "MULT18X18D", "DP16KD", "Fmax MHz", "seeds"], rows))
     return "\n\n".join(t)
 

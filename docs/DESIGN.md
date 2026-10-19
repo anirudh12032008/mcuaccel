@@ -518,10 +518,9 @@ T_tile = max(6, 8, 6) = 8 (requant bound); op_12 (C = 128): max(34, 8, 6) = 34 (
   credit bound; the model keeps the +1 (conservative). Over-prediction by command (red-team
   recomputation): mnist op_1 +3.4 % (P = 8, 16), cifar op_2 +3.0 % (P = 8, 16), cifar op_4 +3.0 %
   (P = 16), cifar op_0 +1.9 % (P = 16), cifar op_6 +1.3 % (P = 16), all others < 0.5 %.
-- FLUSH: the real remainder after the last issue is NV + 11 cycles (measured, lone tile); the model's W_last + 2λ + 10 +
+- FLUSH: the real remainder after the last issue is NV + 10 cycles; the model's W_last + 2λ + 10 +
   NV counts the last tile's W_t and NV in both T_tile and FLUSH and over-predicts by 2 + W_last
-  cycles per command (≤ P + 3; ≤ 7 at P = 16); written before m1 for an NV + 10 remainder; with the
-  measured NV + 11 the over-prediction is 1 + W_last (post-m1 note, the model is unchanged).
+  cycles per command (≤ P + 3; ≤ 7 at P = 16).
 - `*_WAIT` phases: +0 cycles if fetch `idle` is combinational as specified (§8.4); a registered idle
   would add ≤ 4 cycles per command (0.6 % worst case, cifar op_15 at P = 16).
 - Driver: drv_chain = 71 was measured on the stub (first poll sees DONE); a real chain adds ≈ 6-7
@@ -551,6 +550,34 @@ T_tile = max(6, 8, 6) = 8 (requant bound); op_12 (C = 128): max(34, 8, 6) = 34 (
 The wbuf output holds between reads (read enable only on issue), so it is valid in the
 response cycle for any λ ≥ 1 (the next read can be issued at earliest in the response cycle
 and appears one cycle later).
+
+### 7.5 Post-hoc notes (after m1)
+
+Written after the M5/M6 measurements. Nothing in 7.1-7.4 or in the m1 model was changed; these notes
+explain deviations of the scored predictions (docs/DECISIONS.md D21). Numbers: results/deviations.json,
+paper/numbers.tex.
+
+- FLUSH (measured, lone tile): the real remainder after the last issue is NV + 11 cycles, not NV + 10;
+  with it the over-prediction is 1 + W_last cycles per command instead of 2 + W_last.
+- Root cause A, the PSETUP tie. The +1 PSETUP cycle per pixel is not only hidden behind the
+  requantizer where a layer is strictly requant bound (the 7.4 bias list counts only those pixels).
+  When the port term λ·(R + W) equals NV (a tie), the write of the previous tile is granted during
+  the PSETUP cycle, so PSETUP is hidden as well: the RTL behaves as
+  `T_pix = max(1 + λ·R, λ·(R + W), NV, ...)` rather than `1 + max(...)`. Probe (red-team T6.3, scratch
+  build/redteam_A): mnist op_1 at P = 8 has 546 of 784 pixels with a write granted in PSETUP (R = 6,
+  W = 2, NV = 8), prediction - measurement = 788 = 784 + 4 (flush). cifar op_0 at P = 16: 690 of 1024
+  pixels (R = 12, W = 4, NV = 16). These two commands (mnist op_1 at P = 8 and 16, cifar op_0 at
+  P = 16) therefore exceeded the pre-registered bias of 7.4 (3.4 % and 1.9 %); all stay inside the
+  20 % tolerance of C4a. experiments/make_deviations.py (rule: error > registered bias + 0.5 pp) lists six rows
+  in results/deviations.json: these three plus mnist op_3 at P = 16, cifar op_0 at P = 4 and P = 8 (1.4-2.6 %,
+  registered below 0.5 % or not at all); those three were not probed, the tie mechanism is the likely cause.
+- Root cause B, CYCLES identity. Measured `CYCLES == Σ(STAMP + λ + 1) + 1` on every chain call
+  (275 calls: both networks, 5 values of P, 11 inferences each), not `+ 2`. RTL and STAMP are correct: the START
+  acceptance cycle is not BUSY. The `+ 2` of 7.2 (`T_chain`) includes that cycle and is the CPU-visible
+  term, so C4b is unaffected (at most 3 cycles per inference).
+- Independent STAMP check (D15 asked for at least three commands counted from the bus): a bus-level
+  count of the first DESC request to the STAMP request equals the self-reported STAMP on three
+  commands (mnist op_1 P = 8: 6356, mnist op_3 P = 8: 7715, cifar op_0 P = 16: 16616).
 
 ## 8. Accelerator RTL modules
 

@@ -136,6 +136,8 @@
       "chain_calls": 33,
       "identity_holds": 0,
       "identity_fails": 33,
+      "identity_plus1_holds": 33,
+      "identity_plus1_fails": 0,
       "delta_histogram": {
         "-1": 33
       },
@@ -183,6 +185,8 @@
       "chain_calls": 33,
       "identity_holds": 0,
       "identity_fails": 33,
+      "identity_plus1_holds": 33,
+      "identity_plus1_fails": 0,
       "delta_histogram": {
         "-1": 33
       },
@@ -230,6 +234,8 @@
       "chain_calls": 33,
       "identity_holds": 0,
       "identity_fails": 33,
+      "identity_plus1_holds": 33,
+      "identity_plus1_fails": 0,
       "delta_histogram": {
         "-1": 33
       },
@@ -277,6 +283,8 @@
       "chain_calls": 33,
       "identity_holds": 0,
       "identity_fails": 33,
+      "identity_plus1_holds": 33,
+      "identity_plus1_fails": 0,
       "delta_histogram": {
         "-1": 33
       },
@@ -324,6 +332,8 @@
       "chain_calls": 33,
       "identity_holds": 0,
       "identity_fails": 33,
+      "identity_plus1_holds": 33,
+      "identity_plus1_fails": 0,
       "delta_histogram": {
         "-1": 33
       },
@@ -371,6 +381,8 @@
       "chain_calls": 22,
       "identity_holds": 0,
       "identity_fails": 22,
+      "identity_plus1_holds": 22,
+      "identity_plus1_fails": 0,
       "delta_histogram": {
         "-1": 22
       },
@@ -418,6 +430,8 @@
       "chain_calls": 22,
       "identity_holds": 0,
       "identity_fails": 22,
+      "identity_plus1_holds": 22,
+      "identity_plus1_fails": 0,
       "delta_histogram": {
         "-1": 22
       },
@@ -465,6 +479,8 @@
       "chain_calls": 22,
       "identity_holds": 0,
       "identity_fails": 22,
+      "identity_plus1_holds": 22,
+      "identity_plus1_fails": 0,
       "delta_histogram": {
         "-1": 22
       },
@@ -512,6 +528,8 @@
       "chain_calls": 22,
       "identity_holds": 0,
       "identity_fails": 22,
+      "identity_plus1_holds": 22,
+      "identity_plus1_fails": 0,
       "delta_histogram": {
         "-1": 22
       },
@@ -559,6 +577,8 @@
       "chain_calls": 22,
       "identity_holds": 0,
       "identity_fails": 22,
+      "identity_plus1_holds": 22,
+      "identity_plus1_fails": 0,
       "delta_histogram": {
         "-1": 22
       },
@@ -889,7 +909,7 @@
     "script": "experiments/compare_m1.py",
     "predictions": "git show m1:results/m1_predictions.csv (arch os)",
     "m1_commit": "6533b1e9f9f2b7c46bb8dbca5d205ab71fca11ff",
-    "head": "7fbe854be0b21915416a83f3cc684556bf90a339",
+    "head": "d189571b7f2609ba913aa02c6d19e9bc09249bae",
     "stamp_runs_tree_dirty": true
   }
 }

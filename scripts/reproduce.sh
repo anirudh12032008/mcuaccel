@@ -25,11 +25,11 @@ step "M3 campaign (C2a, C2b, chains, errors)"; $PY experiments/run_m3.py $M3
 step "M5 timing per P (C1, C1b, C5)"; $PY experiments/run_soc.py $SOCP $IMG
 step "M5/M6 profile + C4b at P=8"; $PY experiments/run_soc.py --P 8 $PROF
 step "M5 C2c bit-exactness on the SoC"; $PY experiments/run_soc.py --P 8 --bitexact $BX
-# C4a (results/m6_pred_vs_meas.csv) has no generator yet; it runs here once one is added.
-if [ -f experiments/run_pred_vs_meas.py ]; then step "C4a pred vs meas"; $PY experiments/run_pred_vs_meas.py; fi
+# C4a/C5 need results/m6_stamps_*_P*.json (`run_soc.py --P <P> --stamps`, not part of this script: long); derived outputs are rebuilt when present.
+if ls results/m6_stamps_*.json >/dev/null 2>&1 && [ -z "${REPRODUCE_QUICK:-}" ]; then step "C4a/C4b/C5 pred vs meas (compare_m1)"; $PY experiments/compare_m1.py; fi
 step "synthesis sweep"
 if [ -n "${REPRODUCE_QUICK:-}" ]; then bash syn/synth.sh accel 8 1; else bash experiments/run_syn_sweep.sh 3; fi
-step "macros"; $PY experiments/make_macros.py
+step "deviations, figure, macros"; $PY experiments/make_deviations.py; $PY experiments/plot_m6.py; $PY experiments/make_macros.py
 step "paper"; make paper
 step "README tables + FINAL_REPORT"; $PY experiments/make_readme_tables.py; $PY experiments/make_final_report.py
 echo; echo "reproduce done"

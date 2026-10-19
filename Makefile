@@ -44,7 +44,7 @@ synth:
 	bash syn/synth.sh $(or $(DESIGN),accel) $(or $(P),8) $(or $(SEED),1)
 
 macros:
-	$(PY) experiments/make_macros.py
+	$(PY) experiments/make_deviations.py && $(PY) experiments/plot_m6.py && $(PY) experiments/make_macros.py
 
 paper:
 	mkdir -p paper/build && cd paper && tectonic -X compile main.tex --outdir build

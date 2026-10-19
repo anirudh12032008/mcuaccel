@@ -1,0 +1,180 @@
+{
+  "generated_by": "experiments/make_deviations.py",
+  "D19": {
+    "source": "docs/DECISIONS.md D19 (before); results/baseline_*.json, m5_accel_*_P8.json (after)",
+    "before": {
+      "baseline": {
+        "mnist_cnn": 12188028,
+        "cifar_mobilenet": 72157425
+      },
+      "accel_P8": {
+        "mnist_cnn": 451480,
+        "cifar_mobilenet": 197617
+      }
+    },
+    "after": {
+      "baseline": {
+        "mnist_cnn": 11383383,
+        "cifar_mobilenet": 69169620
+      },
+      "accel_P8": {
+        "mnist_cnn": 243059,
+        "cifar_mobilenet": 197613
+      }
+    },
+    "speedup_before": {
+      "mnist_cnn": 26.995720740675115,
+      "cifar_mobilenet": 365.137741186234
+    },
+    "speedup_after": {
+      "mnist_cnn": 46.83382635491794,
+      "cifar_mobilenet": 350.0256562068285
+    }
+  },
+  "D20": {
+    "source": "docs/DECISIONS.md D20 (before, uncommitted pre-fix smoke runs); results/m6_c4b.json (after)",
+    "before": {
+      "mnist_cnn": {
+        "pred": 18736,
+        "meas": 18928,
+        "err_pct": -1.0143702451394758
+      },
+      "cifar_mobilenet": {
+        "pred": 135876,
+        "meas": 135281,
+        "err_pct": 0.4398252526223195
+      }
+    },
+    "after": {
+      "mnist_cnn": {
+        "pred": 18736,
+        "meas": 18913,
+        "err_pct": -0.9358642203775182
+      },
+      "cifar_mobilenet": {
+        "pred": 135876,
+        "meas": 135277,
+        "err_pct": 0.44279515364770067
+      }
+    }
+  },
+  "root_cause_A": {
+    "source": "results/m6_pred_vs_meas.csv vs DESIGN.md 7.4 at tag m1 (registered over-prediction by command)",
+    "bias_default_pct": 0.5,
+    "margin_pp": 0.5,
+    "rule": "signed error > registered bias + 0.5 pp (unlisted commands: 0.5 %)",
+    "exceeding_rows": [
+      {
+        "model": "mnist_cnn",
+        "op": 1,
+        "cmd": 0,
+        "P": 8,
+        "pred": 7144,
+        "meas": 6356,
+        "err_pct": 12.3977,
+        "registered_bias_pct": 3.4
+      },
+      {
+        "model": "mnist_cnn",
+        "op": 1,
+        "cmd": 0,
+        "P": 16,
+        "pred": 7168,
+        "meas": 6380,
+        "err_pct": 12.3511,
+        "registered_bias_pct": 3.4
+      },
+      {
+        "model": "mnist_cnn",
+        "op": 3,
+        "cmd": 0,
+        "P": 16,
+        "pred": 4580,
+        "meas": 4515,
+        "err_pct": 1.4396,
+        "registered_bias_pct": 0.5
+      },
+      {
+        "model": "cifar_mobilenet",
+        "op": 0,
+        "cmd": 0,
+        "P": 4,
+        "pred": 50092,
+        "meas": 49381,
+        "err_pct": 1.4398,
+        "registered_bias_pct": 0.5
+      },
+      {
+        "model": "cifar_mobilenet",
+        "op": 0,
+        "cmd": 0,
+        "P": 8,
+        "pred": 27724,
+        "meas": 27029,
+        "err_pct": 2.5713,
+        "registered_bias_pct": 0.5
+      },
+      {
+        "model": "cifar_mobilenet",
+        "op": 0,
+        "cmd": 0,
+        "P": 16,
+        "pred": 17648,
+        "meas": 16616,
+        "err_pct": 6.2109,
+        "registered_bias_pct": 1.9
+      }
+    ],
+    "tie_probe": {
+      "source": "red-team T6.3 probe, build/redteam_A/{r1.log,r3.log} (scratch, not a result file)",
+      "mnist_cnn_op1_P8": {
+        "pixels": 784,
+        "writes_in_psetup": 546,
+        "R": 6,
+        "W": 2,
+        "NV": 8,
+        "bus_stamp": 6356
+      },
+      "cifar_mobilenet_op0_P16": {
+        "pixels": 1024,
+        "writes_in_psetup": 690,
+        "R": 12,
+        "W": 4,
+        "NV": 16,
+        "bus_stamp": 16616
+      }
+    }
+  },
+  "root_cause_B": {
+    "source": "results/m6_summary.json cycles_identity_per_chain (experiments/compare_m1.py)",
+    "chain_calls": 275,
+    "plus2_holds": 0,
+    "plus1_holds": 275
+  },
+  "independent_stamp": {
+    "source": "red-team T6.3 independent bus-level count (first DESC request to STAMP request); STAMP from results/m6_pred_vs_meas.csv",
+    "commands": [
+      {
+        "model": "mnist_cnn",
+        "op": 1,
+        "P": 8,
+        "bus_count": 6356,
+        "stamp": 6356
+      },
+      {
+        "model": "mnist_cnn",
+        "op": 3,
+        "P": 8,
+        "bus_count": 7715,
+        "stamp": 7715
+      },
+      {
+        "model": "cifar_mobilenet",
+        "op": 0,
+        "P": 16,
+        "bus_count": 16616,
+        "stamp": 16616
+      }
+    ]
+  }
+}

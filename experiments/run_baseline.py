@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Baseline (D6): mcugrad's generated model.c on the PicoRV32 SoC in Verilator.
+"""Baseline (D6, amended by D19): mcugrad's generated model.c with pinned inlining (sw/build_fw.py::pin_inlining) on the PicoRV32 SoC in Verilator.
     run_baseline.py [--model mnist_cnn|cifar_mobilenet ...] [--images 10] [--runs 3]
                     [--prof-images 2 --prof-runs 1 | --no-profile] [--max-cycles N]
 Writes results/baseline_<model>.json and results/baseline_profile_<model>.json."""
@@ -29,6 +29,11 @@ def git_head() -> str:
     return r.stdout.strip() if r.returncode == 0 else "unknown (not a git checkout)"
 
 
+def tree_dirty() -> bool:
+    r = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True)
+    return bool(r.stdout.strip()) if r.returncode == 0 else True  # unknown counts as dirty
+
+
 def conv(v: str):
     for t in (int, float):
         try:
@@ -52,7 +57,7 @@ def run_sim(hexf: str, max_cycles: int) -> dict:
 
 
 def meta(b: dict, images: int, runs: int) -> dict:
-    return {"commit": git_head(), "date": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+    return {"commit": git_head(), "tree_dirty": tree_dirty(), "date": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
             "compiler": b["compiler"], "flags": b["flags"], "picorv32_config": PICORV32_CFG,
             "images": images, "runs": runs, "image_bytes": b["image_bytes"], "x_align": b["x_align"]}
 
@@ -61,7 +66,7 @@ def baseline(model: str, images: int, runs: int, max_cycles: int) -> None:
     b = build_fw.build(model, images, runs)
     r = run_sim(b["hex"], max_cycles)
     kv = {k: conv(v) for k, v in re.findall(r"MCUGRAD_RESULT\s+(\w+)=(\S+)", r["stdout"])}
-    out = {"model": model, "kind": "baseline (mcugrad model.c unchanged, D6; uninstrumented build)",
+    out = {"model": model, "kind": "baseline (mcugrad model.c with pinned inlining, D19: mg_* always_inline, op_* noinline, applied to every build; uninstrumented)",
            "mcugrad_result": kv, "sim_cycles": r["sim_cycles"], "wall_s": round(r["wall_s"], 2),
            "sim_cpu_s": round(r["cpu_s"], 2), "sim_cycles_per_cpu_s": round(r["sim_cycles"] / r["cpu_s"]), **meta(b, images, runs)}
     path = os.path.join(ROOT, "results", f"baseline_{model}.json")

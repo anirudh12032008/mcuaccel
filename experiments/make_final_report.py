@@ -35,11 +35,13 @@ Repository HEAD `{head}`{' (working tree dirty)' if dirty else ''}.
 {results()}
 
 ## Deviations logged in docs/DECISIONS.md
-Text copied verbatim from the decision log. Neither changes a threshold in SPEC.
+Text copied verbatim from the decision log. None changes a threshold in SPEC; D21 records post-hoc explanations, the scored model outputs are unchanged.
 
 {decision('D19')}
 
 {decision('D20')}
+
+{decision('D21')}
 
 ## Pending items
 """ + "\n".join(f"- {x}" for x in pending_items()) + f"""

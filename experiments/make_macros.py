@@ -14,6 +14,7 @@ a \\todo, never a wrong number):
 """
 import csv, hashlib, io, json, statistics, subprocess, sys
 from pathlib import Path
+from status import c2c, syn_rows  # shared rules: C2c verdict, newest-RTL-version synthesis rows
 
 ROOT = Path(__file__).resolve().parent.parent
 R = ROOT / "results"
@@ -183,18 +184,23 @@ for k, nm in [("c2b_images", "MeasCtwoBImages"), ("c2b_mismatch", "MeasCtwoBMism
         emit(nm, i(bx[k]), f"results/m5_bitexact.json {k}")
     else:
         todo(nm, k, "results/m5_bitexact.json")
+for m, M in MODELS.items():  # C2c second reference: the baseline firmware's outputs (SPEC C2c)
+    v = bx.get("per_model_c2c", {}).get(m, {}).get("vs_baseline_firmware")
+    if v:
+        emit(f"MeasCtwoCBase{M}", i(v["mismatch_bytes"]), f"results/m5_bitexact.json per_model_c2c.{m}.vs_baseline_firmware.mismatch_bytes")
+    else:
+        todo(f"MeasCtwoCBase{M}", f"C2c vs baseline firmware {m}", "results/m5_bitexact.json")
+verdict("VerdictCtwoC", c2c(bx)[0], "C2c verdict", "C2c: mismatch 0 vs run_int8 and vs baseline firmware, both networks (status.c2c)")
 
 # ---- C3 / synthesis
 def synrows(design, P=None):
-    p = R / "syn" / (f"{design}_P{P}.jsonl" if P else f"{design}.jsonl")
-    if not p.exists():
-        return [], p.name
-    return [r for r in map(json.loads, filter(str.strip, p.read_text().splitlines())) if "note" not in r], p.name
+    """Newest RTL version, one row per seed (rule documented in status.syn_rows)."""
+    return syn_rows(design, P), (f"{design}_P{P}.jsonl" if P else f"{design}.jsonl")
 
 
 def syn(prefix, design, P=None):
     rs, fn = synrows(design, P)
-    r1 = next((r for r in rs if r["seed"] == 1), None)
+    r1 = next((r for r in rs if r["seed"] == 1), rs[0] if rs else None)
     for k, nm, fmt in [("lut4", "Lut", i), ("ff", "Ff", i), ("dp16kd", "Bram", i), ("mult18x18d", "Mult", i)]:
         if r1:
             emit(f"{prefix}{nm}", fmt(r1[k]), f"results/syn/{fn} seed 1 .{k}")
@@ -202,7 +208,7 @@ def syn(prefix, design, P=None):
             todo(f"{prefix}{nm}", f"{design} {k}", f"results/syn/{fn}")
     if rs:
         emit(f"{prefix}Fmax", f1(statistics.median(r["fmax_mhz"] for r in rs)),
-             f"results/syn/{fn} median fmax_mhz over {len(rs)} seeds")
+             f"results/syn/{fn} median fmax_mhz over {len(rs)} distinct seeds, newest RTL version")
         emit(f"{prefix}FmaxSeeds", len(rs), f"results/syn/{fn} seeds")
     else:
         todo(f"{prefix}Fmax", f"{design} Fmax", f"results/syn/{fn}")
@@ -253,6 +259,56 @@ for nm, m in (("PstarMeasMnist", "mnist_cnn"), ("PstarMeasCifar", "cifar_mobilen
         emit(nm, c5["models"][m]["measured_pstar"], f"results/m6_c5.json models.{m}.measured_pstar (16 = not reached)")
     else:
         todo(nm, "measured saturation width", "results/m6_c5.json (sum STAMP)")
+
+# ---- post-m1 deviations and post-hoc evidence (results/deviations.json, experiments/make_deviations.py)
+dv = load(R / "deviations.json")
+if dv:
+    for m, M in MODELS.items():
+        s = "results/deviations.json D19"
+        emit(f"DevBaseBefore{M}", i(dv["D19"]["before"]["baseline"][m]), f"{s} before.baseline (docs/DECISIONS.md D19)")
+        emit(f"DevAccelBefore{M}", i(dv["D19"]["before"]["accel_P8"][m]), f"{s} before.accel_P8 (docs/DECISIONS.md D19)")
+        emit(f"DevSpeedupBefore{M}", f1(dv["D19"]["speedup_before"][m]), f"{s} speedup_before")
+        emit(f"DevSpeedupAfter{M}", f1(dv["D19"]["speedup_after"][m]), f"{s} speedup_after")
+        emit(f"DevCfourBMeasBefore{M}", i(dv["D20"]["before"][m]["meas"]), "results/deviations.json D20 before.meas (docs/DECISIONS.md D20)")
+        emit(f"DevCfourBErrBefore{M}", f"{dv['D20']['before'][m]['err_pct']:+.1f}", "results/deviations.json D20 before.err_pct")
+        emit(f"DevCfourBErrAfter{M}", f"{dv['D20']['after'][m]['err_pct']:+.1f}", "results/deviations.json D20 after.err_pct")
+    ex = dv["root_cause_A"]["exceeding_rows"]
+    emit("NExceed", len(ex), "results/deviations.json root_cause_A.exceeding_rows")
+    emit("BiasDefault", dv["root_cause_A"]["bias_default_pct"], "results/deviations.json root_cause_A.bias_default_pct (DESIGN 7.4 'all others < 0.5 %')")
+    emit("ExceedMargin", dv["root_cause_A"]["margin_pp"], "results/deviations.json root_cause_A.margin_pp")
+    tp = dv["root_cause_A"]["tie_probe"]
+    for k, nm in (("mnist_cnn_op1_P8", "Mnist"), ("cifar_mobilenet_op0_P16", "Cifar")):
+        emit(f"Tie{nm}Writes", i(tp[k]["writes_in_psetup"]), f"results/deviations.json root_cause_A.tie_probe.{k}")
+        emit(f"Tie{nm}Pixels", i(tp[k]["pixels"]), f"results/deviations.json root_cause_A.tie_probe.{k}")
+    b = dv["root_cause_B"]
+    emit("IdentCalls", b["chain_calls"], "results/deviations.json root_cause_B.chain_calls")
+    emit("IdentPlusOne", b["plus1_holds"], "results/deviations.json root_cause_B.plus1_holds")
+    emit("IdentPlusTwo", b["plus2_holds"], "results/deviations.json root_cause_B.plus2_holds")
+    ind = dv["independent_stamp"]["commands"]
+    emit("IndepStampN", len(ind), "results/deviations.json independent_stamp.commands")
+    emit("IndepStampAgree", sum(c["bus_count"] == c["stamp"] for c in ind), "bus-level count == STAMP")
+    emit("IndepStampList", ", ".join(i(c["stamp"]) for c in ind), "results/deviations.json independent_stamp.commands[].stamp")
+    # post-hoc rescoring: frozen C4b prediction (accelerator + driver) + measured post-D19 fallback-op cycles + bench window
+    for m, M in MODELS.items():
+        pj = load(R / f"m5_profile_{m}_P8.json")
+        fb = statistics.mean(pj["c4b"]["fallback_sum_per_image_run0"])
+        assert pj["c4b"]["bench_window_cycles"] == ov["cycles_median"], "bench window differs between profile and baseline_overhead"
+        ph = c4b[m]["pred"] + fb + ov["cycles_median"] if m in c4b else None
+        s = f"m6_c4b.json {m}.pred + mean(m5_profile_{m}_P8.json c4b.fallback_sum_per_image_run0) + baseline_overhead.json"
+        if ph is not None:
+            emit(f"PostHocFallback{M}", i(fb), f"mean fallback-op cycles per image, m5_profile_{m}_P8.json c4b.fallback_sum_per_image_run0")
+            emit(f"PostHocCycles{M}", i(ph), s)
+            emit(f"PostHocSpeedup{M}", f1(base[m] / ph), f"baseline_{m}.json cycles_median / ({s})")
+    with open(ROOT / "paper/tab_exceed.tex", "w") as t:
+        t.write("% generated by experiments/make_macros.py from results/deviations.json (root_cause_A); do not edit\n")
+        t.write("\\begin{tabular}{lrrrrrr}\\toprule\nnet & op & $P$ & pred. & meas. & err.\\,\\% & reg.\\,\\%\\\\\\midrule\n")
+        for r in ex:
+            t.write(f"{'mnist' if r['model'] == 'mnist_cnn' else 'cifar'} & {r['op']} & {r['P']} & {r['pred']:,} & {r['meas']:,} & "
+                    f"{r['err_pct']:.1f} & {r['registered_bias_pct']:.1f} \\\\\n")
+        t.write("\\bottomrule\n\\end{tabular}\n")
+else:
+    for n_ in ("NExceed", "IdentCalls", "IdentPlusOne", "IdentPlusTwo", "IndepStampN", "IndepStampAgree", "IndepStampList"):
+        todo(n_, n_, "results/deviations.json (experiments/make_deviations.py)")
 
 # ---- tables (generated, no typed numbers)
 with open(ROOT / "paper/tab_pred_cmds.tex", "w") as t:

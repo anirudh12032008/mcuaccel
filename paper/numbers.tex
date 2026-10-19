@@ -37,20 +37,20 @@
 \newcommand{\BenchWindow}{120}% results/baseline_overhead.json cycles_median
 \newcommand{\DrvChain}{71}% results/driver_overhead.json drv_chain
 \newcommand{\DrvPatch}{15}% results/driver_overhead.json drv_patch
-\newcommand{\BaselineCyclesMnist}{12,188,028}% results/baseline_mnist_cnn.json mcugrad_result.cycles_median
-\newcommand{\BaselineMinMnist}{12,183,011}% results/baseline_mnist_cnn.json mcugrad_result.cycles_min
-\newcommand{\BaselineMaxMnist}{12,193,076}% results/baseline_mnist_cnn.json mcugrad_result.cycles_max
-\newcommand{\BaselineMsMnist}{243.8}% results/baseline_mnist_cnn.json cycles_median / clock_hz
+\newcommand{\BaselineCyclesMnist}{11,383,383}% results/baseline_mnist_cnn.json mcugrad_result.cycles_median
+\newcommand{\BaselineMinMnist}{11,378,852}% results/baseline_mnist_cnn.json mcugrad_result.cycles_min
+\newcommand{\BaselineMaxMnist}{11,387,883}% results/baseline_mnist_cnn.json mcugrad_result.cycles_max
+\newcommand{\BaselineMsMnist}{227.7}% results/baseline_mnist_cnn.json cycles_median / clock_hz
 \newcommand{\BaselineImagesMnist}{10}% results/baseline_mnist_cnn.json images
 \newcommand{\BaselineRunsMnist}{3}% results/baseline_mnist_cnn.json runs
 \newcommand{\BaselineCorrectMnist}{10}% results/baseline_mnist_cnn.json mcugrad_result.correct (of images)
 \newcommand{\ClockMHzMnist}{50}% results/baseline_mnist_cnn.json clock_hz
-\newcommand{\ProfileAccelShareMnist}{96.4}% sum of ops[].share with name conv2d*/matmul* in baseline_profile_mnist_cnn.json (pct)
-\newcommand{\ProfileSwShareMnist}{3.6}% sum of ops[].share, pool/transpose ops, baseline_profile_mnist_cnn.json (pct)
-\newcommand{\BaselineCyclesCifar}{72,157,425}% results/baseline_cifar_mobilenet.json mcugrad_result.cycles_median
-\newcommand{\BaselineMinCifar}{72,132,576}% results/baseline_cifar_mobilenet.json mcugrad_result.cycles_min
-\newcommand{\BaselineMaxCifar}{72,174,963}% results/baseline_cifar_mobilenet.json mcugrad_result.cycles_max
-\newcommand{\BaselineMsCifar}{1443.1}% results/baseline_cifar_mobilenet.json cycles_median / clock_hz
+\newcommand{\ProfileAccelShareMnist}{98.0}% sum of ops[].share with name conv2d*/matmul* in baseline_profile_mnist_cnn.json (pct)
+\newcommand{\ProfileSwShareMnist}{2.0}% sum of ops[].share, pool/transpose ops, baseline_profile_mnist_cnn.json (pct)
+\newcommand{\BaselineCyclesCifar}{69,169,620}% results/baseline_cifar_mobilenet.json mcugrad_result.cycles_median
+\newcommand{\BaselineMinCifar}{69,144,241}% results/baseline_cifar_mobilenet.json mcugrad_result.cycles_min
+\newcommand{\BaselineMaxCifar}{69,186,835}% results/baseline_cifar_mobilenet.json mcugrad_result.cycles_max
+\newcommand{\BaselineMsCifar}{1383.4}% results/baseline_cifar_mobilenet.json cycles_median / clock_hz
 \newcommand{\BaselineImagesCifar}{10}% results/baseline_cifar_mobilenet.json images
 \newcommand{\BaselineRunsCifar}{3}% results/baseline_cifar_mobilenet.json runs
 \newcommand{\BaselineCorrectCifar}{8}% results/baseline_cifar_mobilenet.json mcugrad_result.correct (of images)
@@ -107,92 +107,128 @@
 \newcommand{\PredSwShareCifarPeight}{31.6}% m1_summary.json models.cifar_mobilenet.archs.os.P.8.sw_cycles / predicted_model_run (pct)
 \newcommand{\PredPstarCifar}{16}% m1_summary.json models.cifar_mobilenet.archs.os.p_star (16 = not reached)
 \newcommand{\PredPstarEndCifar}{16}% m1_summary.json models.cifar_mobilenet.archs.os.p_star_end_to_end
-\newcommand{\MeasCyclesMnistPone}{\todo{MEASURE: accelerated cycles mnist cnn P=1}}% PENDING results/m5_accel_mnist_cnn_P1.json
-\newcommand{\MeasSpeedupMnistPone}{\todo{MEASURE: speedup mnist cnn P=1}}% PENDING results/m5_accel_mnist_cnn_P1.json
-\newcommand{\MeasCyclesMnistPtwo}{\todo{MEASURE: accelerated cycles mnist cnn P=2}}% PENDING results/m5_accel_mnist_cnn_P2.json
-\newcommand{\MeasSpeedupMnistPtwo}{\todo{MEASURE: speedup mnist cnn P=2}}% PENDING results/m5_accel_mnist_cnn_P2.json
-\newcommand{\MeasCyclesMnistPfour}{\todo{MEASURE: accelerated cycles mnist cnn P=4}}% PENDING results/m5_accel_mnist_cnn_P4.json
-\newcommand{\MeasSpeedupMnistPfour}{\todo{MEASURE: speedup mnist cnn P=4}}% PENDING results/m5_accel_mnist_cnn_P4.json
-\newcommand{\MeasCyclesMnistPeight}{\todo{MEASURE: accelerated cycles mnist cnn P=8}}% PENDING results/m5_accel_mnist_cnn_P8.json
-\newcommand{\MeasSpeedupMnistPeight}{\todo{MEASURE: speedup mnist cnn P=8}}% PENDING results/m5_accel_mnist_cnn_P8.json
-\newcommand{\MeasCyclesMnistPsixteen}{\todo{MEASURE: accelerated cycles mnist cnn P=16}}% PENDING results/m5_accel_mnist_cnn_P16.json
-\newcommand{\MeasSpeedupMnistPsixteen}{\todo{MEASURE: speedup mnist cnn P=16}}% PENDING results/m5_accel_mnist_cnn_P16.json
-\newcommand{\MeasCyclesCifarPone}{\todo{MEASURE: accelerated cycles cifar mobilenet P=1}}% PENDING results/m5_accel_cifar_mobilenet_P1.json
-\newcommand{\MeasSpeedupCifarPone}{\todo{MEASURE: speedup cifar mobilenet P=1}}% PENDING results/m5_accel_cifar_mobilenet_P1.json
-\newcommand{\MeasCyclesCifarPtwo}{\todo{MEASURE: accelerated cycles cifar mobilenet P=2}}% PENDING results/m5_accel_cifar_mobilenet_P2.json
-\newcommand{\MeasSpeedupCifarPtwo}{\todo{MEASURE: speedup cifar mobilenet P=2}}% PENDING results/m5_accel_cifar_mobilenet_P2.json
-\newcommand{\MeasCyclesCifarPfour}{\todo{MEASURE: accelerated cycles cifar mobilenet P=4}}% PENDING results/m5_accel_cifar_mobilenet_P4.json
-\newcommand{\MeasSpeedupCifarPfour}{\todo{MEASURE: speedup cifar mobilenet P=4}}% PENDING results/m5_accel_cifar_mobilenet_P4.json
-\newcommand{\MeasCyclesCifarPeight}{\todo{MEASURE: accelerated cycles cifar mobilenet P=8}}% PENDING results/m5_accel_cifar_mobilenet_P8.json
-\newcommand{\MeasSpeedupCifarPeight}{\todo{MEASURE: speedup cifar mobilenet P=8}}% PENDING results/m5_accel_cifar_mobilenet_P8.json
-\newcommand{\MeasCyclesCifarPsixteen}{\todo{MEASURE: accelerated cycles cifar mobilenet P=16}}% PENDING results/m5_accel_cifar_mobilenet_P16.json
-\newcommand{\MeasSpeedupCifarPsixteen}{\todo{MEASURE: speedup cifar mobilenet P=16}}% PENDING results/m5_accel_cifar_mobilenet_P16.json
-\newcommand{\VerdictCone}{\todo{MEASURE: C1 verdict}}% PENDING C1 from m5_accel_*_P8.json
-\newcommand{\VerdictConeB}{\todo{MEASURE: C1b verdict}}% PENDING C1b from m5_accel_cifar_mobilenet_P8.json
-\newcommand{\MeasCtwoALayers}{\todo{MEASURE: C2a layers run}}% PENDING results/m3_bitexact.csv
-\newcommand{\MeasCtwoAMismatch}{\todo{MEASURE: C2a mismatching bytes}}% PENDING results/m3_bitexact.csv
-\newcommand{\VerdictCtwoA}{\todo{MEASURE: C2a verdict}}% PENDING results/m3_bitexact.csv
-\newcommand{\MeasCtwoBImages}{\todo{MEASURE: c2b images}}% PENDING results/m5_bitexact.json
-\newcommand{\MeasCtwoBMismatch}{\todo{MEASURE: c2b mismatch}}% PENDING results/m5_bitexact.json
-\newcommand{\MeasCtwoCImages}{\todo{MEASURE: c2c images}}% PENDING results/m5_bitexact.json
-\newcommand{\MeasCtwoCMismatch}{\todo{MEASURE: c2c mismatch}}% PENDING results/m5_bitexact.json
+\newcommand{\MeasCyclesMnistPone}{323,671}% m5_accel_mnist_cnn_P1.json mcugrad_result.cycles_median
+\newcommand{\MeasSpeedupMnistPone}{35.2}% baseline_mnist_cnn.json / m5_accel_mnist_cnn_P1.json
+\newcommand{\MeasCyclesMnistPtwo}{276,129}% m5_accel_mnist_cnn_P2.json mcugrad_result.cycles_median
+\newcommand{\MeasSpeedupMnistPtwo}{41.2}% baseline_mnist_cnn.json / m5_accel_mnist_cnn_P2.json
+\newcommand{\MeasCyclesMnistPfour}{253,024}% m5_accel_mnist_cnn_P4.json mcugrad_result.cycles_median
+\newcommand{\MeasSpeedupMnistPfour}{45.0}% baseline_mnist_cnn.json / m5_accel_mnist_cnn_P4.json
+\newcommand{\MeasCyclesMnistPeight}{243,059}% m5_accel_mnist_cnn_P8.json mcugrad_result.cycles_median
+\newcommand{\MeasSpeedupMnistPeight}{46.8}% baseline_mnist_cnn.json / m5_accel_mnist_cnn_P8.json
+\newcommand{\MeasCyclesMnistPsixteen}{239,693}% m5_accel_mnist_cnn_P16.json mcugrad_result.cycles_median
+\newcommand{\MeasSpeedupMnistPsixteen}{47.5}% baseline_mnist_cnn.json / m5_accel_mnist_cnn_P16.json
+\newcommand{\MeasCyclesCifarPone}{645,173}% m5_accel_cifar_mobilenet_P1.json mcugrad_result.cycles_median
+\newcommand{\MeasSpeedupCifarPone}{107.2}% baseline_cifar_mobilenet.json / m5_accel_cifar_mobilenet_P1.json
+\newcommand{\MeasCyclesCifarPtwo}{385,685}% m5_accel_cifar_mobilenet_P2.json mcugrad_result.cycles_median
+\newcommand{\MeasSpeedupCifarPtwo}{179.3}% baseline_cifar_mobilenet.json / m5_accel_cifar_mobilenet_P2.json
+\newcommand{\MeasCyclesCifarPfour}{255,033}% m5_accel_cifar_mobilenet_P4.json mcugrad_result.cycles_median
+\newcommand{\MeasSpeedupCifarPfour}{271.2}% baseline_cifar_mobilenet.json / m5_accel_cifar_mobilenet_P4.json
+\newcommand{\MeasCyclesCifarPeight}{197,613}% m5_accel_cifar_mobilenet_P8.json mcugrad_result.cycles_median
+\newcommand{\MeasSpeedupCifarPeight}{350.0}% baseline_cifar_mobilenet.json / m5_accel_cifar_mobilenet_P8.json
+\newcommand{\MeasCyclesCifarPsixteen}{173,637}% m5_accel_cifar_mobilenet_P16.json mcugrad_result.cycles_median
+\newcommand{\MeasSpeedupCifarPsixteen}{398.4}% baseline_cifar_mobilenet.json / m5_accel_cifar_mobilenet_P16.json
+\newcommand{\VerdictCone}{confirmed}% C1 from m5_accel_*_P8.json
+\newcommand{\VerdictConeB}{confirmed}% C1b from m5_accel_cifar_mobilenet_P8.json
+\newcommand{\MeasCtwoALayers}{1,000}% rows of results/m3_bitexact.csv
+\newcommand{\MeasCtwoAMismatch}{0}% sum of mismatch_bytes, results/m3_bitexact.csv
+\newcommand{\VerdictCtwoA}{confirmed}% C2a
+\newcommand{\MeasCtwoBImages}{10}% results/m5_bitexact.json c2b_images
+\newcommand{\MeasCtwoBMismatch}{0}% results/m5_bitexact.json c2b_mismatch
+\newcommand{\MeasCtwoCImages}{100}% results/m5_bitexact.json c2c_images
+\newcommand{\MeasCtwoCMismatch}{0}% results/m5_bitexact.json c2c_mismatch
+\newcommand{\MeasCtwoCBaseMnist}{0}% results/m5_bitexact.json per_model_c2c.mnist_cnn.vs_baseline_firmware.mismatch_bytes
+\newcommand{\MeasCtwoCBaseCifar}{\todo{MEASURE: C2c vs baseline firmware cifar mobilenet}}% PENDING results/m5_bitexact.json
+\newcommand{\VerdictCtwoC}{\todo{MEASURE: C2c verdict}}% PENDING C2c: mismatch 0 vs run_int8 and vs baseline firmware, both networks (status.c2c)
 \newcommand{\SynPicorvLut}{2,896}% results/syn/picorv32.jsonl seed 1 .lut4
 \newcommand{\SynPicorvFf}{1,027}% results/syn/picorv32.jsonl seed 1 .ff
 \newcommand{\SynPicorvBram}{0}% results/syn/picorv32.jsonl seed 1 .dp16kd
 \newcommand{\SynPicorvMult}{4}% results/syn/picorv32.jsonl seed 1 .mult18x18d
-\newcommand{\SynPicorvFmax}{78.2}% results/syn/picorv32.jsonl median fmax_mhz over 1 seeds
-\newcommand{\SynPicorvFmaxSeeds}{1}% results/syn/picorv32.jsonl seeds
-\newcommand{\SynSocNoAccelLut}{3,224}% results/syn/soc_noaccel.jsonl seed 1 .lut4
+\newcommand{\SynPicorvFmax}{81.7}% results/syn/picorv32.jsonl median fmax_mhz over 10 distinct seeds, newest RTL version
+\newcommand{\SynPicorvFmaxSeeds}{10}% results/syn/picorv32.jsonl seeds
+\newcommand{\SynSocNoAccelLut}{3,392}% results/syn/soc_noaccel.jsonl seed 1 .lut4
 \newcommand{\SynSocNoAccelFf}{1,073}% results/syn/soc_noaccel.jsonl seed 1 .ff
 \newcommand{\SynSocNoAccelBram}{128}% results/syn/soc_noaccel.jsonl seed 1 .dp16kd
 \newcommand{\SynSocNoAccelMult}{4}% results/syn/soc_noaccel.jsonl seed 1 .mult18x18d
-\newcommand{\SynSocNoAccelFmax}{63.1}% results/syn/soc_noaccel.jsonl median fmax_mhz over 1 seeds
-\newcommand{\SynSocNoAccelFmaxSeeds}{1}% results/syn/soc_noaccel.jsonl seeds
-\newcommand{\SynSocPeightLut}{\todo{MEASURE: soc lut4}}% PENDING results/syn/soc_P8.jsonl
-\newcommand{\SynSocPeightFf}{\todo{MEASURE: soc ff}}% PENDING results/syn/soc_P8.jsonl
-\newcommand{\SynSocPeightBram}{\todo{MEASURE: soc dp16kd}}% PENDING results/syn/soc_P8.jsonl
-\newcommand{\SynSocPeightMult}{\todo{MEASURE: soc mult18x18d}}% PENDING results/syn/soc_P8.jsonl
-\newcommand{\SynSocPeightFmax}{\todo{MEASURE: soc Fmax}}% PENDING results/syn/soc_P8.jsonl
-\newcommand{\SynSocPeightFmaxSeeds}{\todo{MEASURE: soc seeds}}% PENDING results/syn/soc_P8.jsonl
-\newcommand{\SynAccelPoneLut}{\todo{MEASURE: accel lut4}}% PENDING results/syn/accel_P1.jsonl
-\newcommand{\SynAccelPoneFf}{\todo{MEASURE: accel ff}}% PENDING results/syn/accel_P1.jsonl
-\newcommand{\SynAccelPoneBram}{\todo{MEASURE: accel dp16kd}}% PENDING results/syn/accel_P1.jsonl
-\newcommand{\SynAccelPoneMult}{\todo{MEASURE: accel mult18x18d}}% PENDING results/syn/accel_P1.jsonl
-\newcommand{\SynAccelPoneFmax}{\todo{MEASURE: accel Fmax}}% PENDING results/syn/accel_P1.jsonl
-\newcommand{\SynAccelPoneFmaxSeeds}{\todo{MEASURE: accel seeds}}% PENDING results/syn/accel_P1.jsonl
-\newcommand{\SynAccelPtwoLut}{\todo{MEASURE: accel lut4}}% PENDING results/syn/accel_P2.jsonl
-\newcommand{\SynAccelPtwoFf}{\todo{MEASURE: accel ff}}% PENDING results/syn/accel_P2.jsonl
-\newcommand{\SynAccelPtwoBram}{\todo{MEASURE: accel dp16kd}}% PENDING results/syn/accel_P2.jsonl
-\newcommand{\SynAccelPtwoMult}{\todo{MEASURE: accel mult18x18d}}% PENDING results/syn/accel_P2.jsonl
-\newcommand{\SynAccelPtwoFmax}{\todo{MEASURE: accel Fmax}}% PENDING results/syn/accel_P2.jsonl
-\newcommand{\SynAccelPtwoFmaxSeeds}{\todo{MEASURE: accel seeds}}% PENDING results/syn/accel_P2.jsonl
-\newcommand{\SynAccelPfourLut}{\todo{MEASURE: accel lut4}}% PENDING results/syn/accel_P4.jsonl
-\newcommand{\SynAccelPfourFf}{\todo{MEASURE: accel ff}}% PENDING results/syn/accel_P4.jsonl
-\newcommand{\SynAccelPfourBram}{\todo{MEASURE: accel dp16kd}}% PENDING results/syn/accel_P4.jsonl
-\newcommand{\SynAccelPfourMult}{\todo{MEASURE: accel mult18x18d}}% PENDING results/syn/accel_P4.jsonl
-\newcommand{\SynAccelPfourFmax}{\todo{MEASURE: accel Fmax}}% PENDING results/syn/accel_P4.jsonl
-\newcommand{\SynAccelPfourFmaxSeeds}{\todo{MEASURE: accel seeds}}% PENDING results/syn/accel_P4.jsonl
-\newcommand{\SynAccelPeightLut}{\todo{MEASURE: accel lut4}}% PENDING results/syn/accel_P8.jsonl
-\newcommand{\SynAccelPeightFf}{\todo{MEASURE: accel ff}}% PENDING results/syn/accel_P8.jsonl
-\newcommand{\SynAccelPeightBram}{\todo{MEASURE: accel dp16kd}}% PENDING results/syn/accel_P8.jsonl
-\newcommand{\SynAccelPeightMult}{\todo{MEASURE: accel mult18x18d}}% PENDING results/syn/accel_P8.jsonl
-\newcommand{\SynAccelPeightFmax}{\todo{MEASURE: accel Fmax}}% PENDING results/syn/accel_P8.jsonl
-\newcommand{\SynAccelPeightFmaxSeeds}{\todo{MEASURE: accel seeds}}% PENDING results/syn/accel_P8.jsonl
-\newcommand{\SynAccelPsixteenLut}{\todo{MEASURE: accel lut4}}% PENDING results/syn/accel_P16.jsonl
-\newcommand{\SynAccelPsixteenFf}{\todo{MEASURE: accel ff}}% PENDING results/syn/accel_P16.jsonl
-\newcommand{\SynAccelPsixteenBram}{\todo{MEASURE: accel dp16kd}}% PENDING results/syn/accel_P16.jsonl
-\newcommand{\SynAccelPsixteenMult}{\todo{MEASURE: accel mult18x18d}}% PENDING results/syn/accel_P16.jsonl
-\newcommand{\SynAccelPsixteenFmax}{\todo{MEASURE: accel Fmax}}% PENDING results/syn/accel_P16.jsonl
-\newcommand{\SynAccelPsixteenFmaxSeeds}{\todo{MEASURE: accel seeds}}% PENDING results/syn/accel_P16.jsonl
-\newcommand{\VerdictCthree}{\todo{MEASURE: C3 verdict}}% PENDING C3 from syn/accel_P8.jsonl
-\newcommand{\MeasCfourRows}{\todo{MEASURE: C4a rows}}% PENDING results/m6_pred_vs_meas.csv
-\newcommand{\MeasCfourMaxErr}{\todo{MEASURE: C4a max error}}% PENDING results/m6_pred_vs_meas.csv
-\newcommand{\MeasCfourMedianErr}{\todo{MEASURE: C4a median signed error}}% PENDING results/m6_pred_vs_meas.csv
-\newcommand{\MeasCfourViolations}{\todo{MEASURE: C4a violations}}% PENDING results/m6_pred_vs_meas.csv
-\newcommand{\VerdictCfourA}{\todo{MEASURE: C4a verdict}}% PENDING results/m6_pred_vs_meas.csv
-\newcommand{\MeasCfourBMnist}{\todo{MEASURE: C4b measured mnist cnn}}% PENDING results/m6_c4b.json
-\newcommand{\MeasCfourBErrMnist}{\todo{MEASURE: C4b error mnist cnn}}% PENDING results/m6_c4b.json
-\newcommand{\MeasCfourBCifar}{\todo{MEASURE: C4b measured cifar mobilenet}}% PENDING results/m6_c4b.json
-\newcommand{\MeasCfourBErrCifar}{\todo{MEASURE: C4b error cifar mobilenet}}% PENDING results/m6_c4b.json
-\newcommand{\PstarMeasMnist}{\todo{MEASURE: measured saturation width}}% PENDING results/m5_accel_*_P*.json (sum STAMP)
-\newcommand{\PstarMeasCifar}{\todo{MEASURE: measured saturation width}}% PENDING results/m5_accel_*_P*.json (sum STAMP)
+\newcommand{\SynSocNoAccelFmax}{59.6}% results/syn/soc_noaccel.jsonl median fmax_mhz over 3 distinct seeds, newest RTL version
+\newcommand{\SynSocNoAccelFmaxSeeds}{3}% results/syn/soc_noaccel.jsonl seeds
+\newcommand{\SynSocPeightLut}{10,684}% results/syn/soc_P8.jsonl seed 1 .lut4
+\newcommand{\SynSocPeightFf}{4,427}% results/syn/soc_P8.jsonl seed 1 .ff
+\newcommand{\SynSocPeightBram}{139}% results/syn/soc_P8.jsonl seed 1 .dp16kd
+\newcommand{\SynSocPeightMult}{40}% results/syn/soc_P8.jsonl seed 1 .mult18x18d
+\newcommand{\SynSocPeightFmax}{35.8}% results/syn/soc_P8.jsonl median fmax_mhz over 2 distinct seeds, newest RTL version
+\newcommand{\SynSocPeightFmaxSeeds}{2}% results/syn/soc_P8.jsonl seeds
+\newcommand{\SynAccelPoneLut}{5,788}% results/syn/accel_P1.jsonl seed 1 .lut4
+\newcommand{\SynAccelPoneFf}{2,932}% results/syn/accel_P1.jsonl seed 1 .ff
+\newcommand{\SynAccelPoneBram}{4}% results/syn/accel_P1.jsonl seed 1 .dp16kd
+\newcommand{\SynAccelPoneMult}{8}% results/syn/accel_P1.jsonl seed 1 .mult18x18d
+\newcommand{\SynAccelPoneFmax}{61.1}% results/syn/accel_P1.jsonl median fmax_mhz over 3 distinct seeds, newest RTL version
+\newcommand{\SynAccelPoneFmaxSeeds}{3}% results/syn/accel_P1.jsonl seeds
+\newcommand{\SynAccelPtwoLut}{5,922}% results/syn/accel_P2.jsonl seed 1 .lut4
+\newcommand{\SynAccelPtwoFf}{2,998}% results/syn/accel_P2.jsonl seed 1 .ff
+\newcommand{\SynAccelPtwoBram}{5}% results/syn/accel_P2.jsonl seed 1 .dp16kd
+\newcommand{\SynAccelPtwoMult}{12}% results/syn/accel_P2.jsonl seed 1 .mult18x18d
+\newcommand{\SynAccelPtwoFmax}{60.4}% results/syn/accel_P2.jsonl median fmax_mhz over 3 distinct seeds, newest RTL version
+\newcommand{\SynAccelPtwoFmaxSeeds}{3}% results/syn/accel_P2.jsonl seeds
+\newcommand{\SynAccelPfourLut}{6,171}% results/syn/accel_P4.jsonl seed 1 .lut4
+\newcommand{\SynAccelPfourFf}{3,134}% results/syn/accel_P4.jsonl seed 1 .ff
+\newcommand{\SynAccelPfourBram}{7}% results/syn/accel_P4.jsonl seed 1 .dp16kd
+\newcommand{\SynAccelPfourMult}{20}% results/syn/accel_P4.jsonl seed 1 .mult18x18d
+\newcommand{\SynAccelPfourFmax}{60.2}% results/syn/accel_P4.jsonl median fmax_mhz over 3 distinct seeds, newest RTL version
+\newcommand{\SynAccelPfourFmaxSeeds}{3}% results/syn/accel_P4.jsonl seeds
+\newcommand{\SynAccelPeightLut}{7,313}% results/syn/accel_P8.jsonl seed 1 .lut4
+\newcommand{\SynAccelPeightFf}{3,542}% results/syn/accel_P8.jsonl seed 1 .ff
+\newcommand{\SynAccelPeightBram}{11}% results/syn/accel_P8.jsonl seed 1 .dp16kd
+\newcommand{\SynAccelPeightMult}{36}% results/syn/accel_P8.jsonl seed 1 .mult18x18d
+\newcommand{\SynAccelPeightFmax}{61.5}% results/syn/accel_P8.jsonl median fmax_mhz over 10 distinct seeds, newest RTL version
+\newcommand{\SynAccelPeightFmaxSeeds}{10}% results/syn/accel_P8.jsonl seeds
+\newcommand{\SynAccelPsixteenLut}{9,716}% results/syn/accel_P16.jsonl seed 1 .lut4
+\newcommand{\SynAccelPsixteenFf}{4,358}% results/syn/accel_P16.jsonl seed 1 .ff
+\newcommand{\SynAccelPsixteenBram}{19}% results/syn/accel_P16.jsonl seed 1 .dp16kd
+\newcommand{\SynAccelPsixteenMult}{68}% results/syn/accel_P16.jsonl seed 1 .mult18x18d
+\newcommand{\SynAccelPsixteenFmax}{58.0}% results/syn/accel_P16.jsonl median fmax_mhz over 3 distinct seeds, newest RTL version
+\newcommand{\SynAccelPsixteenFmaxSeeds}{3}% results/syn/accel_P16.jsonl seeds
+\newcommand{\VerdictCthree}{refuted}% C3 from syn/accel_P8.jsonl
+\newcommand{\MeasCfourRows}{108}% rows of results/m6_pred_vs_meas.csv
+\newcommand{\MeasCfourMaxErr}{12.4}% max |pred-meas|/meas (pct), results/m6_pred_vs_meas.csv
+\newcommand{\MeasCfourMedianErr}{0.2}% median signed error (pct), results/m6_pred_vs_meas.csv
+\newcommand{\MeasCfourViolations}{0}% rows with error > 20 pct
+\newcommand{\VerdictCfourA}{confirmed}% C4a
+\newcommand{\MeasCfourBMnist}{18,913}% results/m6_c4b.json mnist_cnn.meas
+\newcommand{\MeasCfourBErrMnist}{-0.9}% results/m6_c4b.json mnist_cnn signed error pct
+\newcommand{\MeasCfourBCifar}{135,277}% results/m6_c4b.json cifar_mobilenet.meas
+\newcommand{\MeasCfourBErrCifar}{0.4}% results/m6_c4b.json cifar_mobilenet signed error pct
+\newcommand{\PstarMeasMnist}{16}% results/m6_c5.json models.mnist_cnn.measured_pstar (16 = not reached)
+\newcommand{\PstarMeasCifar}{16}% results/m6_c5.json models.cifar_mobilenet.measured_pstar (16 = not reached)
+\newcommand{\DevBaseBeforeMnist}{12,188,028}% results/deviations.json D19 before.baseline (docs/DECISIONS.md D19)
+\newcommand{\DevAccelBeforeMnist}{451,480}% results/deviations.json D19 before.accel_P8 (docs/DECISIONS.md D19)
+\newcommand{\DevSpeedupBeforeMnist}{27.0}% results/deviations.json D19 speedup_before
+\newcommand{\DevSpeedupAfterMnist}{46.8}% results/deviations.json D19 speedup_after
+\newcommand{\DevCfourBMeasBeforeMnist}{18,928}% results/deviations.json D20 before.meas (docs/DECISIONS.md D20)
+\newcommand{\DevCfourBErrBeforeMnist}{-1.0}% results/deviations.json D20 before.err_pct
+\newcommand{\DevCfourBErrAfterMnist}{-0.9}% results/deviations.json D20 after.err_pct
+\newcommand{\DevBaseBeforeCifar}{72,157,425}% results/deviations.json D19 before.baseline (docs/DECISIONS.md D19)
+\newcommand{\DevAccelBeforeCifar}{197,617}% results/deviations.json D19 before.accel_P8 (docs/DECISIONS.md D19)
+\newcommand{\DevSpeedupBeforeCifar}{365.1}% results/deviations.json D19 speedup_before
+\newcommand{\DevSpeedupAfterCifar}{350.0}% results/deviations.json D19 speedup_after
+\newcommand{\DevCfourBMeasBeforeCifar}{135,281}% results/deviations.json D20 before.meas (docs/DECISIONS.md D20)
+\newcommand{\DevCfourBErrBeforeCifar}{+0.4}% results/deviations.json D20 before.err_pct
+\newcommand{\DevCfourBErrAfterCifar}{+0.4}% results/deviations.json D20 after.err_pct
+\newcommand{\NExceed}{6}% results/deviations.json root_cause_A.exceeding_rows
+\newcommand{\BiasDefault}{0.5}% results/deviations.json root_cause_A.bias_default_pct (DESIGN 7.4 'all others < 0.5 %')
+\newcommand{\ExceedMargin}{0.5}% results/deviations.json root_cause_A.margin_pp
+\newcommand{\TieMnistWrites}{546}% results/deviations.json root_cause_A.tie_probe.mnist_cnn_op1_P8
+\newcommand{\TieMnistPixels}{784}% results/deviations.json root_cause_A.tie_probe.mnist_cnn_op1_P8
+\newcommand{\TieCifarWrites}{690}% results/deviations.json root_cause_A.tie_probe.cifar_mobilenet_op0_P16
+\newcommand{\TieCifarPixels}{1,024}% results/deviations.json root_cause_A.tie_probe.cifar_mobilenet_op0_P16
+\newcommand{\IdentCalls}{275}% results/deviations.json root_cause_B.chain_calls
+\newcommand{\IdentPlusOne}{275}% results/deviations.json root_cause_B.plus1_holds
+\newcommand{\IdentPlusTwo}{0}% results/deviations.json root_cause_B.plus2_holds
+\newcommand{\IndepStampN}{3}% results/deviations.json independent_stamp.commands
+\newcommand{\IndepStampAgree}{3}% bus-level count == STAMP
+\newcommand{\IndepStampList}{6,356, 7,715, 16,616}% results/deviations.json independent_stamp.commands[].stamp
+\newcommand{\PostHocFallbackMnist}{224,959}% mean fallback-op cycles per image, m5_profile_mnist_cnn_P8.json c4b.fallback_sum_per_image_run0
+\newcommand{\PostHocCyclesMnist}{243,815}% m6_c4b.json mnist_cnn.pred + mean(m5_profile_mnist_cnn_P8.json c4b.fallback_sum_per_image_run0) + baseline_overhead.json
+\newcommand{\PostHocSpeedupMnist}{46.7}% baseline_mnist_cnn.json cycles_median / (m6_c4b.json mnist_cnn.pred + mean(m5_profile_mnist_cnn_P8.json c4b.fallback_sum_per_image_run0) + baseline_overhead.json)
+\newcommand{\PostHocFallbackCifar}{62,764}% mean fallback-op cycles per image, m5_profile_cifar_mobilenet_P8.json c4b.fallback_sum_per_image_run0
+\newcommand{\PostHocCyclesCifar}{198,760}% m6_c4b.json cifar_mobilenet.pred + mean(m5_profile_cifar_mobilenet_P8.json c4b.fallback_sum_per_image_run0) + baseline_overhead.json
+\newcommand{\PostHocSpeedupCifar}{348.0}% baseline_cifar_mobilenet.json cycles_median / (m6_c4b.json cifar_mobilenet.pred + mean(m5_profile_cifar_mobilenet_P8.json c4b.fallback_sum_per_image_run0) + baseline_overhead.json)

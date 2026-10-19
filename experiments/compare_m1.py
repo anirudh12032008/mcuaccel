@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""M6 / T6.2: measured STAMPs vs the frozen M1 predictions (C4a), per-chain CYCLES identity, C5, Amdahl, variance.
+"""M6 / T6.2: measured STAMPs vs the frozen M1 predictions (C4a), per-chain CYCLES identity (frozen +2 and BUSY-high +1), C5, Amdahl, variance.
 Inputs : results/m6_stamps_<model>_P<P>.json (run_soc.py --stamps), results/m5_accel_*.json, results/m5_profile_*_P8.json,
          results/baseline_*.json, and `git show m1:results/m1_predictions.csv|m1_summary.json` (frozen; never the working copy).
 Outputs: results/m6_pred_vs_meas.csv (model,op,cmd,P,pred_cycles,meas_cycles,err_pct,meas_min,meas_max,kind,commit,tree_dirty)
@@ -48,18 +48,23 @@ for m in MODELS:
             rows.append({"model": m, "op": op, "cmd": k, "P": P, "pred_cycles": pc, "meas_cycles": int(meas),
                          "err_pct": round(100.0 * (pc - meas) / meas, 4), "meas_min": min(v), "meas_max": max(v),
                          "kind": p["kind"], "commit": j["commit"], "tree_dirty": j["tree_dirty"]})
-        # CYCLES == sum(STAMP + lam + 1) + 2 per chain call (DESIGN 7.4), every call of every inference
-        n_ok = n_bad = 0
+        # CYCLES vs sum(STAMP + lam + 1) per chain call, every call of every inference.
+        #  frozen check  : + 2 (DESIGN 7.2 T_chain, the CPU-visible term incl. the START acceptance cycle)  -> identity_holds/fails
+        #  added (D21)   : + 1 (CYCLES counts BUSY-high cycles; the START acceptance cycle is not BUSY)     -> identity_plus1_*
+        n_ok = n_bad = n_ok1 = 0
         bad = []
         for ii, inf in enumerate(j["inferences"]):
             for ci, ch in enumerate(inf):
-                want = sum(s + LAM + 1 for s in ch["stamps"]) + 2
+                base = sum(s + LAM + 1 for s in ch["stamps"])
+                want = base + 2
+                n_ok1 += ch["cycles"] == base + 1
                 if ch["cycles"] == want:
                     n_ok += 1
                 else:
                     n_bad += 1
                     bad.append({"inference": ii, "chain": ci, "cycles": ch["cycles"], "want": want, "delta": ch["cycles"] - want})
         chain_chk.append({"model": m, "P": P, "chain_calls": n_ok + n_bad, "identity_holds": n_ok, "identity_fails": n_bad,
+                      "identity_plus1_holds": n_ok1, "identity_plus1_fails": n_ok + n_bad - n_ok1,
                       "delta_histogram": {str(d): sum(b["delta"] == d for b in bad) for d in sorted({b["delta"] for b in bad})}, "fails": bad[:5]})
         sum_stamp[m, P] = statistics.median(sum(pc) for pc in per_cmd)
 for key, p in pred.items():
@@ -142,7 +147,9 @@ json.dump(sm, open(os.path.join(R, "m6_summary.json"), "w"), indent=2)
 print(f"C4a rows={len(rows)} (pred rows os={len(pred)}) unmatched={len(viol_missing)} >20%={c4a['n_error_gt_20pct']} max|err|={c4a['max_abs_err_pct']}% verdict={c4a['verdict']}")
 for P, d in by_P.items():
     print(f"  P={P}: {d}")
-print("CYCLES identity:", [(c["model"], c["P"], f"{c['identity_holds']}/{c['chain_calls']}") for c in chain_chk])
+tot = sum(c["chain_calls"] for c in chain_chk)
+print(f"CYCLES identity over {tot} chain calls ({len(chain_chk)} model x P files): "
+      f"frozen +2 holds {sum(c['identity_holds'] for c in chain_chk)}, +1 (BUSY-high) holds {sum(c['identity_plus1_holds'] for c in chain_chk)}")
 for m in MODELS:
     c = c5["models"][m]
     print(f"C5 {m}: measured P*={c['measured_pstar']} predicted P*={c['predicted_pstar']} e2e meas={c['measured_pstar_end_to_end']} pred={c['predicted_pstar_end_to_end']}")

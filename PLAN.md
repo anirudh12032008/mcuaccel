@@ -2,7 +2,7 @@
 
 A fresh session resumes from here. Status legend: [x] done (evidence linked), [ ] open.
 Read CLAUDE.md (conventions), docs/SPEC.md (claims C1-C5), docs/DESIGN.md (interfaces, timing,
-module list, test plan), docs/DECISIONS.md (D1-D14) before touching anything.
+module list, test plan), docs/DECISIONS.md (D1-D21) before touching anything.
 
 ## Environment
 - Repo: `/Users/anirudh/mcuaccl`. `scripts/bootstrap.sh` then `source scripts/env.sh`.
@@ -26,11 +26,22 @@ module list, test plan), docs/DECISIONS.md (D1-D14) before touching anything.
   - [x] M2 rtl/accel/* per DESIGN §8, unit tests vs int8ops (tag m2). Datapath 53be20a, control a2e8c4b,
         red-team T2.3: 1 blocker (credit leak after abort) + credit-loop latency fixed in 31cb76a (D20).
   - [x] M3 tb/accel: 1000 random layers x 5 P, whole networks, chains, errors: 0 mismatches (tag m3)
-  - [ ] M4 backend: packing, splitting, descriptors, model.c emit, driver; executor == int8ops (tag m4)
-        emit.py + host bit-exactness + fairness tests done (5af3876), red-team T4.3 0 blockers, fixes 44fd6a8.
-        Open: T4.2 transpose folding (optional, default off). Tag m4 after M5 builds run on the real RTL.
-  - [ ] M5 SoC: both builds of both networks in Verilator; C2c; first C1/C1b measurements (tag m5)
-  - [ ] M6 syn/ + experiments/: C3, C4, C5, P ablation, pred-vs-meas, variance (tag m6)
+  - [x] M4 backend: packing, splitting, descriptors, model.c emit, driver; executor == int8ops.
+        emit.py + host bit-exactness + fairness tests (5af3876), red-team T4.3 0 blockers, fixes 44fd6a8;
+        the emitted builds run on the real RTL in M5 (C2c, C1, profile). D19 pinned inlining in
+        sw/build_fw.py. Open: T4.2 transpose folding (optional, default off, not used). Tag m4 pending
+        (orchestrator).
+  - [ ] M5 SoC: both builds of both networks in Verilator, timing P=1..16, C4 per command and per network,
+        C5, Amdahl shares (results committed in d189571). C2c: 100 images per network vs run_int8 done, 0
+        mismatches; the baseline-firmware comparison (SPEC C2c second reference) is done for mnist and
+        RUNNING for cifar (results/m5_bitexact.json, log build/exp_bx_cifar.log); status.py leaves C2c
+        pending until both models have it. Tag m5 after that completes.
+  - [x] M6 syn/ + experiments/: ECP5 sweep committed (8bc8e6a); C3 refuted at P=8 (LUT4 over budget; see
+        FINAL_REPORT), C4a confirmed (all rows within 20 %, some over their pre-registered bias: D21),
+        C4b confirmed, C5 measured (results/m6_c5.json), T6.3 final claims red-team applied (D21,
+        DESIGN 7.5). Open until the BRAM fix lands: soc_ram.sv change (in progress, concurrent agent)
+        and new soc_*.jsonl rows; synthesis rows are deduplicated to the newest RTL version
+        (status.syn_rows). Tag m6 pending.
   - [ ] Stretch: Tiny Tapeout-sized variant (P=1 or 2) through LibreLane/sky130, if time allows
 - [ ] Step 5  Verify: everything green from a clean clone (`make test`), lint, red-team sign-off
 - [ ] Step 6  Experiments: experiments/*.py -> results/*.csv|json, figures only from results/
@@ -105,12 +116,18 @@ cycles for both networks in results/baseline_*.json.
   HARDWARE_TODO.md (FPGA wall-clock + power procedure); FINAL_REPORT.md. ORCH tags v0.1.0.
 
 ## Next action
-2026-10-17: m1 tagged. M2 in flight: T2.1 datapath (align, mac_array, requant, writer, wbuf, pbuf)
-and T2.2 control (fetch, ctrl, real top) in parallel on disjoint files against the tests-first unit
-tests (ee60992); then T2.3 red-team. In parallel: T7.1 paper skeleton + experiments/make_macros.py.
-After M2: M3 campaign (tb/accel exists), M5 firmware builds of the emitted model.c.
+2026-10-19: M5/M6 results are committed (d189571). In flight: (1) the cifar baseline-firmware C2c
+comparison (results/m5_bitexact.json); (2) the soc_ram BRAM fix (rtl/soc/soc_ram.sv, new
+results/syn/soc_*.jsonl rows). T6.3 red-team findings applied (D21, DESIGN 7.5, paper, status.py,
+make_macros.py, compare_m1.py, run_baseline.py, make_deviations.py, plot_m6.py).
+Remaining, in order: wait for (1) and (2); `make macros && make paper && make readme`; check no number
+disagrees with results/ and the page count; commit; clean-clone check (`make clean-clone-check`);
+tags m4, m5, m6; then release `v0.1.0` with HARDWARE_TODO.md items still listed as pending.
 
 ## Log
+- 2026-10-19 T6.3 final claims red-team applied: D21 (PSETUP tie, CYCLES identity +1, independent STAMP
+  check), paper post-hoc rows and deviations paragraph, C2c needs the baseline-firmware comparison,
+  synthesis rows deduplicated per seed / newest RTL version. M5/M6 results in d189571. No numbers changed.
 - 2026-10-19 m2 tagged. Pre-fix synth P=8: 7297 LUT4 > C3's 6000 (provisional, rerun on 31cb76a).
 - 2026-10-17 m1 tagged. cifar baseline 10x3 = 72,157,425 cycles/inf (runs identical). M4 emitter done.
 - 2026-10-10 Baselines measured: mnist 12.19M cycles/inf (10x3), cifar 72.16M (2x1, rerun pending);
