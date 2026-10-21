@@ -28,7 +28,15 @@ module soc_ram #(
   localparam int WORDS = BYTES / 4;
   localparam int AW = $clog2(WORDS);
 
-  logic [31:0] mem[0:WORDS-1];
+  // Four byte-lane memories, one write enable per lane and port: the form Yosys memory_libmap
+  // maps to ECP5 DP16KD (true dual port, read-first). A 32-bit array with per-byte writes on two
+  // ports falls back to flip-flops. no_rw_check: a read on one port in the cycle the other port
+  // writes the same word is undefined on DP16KD (simulation returns the old word); without the
+  // attribute Yosys refuses the block RAM. Same-port read-first is kept (WRITEMODE READBEFOREWRITE).
+  (* no_rw_check *) logic [7:0] mem0[0:WORDS-1];
+  (* no_rw_check *) logic [7:0] mem1[0:WORDS-1];
+  (* no_rw_check *) logic [7:0] mem2[0:WORDS-1];
+  (* no_rw_check *) logic [7:0] mem3[0:WORDS-1];
 
   /* verilator lint_off UNUSEDSIGNAL */
   logic [31:0] a_off, b_off;
@@ -45,20 +53,56 @@ module soc_ram #(
   assign b_gnt = 1'b1;
 
 `ifndef SYNTHESIS
+  logic [31:0] img[0:WORDS-1];
   initial begin
     string f;
-    if (INIT_FILE != "") $readmemh(INIT_FILE, mem);
-    if ($value$plusargs("ram=%s", f)) $readmemh(f, mem);
+    for (int i = 0; i < WORDS; i++) img[i] = 32'h0;
+    if (INIT_FILE != "") $readmemh(INIT_FILE, img);
+    if ($value$plusargs("ram=%s", f)) $readmemh(f, img);
+    for (int i = 0; i < WORDS; i++) begin
+      mem0[i] = img[i][7:0];
+      mem1[i] = img[i][15:8];
+      mem2[i] = img[i][23:16];
+      mem3[i] = img[i][31:24];
+    end
   end
 `endif
 
+  logic a_wr, b_wr;
+  assign a_wr = a_req && a_we && a_in;
+  assign b_wr = b_req && b_we && b_in;
+
   always_ff @(posedge clk) begin
-    a_rdata <= mem[a_idx];
-    b_rdata <= mem[b_idx];
-    for (int k = 0; k < 4; k++) begin
-      if (a_req && a_we && a_in && a_be[k]) mem[a_idx][8*k+:8] <= a_wdata[8*k+:8];
-      if (b_req && b_we && b_in && b_be[k]) mem[b_idx][8*k+:8] <= b_wdata[8*k+:8];
-    end
+    a_rdata[7:0] <= mem0[a_idx];
+    if (a_wr && a_be[0]) mem0[a_idx] <= a_wdata[7:0];
+  end
+  always_ff @(posedge clk) begin
+    b_rdata[7:0] <= mem0[b_idx];
+    if (b_wr && b_be[0]) mem0[b_idx] <= b_wdata[7:0];
+  end
+  always_ff @(posedge clk) begin
+    a_rdata[15:8] <= mem1[a_idx];
+    if (a_wr && a_be[1]) mem1[a_idx] <= a_wdata[15:8];
+  end
+  always_ff @(posedge clk) begin
+    b_rdata[15:8] <= mem1[b_idx];
+    if (b_wr && b_be[1]) mem1[b_idx] <= b_wdata[15:8];
+  end
+  always_ff @(posedge clk) begin
+    a_rdata[23:16] <= mem2[a_idx];
+    if (a_wr && a_be[2]) mem2[a_idx] <= a_wdata[23:16];
+  end
+  always_ff @(posedge clk) begin
+    b_rdata[23:16] <= mem2[b_idx];
+    if (b_wr && b_be[2]) mem2[b_idx] <= b_wdata[23:16];
+  end
+  always_ff @(posedge clk) begin
+    a_rdata[31:24] <= mem3[a_idx];
+    if (a_wr && a_be[3]) mem3[a_idx] <= a_wdata[31:24];
+  end
+  always_ff @(posedge clk) begin
+    b_rdata[31:24] <= mem3[b_idx];
+    if (b_wr && b_be[3]) mem3[b_idx] <= b_wdata[31:24];
   end
 
   always_ff @(posedge clk) begin
