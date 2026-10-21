@@ -1,0 +1,47 @@
+{
+  "c2b_images": 10,
+  "c2b_mismatch": 0,
+  "c2b_images_per_model": {
+    "mnist_cnn": 10,
+    "cifar_mobilenet": 10
+  },
+  "c2b_problems": 0,
+  "c2b_P": 8,
+  "per_model_c2c": {
+    "mnist_cnn": {
+      "P": 8,
+      "images": 100,
+      "mismatch_bytes": 0,
+      "mismatch_images": [],
+      "reference": "mcugrad.quant.run_int8",
+      "sim_cycles": 26776606,
+      "log": "build/fw/mnist_cnn_accel_P8_dump_i100_r1/fw.log",
+      "vs_baseline_firmware": {
+        "mismatch_bytes": 0,
+        "mismatch_images": [],
+        "log": "build/fw/mnist_cnn_base_dump_i100_r1/fw.log"
+      },
+      "baseline_firmware_vs_run_int8_mismatch_bytes": 0
+    },
+    "cifar_mobilenet": {
+      "P": 8,
+      "images": 100,
+      "mismatch_bytes": 0,
+      "mismatch_images": [],
+      "reference": "mcugrad.quant.run_int8",
+      "sim_cycles": 21380289,
+      "log": "build/fw/cifar_mobilenet_accel_P8_dump_i100_r1/fw.log",
+      "vs_baseline_firmware": {
+        "mismatch_bytes": 0,
+        "mismatch_images": [],
+        "log": "build/fw/cifar_mobilenet_base_dump_i100_r1/fw.log"
+      },
+      "baseline_firmware_vs_run_int8_mismatch_bytes": 0
+    }
+  },
+  "c2b_note": "C2b (layer-by-layer, accelerator level) is filled by tb/accel, not by run_soc.py",
+  "commit": "45d37bc676b4b9d6d23ffd0260811e86b9ea9f16",
+  "date": "2026-10-21T09:42:45+00:00",
+  "c2c_images": 100,
+  "c2c_mismatch": 0
+}

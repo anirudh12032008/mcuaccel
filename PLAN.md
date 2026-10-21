@@ -29,23 +29,20 @@ module list, test plan), docs/DECISIONS.md (D1-D21) before touching anything.
   - [x] M4 backend: packing, splitting, descriptors, model.c emit, driver; executor == int8ops.
         emit.py + host bit-exactness + fairness tests (5af3876), red-team T4.3 0 blockers, fixes 44fd6a8;
         the emitted builds run on the real RTL in M5 (C2c, C1, profile). D19 pinned inlining in
-        sw/build_fw.py. Open: T4.2 transpose folding (optional, default off, not used). Tag m4 pending
-        (orchestrator).
-  - [ ] M5 SoC: both builds of both networks in Verilator, timing P=1..16, C4 per command and per network,
-        C5, Amdahl shares (results committed in d189571). C2c: 100 images per network vs run_int8 done, 0
-        mismatches; the baseline-firmware comparison (SPEC C2c second reference) is done for mnist and
-        RUNNING for cifar (results/m5_bitexact.json, log build/exp_bx_cifar.log); status.py leaves C2c
-        pending until both models have it. Tag m5 after that completes.
+        sw/build_fw.py. Open: T4.2 transpose folding (optional, default off, not used). Tagged m4.
+  - [x] M5 SoC: both builds of both networks in Verilator, timing P=1..16, C4 per command and per network,
+        C5, Amdahl shares (d189571). C2c confirmed: 100 images per network, 0 mismatching bytes vs run_int8
+        and vs the baseline firmware, both networks (results/m5_bitexact.json). Tag m5.
   - [x] M6 syn/ + experiments/: ECP5 sweep committed (8bc8e6a); C3 refuted at P=8 (LUT4 over budget; see
         FINAL_REPORT), C4a confirmed (all rows within 20 %, some over their pre-registered bias: D21),
         C4b confirmed, C5 measured (results/m6_c5.json), T6.3 final claims red-team applied (D21,
-        DESIGN 7.5). Open until the BRAM fix lands: soc_ram.sv change (in progress, concurrent agent)
-        and new soc_*.jsonl rows; synthesis rows are deduplicated to the newest RTL version
-        (status.syn_rows). Tag m6 pending.
+        DESIGN 7.5). soc_ram maps to DP16KD block RAM (cycles unchanged, 436 tests pass); SoC synthesis
+        at 10 seeds each: P=8 10,684 LUT4 / 35.8 MHz, no accel 3,392 LUT4 / 61.0 MHz. Tag m6.
   - [ ] Stretch: Tiny Tapeout-sized variant (P=1 or 2) through LibreLane/sky130, if time allows
 - [ ] Step 5  Verify: everything green from a clean clone (`make test`), lint, red-team sign-off
-- [ ] Step 6  Experiments: experiments/*.py -> results/*.csv|json, figures only from results/
-- [ ] Step 7  Paper: paper/main.tex (IEEEtran, 6 pages), macros from results/, reviewer pass
+- [x] Step 6  Experiments: experiments/*.py -> results/*.csv|json, figures only from results/
+- [x] Step 7  Paper: paper/main.tex (IEEEtran conference, 6 pages, T7.2 reviewer pass) and
+      paper/journal/main.tex (IEEEtran journal, 14 pages); shared macros from results/
 - [ ] Step 8  Ship: README, HARDWARE_TODO.md, FINAL_REPORT.md, tag v0.1.0
 
 ## Task graph (who, model, dependencies, parallelism)
@@ -116,15 +113,14 @@ cycles for both networks in results/baseline_*.json.
   HARDWARE_TODO.md (FPGA wall-clock + power procedure); FINAL_REPORT.md. ORCH tags v0.1.0.
 
 ## Next action
-2026-10-19: M5/M6 results are committed (d189571). In flight: (1) the cifar baseline-firmware C2c
-comparison (results/m5_bitexact.json); (2) the soc_ram BRAM fix (rtl/soc/soc_ram.sv, new
-results/syn/soc_*.jsonl rows). T6.3 red-team findings applied (D21, DESIGN 7.5, paper, status.py,
-make_macros.py, compare_m1.py, run_baseline.py, make_deviations.py, plot_m6.py).
-Remaining, in order: wait for (1) and (2); `make macros && make paper && make readme`; check no number
-disagrees with results/ and the page count; commit; clean-clone check (`make clean-clone-check`);
-tags m4, m5, m6; then release `v0.1.0` with HARDWARE_TODO.md items still listed as pending.
+2026-10-21: all claims scored (C1, C1b, C2a-c, C4a, C4b confirmed; C3 refuted; C5 descriptive); both
+papers built; tags m4-m6. Remaining: clean-clone check (`make clean-clone-check`), then tag v0.1.0.
+Before submission (author): push m1 to a public remote for an external timestamp; board wall-clock run
+(HARDWARE_TODO.md items 1-2).
 
 ## Log
+- 2026-10-21 C2c confirmed (cifar baseline-firmware comparison, 0 mismatches). SoC synth at 10 seeds,
+  soc_ram BRAM fix committed. Conference paper reviewed (T7.2); journal version written. Tags m4-m6.
 - 2026-10-19 T6.3 final claims red-team applied: D21 (PSETUP tie, CYCLES identity +1, independent STAMP
   check), paper post-hoc rows and deviations paragraph, C2c needs the baseline-firmware comparison,
   synthesis rows deduplicated per seed / newest RTL version. M5/M6 results in d189571. No numbers changed.
