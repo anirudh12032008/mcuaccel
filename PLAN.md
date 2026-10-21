@@ -39,11 +39,12 @@ module list, test plan), docs/DECISIONS.md (D1-D21) before touching anything.
         DESIGN 7.5). soc_ram maps to DP16KD block RAM (cycles unchanged, 436 tests pass); SoC synthesis
         at 10 seeds each: P=8 10,684 LUT4 / 35.8 MHz, no accel 3,392 LUT4 / 61.0 MHz. Tag m6.
   - [ ] Stretch: Tiny Tapeout-sized variant (P=1 or 2) through LibreLane/sky130, if time allows
-- [ ] Step 5  Verify: everything green from a clean clone (`make test`), lint, red-team sign-off
+- [x] Step 5  Verify: clean clone 2026-10-21 at 6263c64: lint clean, 435 passed, 1 skipped
+      (test_whole_network: needs the git-ignored build/graphs cache from make test-slow; C2b/C2c in results/)
 - [x] Step 6  Experiments: experiments/*.py -> results/*.csv|json, figures only from results/
 - [x] Step 7  Paper: paper/main.tex (IEEEtran conference, 6 pages, T7.2 reviewer pass) and
       paper/journal/main.tex (IEEEtran journal, 14 pages); shared macros from results/
-- [ ] Step 8  Ship: README, HARDWARE_TODO.md, FINAL_REPORT.md, tag v0.1.0
+- [x] Step 8  Ship: README, HARDWARE_TODO.md, FINAL_REPORT.md, tag v0.1.0
 
 ## Task graph (who, model, dependencies, parallelism)
 
@@ -114,7 +115,7 @@ cycles for both networks in results/baseline_*.json.
 
 ## Next action
 2026-10-21: all claims scored (C1, C1b, C2a-c, C4a, C4b confirmed; C3 refuted; C5 descriptive); both
-papers built; tags m4-m6. Remaining: clean-clone check (`make clean-clone-check`), then tag v0.1.0.
+papers built; clean-clone check passed; tags m4-m6 and v0.1.0.
 Before submission (author): push m1 to a public remote for an external timestamp; board wall-clock run
 (HARDWARE_TODO.md items 1-2).
 

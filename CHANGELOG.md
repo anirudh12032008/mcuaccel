@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.1.0 (2026-10-21)
 - Project skeleton (Step 0).
 - M1: analytic cycle model, pre-registered predictions frozen at tag `m1` (results/M1_PREDICTIONS.md).
 - M2-M3: accelerator RTL, 0 mismatching bytes over 5000 random layers at P=1..16 (tags m2, m3).
