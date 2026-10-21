@@ -17,7 +17,7 @@ endif
 endif
 export PATH := $(ROOT)/.venv/bin:$(ROOT)/tools/xpack-riscv-none-elf-gcc-15.2.0-1/bin:$(ROOT)/tools/oss-cad-suite/bin:$(PATH)
 
-.PHONY: bootstrap lint test test-slow synth macros paper reproduce clean-clone-check readme clean
+.PHONY: bootstrap lint test test-slow synth macros paper paper-journal reproduce clean-clone-check readme clean
 
 RTL := $(shell find rtl -name '*.sv' 2>/dev/null | sort)
 PICO := third_party/picorv32/picorv32.v
@@ -50,6 +50,10 @@ paper:
 	mkdir -p paper/build && cd paper && tectonic -X compile main.tex --outdir build
 	cp paper/build/main.pdf paper/main.pdf
 
+paper-journal:
+	mkdir -p paper/journal/build && cd paper/journal && tectonic -X compile main.tex --outdir build
+	cp paper/journal/build/main.pdf paper/journal/main.pdf
+
 # Full pipeline (hours; runtimes in README). REPRODUCE_QUICK=1 for a smoke run that restores results/ afterwards.
 reproduce:
 	scripts/reproduce.sh
@@ -61,7 +65,7 @@ readme:
 	$(PY) experiments/make_readme_tables.py && $(PY) experiments/make_final_report.py
 
 clean:
-	rm -rf build sim_build obj_dir paper/build
+	rm -rf build sim_build obj_dir paper/build paper/journal/build
 
 .PHONY: sim
 sim:
