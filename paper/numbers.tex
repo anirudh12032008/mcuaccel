@@ -150,14 +150,14 @@
 \newcommand{\SynSocNoAccelFf}{1,073}% results/syn/soc_noaccel.jsonl seed 1 .ff
 \newcommand{\SynSocNoAccelBram}{128}% results/syn/soc_noaccel.jsonl seed 1 .dp16kd
 \newcommand{\SynSocNoAccelMult}{4}% results/syn/soc_noaccel.jsonl seed 1 .mult18x18d
-\newcommand{\SynSocNoAccelFmax}{61.8}% results/syn/soc_noaccel.jsonl median fmax_mhz over 5 distinct seeds, newest RTL version
-\newcommand{\SynSocNoAccelFmaxSeeds}{5}% results/syn/soc_noaccel.jsonl seeds
+\newcommand{\SynSocNoAccelFmax}{61.0}% results/syn/soc_noaccel.jsonl median fmax_mhz over 10 distinct seeds, newest RTL version
+\newcommand{\SynSocNoAccelFmaxSeeds}{10}% results/syn/soc_noaccel.jsonl seeds
 \newcommand{\SynSocPeightLut}{10,684}% results/syn/soc_P8.jsonl seed 1 .lut4
 \newcommand{\SynSocPeightFf}{4,427}% results/syn/soc_P8.jsonl seed 1 .ff
 \newcommand{\SynSocPeightBram}{139}% results/syn/soc_P8.jsonl seed 1 .dp16kd
 \newcommand{\SynSocPeightMult}{40}% results/syn/soc_P8.jsonl seed 1 .mult18x18d
-\newcommand{\SynSocPeightFmax}{36.0}% results/syn/soc_P8.jsonl median fmax_mhz over 7 distinct seeds, newest RTL version
-\newcommand{\SynSocPeightFmaxSeeds}{7}% results/syn/soc_P8.jsonl seeds
+\newcommand{\SynSocPeightFmax}{35.8}% results/syn/soc_P8.jsonl median fmax_mhz over 10 distinct seeds, newest RTL version
+\newcommand{\SynSocPeightFmaxSeeds}{10}% results/syn/soc_P8.jsonl seeds
 \newcommand{\SynAccelPoneLut}{5,788}% results/syn/accel_P1.jsonl seed 1 .lut4
 \newcommand{\SynAccelPoneFf}{2,932}% results/syn/accel_P1.jsonl seed 1 .ff
 \newcommand{\SynAccelPoneBram}{4}% results/syn/accel_P1.jsonl seed 1 .dp16kd
@@ -283,6 +283,6 @@
 \newcommand{\AccelOverCpuLut}{2.5}% accel_P8 seed 1 lut4 / picorv32 seed 1 lut4
 \newcommand{\SynLutOverBudget}{21.9}% (accel_P8 seed 1 lut4 - 6000) / 6000 (pct)
 \newcommand{\SynLutPerP}{262}% (accel_P16 - accel_P1) seed 1 lut4 / 15
-\newcommand{\FmaxRatioSoc}{0.58}% median fmax soc_P8 / median fmax soc_noaccel (newest RTL version)
-\newcommand{\WallSpeedupEstMnist}{27.2}% MeasSpeedup P=8 x FmaxRatioSoc (estimate: each SoC at its own median Fmax; not a board measurement)
-\newcommand{\WallSpeedupEstCifar}{203.5}% MeasSpeedup P=8 x FmaxRatioSoc (estimate: each SoC at its own median Fmax; not a board measurement)
+\newcommand{\FmaxRatioSoc}{0.59}% median fmax soc_P8 / median fmax soc_noaccel (newest RTL version)
+\newcommand{\WallSpeedupEstMnist}{27.5}% MeasSpeedup P=8 x FmaxRatioSoc (estimate: each SoC at its own median Fmax; not a board measurement)
+\newcommand{\WallSpeedupEstCifar}{205.3}% MeasSpeedup P=8 x FmaxRatioSoc (estimate: each SoC at its own median Fmax; not a board measurement)
