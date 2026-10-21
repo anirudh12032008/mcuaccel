@@ -5,7 +5,7 @@ Real where a result file exists, \\todo{MEASURE: ...} otherwise; rerun after eac
 Pre-registered inputs (predictions) are read from git tag m1, not the working tree.
 Expected files for results that do not exist yet (schemas are assumptions; a mismatch yields
 a \\todo, never a wrong number):
-  results/m3_bitexact.csv         columns seed,mismatch_bytes (one row per random layer)   [C2a]
+  results/m3_summary.json         layers[P].rows / .mismatch_bytes, Ps (full M3 campaign, every P)  [C2a]
   results/m5_bitexact.json        c2b_images,c2b_mismatch,c2c_images,c2c_mismatch          [C2b/c]
   results/m5_accel_<model>_P<P>.json  same schema as baseline_<model>.json (mcugrad_result.cycles_median)  [C1, C1b, C5]
   results/m6_pred_vs_meas.csv     columns model,op,cmd,P,pred_cycles,meas_cycles           [C4a]
@@ -14,7 +14,7 @@ a \\todo, never a wrong number):
 """
 import csv, hashlib, io, json, statistics, subprocess, sys
 from pathlib import Path
-from status import c2c, syn_rows  # shared rules: C2c verdict, newest-RTL-version synthesis rows
+from status import c2c, syn_row, syn_rows  # shared rules: C2c verdict, newest-RTL-version synthesis rows
 
 ROOT = Path(__file__).resolve().parent.parent
 R = ROOT / "results"
@@ -165,18 +165,20 @@ verdict("VerdictCone", None if None in s8 else all(base[m] / meas[m, 8] >= 10 fo
 verdict("VerdictConeB", None if s8[1] is None else base["cifar_mobilenet"] / s8[1] >= 100,
         "C1b verdict", "C1b from m5_accel_cifar_mobilenet_P8.json")
 
-# ---- C2
-p = R / "m3_bitexact.csv"
-rows = list(csv.DictReader(p.open())) if p.exists() else []
-if rows and "mismatch_bytes" in rows[0]:
-    mm = sum(int(r["mismatch_bytes"]) for r in rows)
-    emit("MeasCtwoALayers", i(len(rows)), "rows of results/m3_bitexact.csv")
-    emit("MeasCtwoAMismatch", i(mm), "sum of mismatch_bytes, results/m3_bitexact.csv")
-    verdict("VerdictCtwoA", mm == 0 and len(rows) >= 1000, "", "C2a")
+# ---- C2 (C2a: the full M3 campaign in results/m3_summary.json, every P; same source as status.py)
+m3s = load(R / "m3_summary.json")
+if m3s and m3s.get("layers"):
+    Ls = m3s["layers"]
+    mm = sum(v["mismatch_bytes"] for v in Ls.values())
+    emit("MeasCtwoALayers", i(sum(v["rows"] for v in Ls.values())), "results/m3_summary.json sum layers[P].rows")
+    emit("MeasCtwoAMismatch", i(mm), "results/m3_summary.json sum layers[P].mismatch_bytes")
+    emit("MeasCtwoAPs", ", ".join(str(P) for P in m3s["Ps"]), "results/m3_summary.json Ps (widths of the C2a campaign)")
+    verdict("VerdictCtwoA", mm == 0 and all(v["rows"] >= 1000 for v in Ls.values()), "", "C2a (results/m3_summary.json)")
 else:
-    todo("MeasCtwoALayers", "C2a layers run", "results/m3_bitexact.csv")
-    todo("MeasCtwoAMismatch", "C2a mismatching bytes", "results/m3_bitexact.csv")
-    todo("VerdictCtwoA", "C2a verdict", "results/m3_bitexact.csv")
+    todo("MeasCtwoALayers", "C2a layers run", "results/m3_summary.json")
+    todo("MeasCtwoAMismatch", "C2a mismatching bytes", "results/m3_summary.json")
+    todo("MeasCtwoAPs", "C2a widths", "results/m3_summary.json")
+    todo("VerdictCtwoA", "C2a verdict", "results/m3_summary.json")
 bx = load(R / "m5_bitexact.json") or {}
 for k, nm in [("c2b_images", "MeasCtwoBImages"), ("c2b_mismatch", "MeasCtwoBMismatch"),
               ("c2c_images", "MeasCtwoCImages"), ("c2c_mismatch", "MeasCtwoCMismatch")]:
@@ -309,6 +311,94 @@ if dv:
 else:
     for n_ in ("NExceed", "IdentCalls", "IdentPlusOne", "IdentPlusTwo", "IndepStampN", "IndepStampAgree", "IndepStampList"):
         todo(n_, n_, "results/deviations.json (experiments/make_deviations.py)")
+
+# ---- journal extension (paper/journal/main.tex): M3 totals, per-P C4a, C5 sums, Amdahl shares, model archs
+emit("EstLutPeight", i(3800), "docs/DESIGN.md 8.12 pre-RTL LUT4 estimate at P=8 (spec constant)")
+m3 = load(R / "m3_summary.json")
+if m3:
+    L, CE = m3["layers"].values(), m3["chains_errors"].values()
+    emit("MThreePerP", i(next(iter(m3["layers"].values()))["rows"]), "results/m3_summary.json layers[P].rows")
+    for k, nm in (("chains", "Chains"), ("errors", "Errors"), ("start_while_busy", "Busy")):
+        emit(f"MThree{nm}Total", i(sum(v[k]["runs"] for v in CE)), f"results/m3_summary.json sum chains_errors[P].{k}.runs")
+    emit("MThreeProblemsTotal", i(sum(v["problems"] for v in L) + sum(v[k]["problems"] for v in CE for k in v)
+                                  + len(m3["whole_network"]["problems"])), "results/m3_summary.json all problems")
+    for m, M in MODELS.items():
+        emit(f"MThreeNodes{M}", i(int(m3["whole_network"]["report"][m].split(",")[1].split()[0])),
+             f"results/m3_summary.json whole_network.report.{m} accelerated node executions")
+    emit("MThreeCommit", m3["commit"][:7], "results/m3_summary.json commit")
+m6 = load(R / "m6_summary.json")
+if m6:
+    for P in PW:
+        d = m6["c4a"]["by_P"][str(P)]
+        emit(f"CfourMaxErrP{PW[P]}", f1(d["max_abs_err_pct"]), f"results/m6_summary.json c4a.by_P.{P}.max_abs_err_pct")
+        emit(f"CfourMedErrP{PW[P]}", f"{d['median_signed_err_pct']:.2f}", f"results/m6_summary.json c4a.by_P.{P}.median_signed_err_pct")
+    for m, M in MODELS.items():
+        a = m6["amdahl_P8"][m]
+        emit(f"AmdahlChainShare{M}", f1(100 * a["chains_share"]), f"results/m6_summary.json amdahl_P8.{m}.chains_share (pct)")
+        emit(f"AmdahlFallbackShare{M}", f1(100 * a["fallback_share"]), f"results/m6_summary.json amdahl_P8.{m}.fallback_share (pct)")
+        emit(f"AmdahlOther{M}", i(a["other_cycles_mean_interval_minus_ops"]), f"results/m6_summary.json amdahl_P8.{m}.other_cycles_mean_interval_minus_ops")
+        emit(f"AmdahlCeiling{M}", f1(base[m] / a["fallback_cycles_mean"]),
+             f"baseline_{m}.json cycles_median / m6_summary.json amdahl_P8.{m}.fallback_cycles_mean (speedup with zero-cycle accelerator)")
+if c5:
+    with open(ROOT / "paper/tab_amdahl.tex", "w") as t:
+        t.write("% generated by experiments/make_macros.py from results/m6_c5.json; do not edit\n")
+        t.write("\\begin{tabular}{rrrrrrr}\\toprule\n& \\multicolumn{3}{c}{mnist} & \\multicolumn{3}{c}{cifar}\\\\\n"
+                "$P$ & run & $\\Sigma$STAMP & acc.\\,\\% & run & $\\Sigma$STAMP & acc.\\,\\%\\\\\\midrule\n")
+        for P in PW:
+            cells = []
+            for m in MODELS:
+                d = c5["models"][m]
+                run, st = d["measured_model_run_cycles"][str(P)], d["measured_sum_stamp"][str(P)]
+                cells += [i(run), i(st), f1(100 * st / run)]
+            t.write(f"{P} & " + " & ".join(cells) + " \\\\\n")
+        t.write("\\bottomrule\n\\end{tabular}\n")
+    for m, M in MODELS.items():
+        d = c5["models"][m]
+        for P in PW:
+            emit(f"MeasStamp{M}P{PW[P]}", i(d["measured_sum_stamp"][str(P)]), f"results/m6_c5.json models.{m}.measured_sum_stamp.{P}")
+        emit(f"MeasStampRatio{M}", f"{d['sum_stamp_ratio_to_P16']['8']:.2f}", f"results/m6_c5.json models.{m}.sum_stamp_ratio_to_P16.8")
+        emit(f"PstarEndMeas{M}", d["measured_pstar_end_to_end"], f"results/m6_c5.json models.{m}.measured_pstar_end_to_end")
+        emit(f"AccShareMeas{M}Peight", f1(100 * d["measured_sum_stamp"]["8"] / d["measured_model_run_cycles"]["8"]),
+             f"results/m6_c5.json models.{m} measured_sum_stamp.8 / measured_model_run_cycles.8 (pct)")
+for m, M in MODELS.items():  # modelled-only alternative architectures (DESIGN 9.3, 9.4), frozen at m1
+    for arch, nm in (("lb", "Lb"), ("acc", "Acc")):
+        emit(f"PredStamp{nm}{M}Peight", i(summ["models"][m]["archs"][arch]["P"]["8"]["sum_stamp"]),
+             f"m1_summary.json models.{m}.archs.{arch}.P.8.sum_stamp")
+_, a1 = syn_row("accel", 1)
+_, a16 = syn_row("accel", 16)
+_, rp = syn_row("picorv32")
+if r8 and rp:
+    emit("AccelOverCpuLut", f1(r8["lut4"] / rp["lut4"]), "accel_P8 seed 1 lut4 / picorv32 seed 1 lut4")
+    emit("SynLutOverBudget", f1(100 * (r8["lut4"] - 6000) / 6000), "(accel_P8 seed 1 lut4 - 6000) / 6000 (pct)")
+if a1 and a16:
+    emit("SynLutPerP", i((a16["lut4"] - a1["lut4"]) / 15), "(accel_P16 - accel_P1) seed 1 lut4 / 15")
+sn, sp = synrows("soc_noaccel")[0], synrows("soc", 8)[0]
+if sn and sp:
+    ratio = statistics.median(r["fmax_mhz"] for r in sp) / statistics.median(r["fmax_mhz"] for r in sn)
+    emit("FmaxRatioSoc", f"{ratio:.2f}", "median fmax soc_P8 / median fmax soc_noaccel (newest RTL version)")
+    for m, M in MODELS.items():
+        if (m, 8) in meas:
+            emit(f"WallSpeedupEst{M}", f1(base[m] / meas[m, 8] * ratio),
+                 f"MeasSpeedup P=8 x FmaxRatioSoc (estimate: each SoC at its own median Fmax; not a board measurement)")
+with open(ROOT / "paper/tab_ops.tex", "w") as t:  # per-op Amdahl decomposition at P=8 (profile builds)
+    t.write("% generated by experiments/make_macros.py from results/baseline_profile_*.json and m5_profile_*_P8.json; do not edit\n")
+    t.write("\\begin{tabular}{llrr}\\toprule\nnet & op (kind) & baseline & accel.\\ $P{=}8$\\\\\\midrule\n")
+    for m in MODELS:
+        bo = {o["op"]: o for o in load(R / f"baseline_profile_{m}.json")["ops"]}
+        for o in load(R / f"m5_profile_{m}_P8.json")["accelerated_ops"]:
+            if o["name"].startswith("chain_"):
+                _, _, lo, hi = o["name"].split("_")
+                ops = [k for k in bo if int(lo) <= k <= int(hi)]
+                lab = f"{lo}" if lo == hi else f"{lo}--{hi}"
+                kinds = sorted({bo[k]["name"].replace("_fused", "").replace("2d", "") for k in ops})
+                lab += f" ({'/'.join(kinds)}, chain)"
+                bc = sum(bo[k]["cycles_per_inference"] for k in ops)
+            else:
+                lab, bc = f"{o['op']} ({o['name'].replace('2d', '')})", bo[o["op"]]["cycles_per_inference"]
+            t.write(f"{'mnist' if m == 'mnist_cnn' else 'cifar'} & {lab} & {i(bc)} & {i(o['cycles_per_inference'])} \\\\\n")
+        if m == "mnist_cnn":
+            t.write("\\midrule\n")
+    t.write("\\bottomrule\n\\end{tabular}\n")
 
 # ---- tables (generated, no typed numbers)
 with open(ROOT / "paper/tab_pred_cmds.tex", "w") as t:

@@ -129,9 +129,10 @@
 \newcommand{\MeasSpeedupCifarPsixteen}{398.4}% baseline_cifar_mobilenet.json / m5_accel_cifar_mobilenet_P16.json
 \newcommand{\VerdictCone}{confirmed}% C1 from m5_accel_*_P8.json
 \newcommand{\VerdictConeB}{confirmed}% C1b from m5_accel_cifar_mobilenet_P8.json
-\newcommand{\MeasCtwoALayers}{1,000}% rows of results/m3_bitexact.csv
-\newcommand{\MeasCtwoAMismatch}{0}% sum of mismatch_bytes, results/m3_bitexact.csv
-\newcommand{\VerdictCtwoA}{confirmed}% C2a
+\newcommand{\MeasCtwoALayers}{5,000}% results/m3_summary.json sum layers[P].rows
+\newcommand{\MeasCtwoAMismatch}{0}% results/m3_summary.json sum layers[P].mismatch_bytes
+\newcommand{\MeasCtwoAPs}{1, 2, 4, 8, 16}% results/m3_summary.json Ps (widths of the C2a campaign)
+\newcommand{\VerdictCtwoA}{confirmed}% C2a (results/m3_summary.json)
 \newcommand{\MeasCtwoBImages}{10}% results/m5_bitexact.json c2b_images
 \newcommand{\MeasCtwoBMismatch}{0}% results/m5_bitexact.json c2b_mismatch
 \newcommand{\MeasCtwoCImages}{100}% results/m5_bitexact.json c2c_images
@@ -149,14 +150,14 @@
 \newcommand{\SynSocNoAccelFf}{1,073}% results/syn/soc_noaccel.jsonl seed 1 .ff
 \newcommand{\SynSocNoAccelBram}{128}% results/syn/soc_noaccel.jsonl seed 1 .dp16kd
 \newcommand{\SynSocNoAccelMult}{4}% results/syn/soc_noaccel.jsonl seed 1 .mult18x18d
-\newcommand{\SynSocNoAccelFmax}{59.6}% results/syn/soc_noaccel.jsonl median fmax_mhz over 3 distinct seeds, newest RTL version
-\newcommand{\SynSocNoAccelFmaxSeeds}{3}% results/syn/soc_noaccel.jsonl seeds
+\newcommand{\SynSocNoAccelFmax}{61.8}% results/syn/soc_noaccel.jsonl median fmax_mhz over 5 distinct seeds, newest RTL version
+\newcommand{\SynSocNoAccelFmaxSeeds}{5}% results/syn/soc_noaccel.jsonl seeds
 \newcommand{\SynSocPeightLut}{10,684}% results/syn/soc_P8.jsonl seed 1 .lut4
 \newcommand{\SynSocPeightFf}{4,427}% results/syn/soc_P8.jsonl seed 1 .ff
 \newcommand{\SynSocPeightBram}{139}% results/syn/soc_P8.jsonl seed 1 .dp16kd
 \newcommand{\SynSocPeightMult}{40}% results/syn/soc_P8.jsonl seed 1 .mult18x18d
-\newcommand{\SynSocPeightFmax}{35.8}% results/syn/soc_P8.jsonl median fmax_mhz over 2 distinct seeds, newest RTL version
-\newcommand{\SynSocPeightFmaxSeeds}{2}% results/syn/soc_P8.jsonl seeds
+\newcommand{\SynSocPeightFmax}{36.0}% results/syn/soc_P8.jsonl median fmax_mhz over 7 distinct seeds, newest RTL version
+\newcommand{\SynSocPeightFmaxSeeds}{7}% results/syn/soc_P8.jsonl seeds
 \newcommand{\SynAccelPoneLut}{5,788}% results/syn/accel_P1.jsonl seed 1 .lut4
 \newcommand{\SynAccelPoneFf}{2,932}% results/syn/accel_P1.jsonl seed 1 .ff
 \newcommand{\SynAccelPoneBram}{4}% results/syn/accel_P1.jsonl seed 1 .dp16kd
@@ -232,3 +233,56 @@
 \newcommand{\PostHocFallbackCifar}{62,764}% mean fallback-op cycles per image, m5_profile_cifar_mobilenet_P8.json c4b.fallback_sum_per_image_run0
 \newcommand{\PostHocCyclesCifar}{198,760}% m6_c4b.json cifar_mobilenet.pred + mean(m5_profile_cifar_mobilenet_P8.json c4b.fallback_sum_per_image_run0) + baseline_overhead.json
 \newcommand{\PostHocSpeedupCifar}{348.0}% baseline_cifar_mobilenet.json cycles_median / (m6_c4b.json cifar_mobilenet.pred + mean(m5_profile_cifar_mobilenet_P8.json c4b.fallback_sum_per_image_run0) + baseline_overhead.json)
+\newcommand{\EstLutPeight}{3,800}% docs/DESIGN.md 8.12 pre-RTL LUT4 estimate at P=8 (spec constant)
+\newcommand{\MThreePerP}{1,000}% results/m3_summary.json layers[P].rows
+\newcommand{\MThreeChainsTotal}{500}% results/m3_summary.json sum chains_errors[P].chains.runs
+\newcommand{\MThreeErrorsTotal}{1,450}% results/m3_summary.json sum chains_errors[P].errors.runs
+\newcommand{\MThreeBusyTotal}{10}% results/m3_summary.json sum chains_errors[P].start_while_busy.runs
+\newcommand{\MThreeProblemsTotal}{0}% results/m3_summary.json all problems
+\newcommand{\MThreeNodesMnist}{30}% results/m3_summary.json whole_network.report.mnist_cnn accelerated node executions
+\newcommand{\MThreeNodesCifar}{140}% results/m3_summary.json whole_network.report.cifar_mobilenet accelerated node executions
+\newcommand{\MThreeCommit}{f9ef16f}% results/m3_summary.json commit
+\newcommand{\CfourMaxErrPone}{0.6}% results/m6_summary.json c4a.by_P.1.max_abs_err_pct
+\newcommand{\CfourMedErrPone}{0.02}% results/m6_summary.json c4a.by_P.1.median_signed_err_pct
+\newcommand{\CfourMaxErrPtwo}{0.9}% results/m6_summary.json c4a.by_P.2.max_abs_err_pct
+\newcommand{\CfourMedErrPtwo}{0.02}% results/m6_summary.json c4a.by_P.2.median_signed_err_pct
+\newcommand{\CfourMaxErrPfour}{1.4}% results/m6_summary.json c4a.by_P.4.max_abs_err_pct
+\newcommand{\CfourMedErrPfour}{0.20}% results/m6_summary.json c4a.by_P.4.median_signed_err_pct
+\newcommand{\CfourMaxErrPeight}{12.4}% results/m6_summary.json c4a.by_P.8.max_abs_err_pct
+\newcommand{\CfourMedErrPeight}{0.31}% results/m6_summary.json c4a.by_P.8.median_signed_err_pct
+\newcommand{\CfourMaxErrPsixteen}{12.4}% results/m6_summary.json c4a.by_P.16.max_abs_err_pct
+\newcommand{\CfourMedErrPsixteen}{0.34}% results/m6_summary.json c4a.by_P.16.median_signed_err_pct
+\newcommand{\AmdahlChainShareMnist}{7.4}% results/m6_summary.json amdahl_P8.mnist_cnn.chains_share (pct)
+\newcommand{\AmdahlFallbackShareMnist}{92.6}% results/m6_summary.json amdahl_P8.mnist_cnn.fallback_share (pct)
+\newcommand{\AmdahlOtherMnist}{1,122}% results/m6_summary.json amdahl_P8.mnist_cnn.other_cycles_mean_interval_minus_ops
+\newcommand{\AmdahlCeilingMnist}{50.6}% baseline_mnist_cnn.json cycles_median / m6_summary.json amdahl_P8.mnist_cnn.fallback_cycles_mean (speedup with zero-cycle accelerator)
+\newcommand{\AmdahlChainShareCifar}{68.2}% results/m6_summary.json amdahl_P8.cifar_mobilenet.chains_share (pct)
+\newcommand{\AmdahlFallbackShareCifar}{31.8}% results/m6_summary.json amdahl_P8.cifar_mobilenet.fallback_share (pct)
+\newcommand{\AmdahlOtherCifar}{725}% results/m6_summary.json amdahl_P8.cifar_mobilenet.other_cycles_mean_interval_minus_ops
+\newcommand{\AmdahlCeilingCifar}{1102.1}% baseline_cifar_mobilenet.json cycles_median / m6_summary.json amdahl_P8.cifar_mobilenet.fallback_cycles_mean (speedup with zero-cycle accelerator)
+\newcommand{\MeasStampMnistPone}{98,240}% results/m6_c5.json models.mnist_cnn.measured_sum_stamp.1
+\newcommand{\MeasStampMnistPtwo}{50,707}% results/m6_c5.json models.mnist_cnn.measured_sum_stamp.2
+\newcommand{\MeasStampMnistPfour}{27,626}% results/m6_c5.json models.mnist_cnn.measured_sum_stamp.4
+\newcommand{\MeasStampMnistPeight}{17,665}% results/m6_c5.json models.mnist_cnn.measured_sum_stamp.8
+\newcommand{\MeasStampMnistPsixteen}{14,299}% results/m6_c5.json models.mnist_cnn.measured_sum_stamp.16
+\newcommand{\MeasStampRatioMnist}{1.24}% results/m6_c5.json models.mnist_cnn.sum_stamp_ratio_to_P16.8
+\newcommand{\PstarEndMeasMnist}{4}% results/m6_c5.json models.mnist_cnn.measured_pstar_end_to_end
+\newcommand{\AccShareMeasMnistPeight}{7.3}% results/m6_c5.json models.mnist_cnn measured_sum_stamp.8 / measured_model_run_cycles.8 (pct)
+\newcommand{\MeasStampCifarPone}{581,949}% results/m6_c5.json models.cifar_mobilenet.measured_sum_stamp.1
+\newcommand{\MeasStampCifarPtwo}{322,472}% results/m6_c5.json models.cifar_mobilenet.measured_sum_stamp.2
+\newcommand{\MeasStampCifarPfour}{191,898}% results/m6_c5.json models.cifar_mobilenet.measured_sum_stamp.4
+\newcommand{\MeasStampCifarPeight}{134,457}% results/m6_c5.json models.cifar_mobilenet.measured_sum_stamp.8
+\newcommand{\MeasStampCifarPsixteen}{110,490}% results/m6_c5.json models.cifar_mobilenet.measured_sum_stamp.16
+\newcommand{\MeasStampRatioCifar}{1.22}% results/m6_c5.json models.cifar_mobilenet.sum_stamp_ratio_to_P16.8
+\newcommand{\PstarEndMeasCifar}{16}% results/m6_c5.json models.cifar_mobilenet.measured_pstar_end_to_end
+\newcommand{\AccShareMeasCifarPeight}{68.0}% results/m6_c5.json models.cifar_mobilenet measured_sum_stamp.8 / measured_model_run_cycles.8 (pct)
+\newcommand{\PredStampLbMnistPeight}{16,791}% m1_summary.json models.mnist_cnn.archs.lb.P.8.sum_stamp
+\newcommand{\PredStampAccMnistPeight}{17,709}% m1_summary.json models.mnist_cnn.archs.acc.P.8.sum_stamp
+\newcommand{\PredStampLbCifarPeight}{105,603}% m1_summary.json models.cifar_mobilenet.archs.lb.P.8.sum_stamp
+\newcommand{\PredStampAccCifarPeight}{122,325}% m1_summary.json models.cifar_mobilenet.archs.acc.P.8.sum_stamp
+\newcommand{\AccelOverCpuLut}{2.5}% accel_P8 seed 1 lut4 / picorv32 seed 1 lut4
+\newcommand{\SynLutOverBudget}{21.9}% (accel_P8 seed 1 lut4 - 6000) / 6000 (pct)
+\newcommand{\SynLutPerP}{262}% (accel_P16 - accel_P1) seed 1 lut4 / 15
+\newcommand{\FmaxRatioSoc}{0.58}% median fmax soc_P8 / median fmax soc_noaccel (newest RTL version)
+\newcommand{\WallSpeedupEstMnist}{27.2}% MeasSpeedup P=8 x FmaxRatioSoc (estimate: each SoC at its own median Fmax; not a board measurement)
+\newcommand{\WallSpeedupEstCifar}{203.5}% MeasSpeedup P=8 x FmaxRatioSoc (estimate: each SoC at its own median Fmax; not a board measurement)
