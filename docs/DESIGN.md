@@ -570,7 +570,20 @@ paper/numbers.tex.
   P = 16) therefore exceeded the pre-registered bias of 7.4 (3.4 % and 1.9 %); all stay inside the
   20 % tolerance of C4a. experiments/make_deviations.py (rule: error > registered bias + 0.5 pp) lists six rows
   in results/deviations.json: these three plus mnist op_3 at P = 16, cifar op_0 at P = 4 and P = 8 (1.4-2.6 %,
-  registered below 0.5 % or not at all); those three were not probed, the tie mechanism is the likely cause.
+  registered below 0.5 % or not at all).
+- Six-row probe (2026-10-24, experiments/probe_tie.py -> results/m6_tie_probe.json). All six rows were
+  re-run as one RTL command of the layer shape with ctrl state and master port traced every cycle; the
+  bus STAMP equals the measured STAMP on each. prediction - measurement splits cycle for cycle into
+  writes granted in a PSETUP cycle, PSETUP hidden at requant-bound pixels (the 7.4 term) and flush:
+  mnist op_1 P = 8 and 16: 788 = 546 + 239 + 3 (all 546 PSETUP writes at tie tiles); mnist op_3 P = 16:
+  65 = 47 (24 tie, 23 port-bound) + 16 + 2; cifar op_0 P = 16: 1032 = 690 (all tie) + 343 - 1;
+  cifar op_0 P = 4: 711 = 707 + 0 + 4 and P = 8: 695 = 690 + 0 + 5, with 0 tie writes (strictly port bound).
+  The tie fully explains four rows (error without tie writes within registered bias + 0.5 pp: 3.81 %,
+  3.79 %, 0.91 %, 2.06 %) but not cifar op_0 P = 4 and P = 8 (1.44 %, 2.57 %). Generalized mechanism: the
+  previous pixel's pending write is granted in PSETUP whenever one is pending, at a tie or at a strictly
+  port-bound pixel, and hides the setup cycle the same way. With all PSETUP-cycle writes removed, every
+  row is within its rule, and the rows registered at the default 0.5 % keep at most 0.40 % error
+  (0.40 %, 0.01 %, 0.02 %).
 - Root cause B, CYCLES identity. Measured `CYCLES == Σ(STAMP + λ + 1) + 1` on every chain call
   (275 calls: both networks, 5 values of P, 11 inferences each), not `+ 2`. RTL and STAMP are correct: the START
   acceptance cycle is not BUSY. The `+ 2` of 7.2 (`T_chain`) includes that cycle and is the CPU-visible
@@ -776,6 +789,14 @@ Assembles bytes (consecutive addresses within a tile) into a word: lane `in_addr
 
 Budgets (SPEC C3): LUT4 ≤ 6000, MULT18X18D ≤ 40, DP16KD ≤ 12; FF ≤ 4000 and Fmax ≥ 50 MHz
 are targets. Scaling: DSP = 4P + 4, DP16KD = P + 3, LUT4 ≈ 2100 + 210·P.
+
+Post-hoc note (2026-10-24; the estimate above is unchanged). syn/breakdown.sh ->
+results/syn/accel_breakdown.json attributes cells per module (Yosys `synth_ecp5 -noflatten`), counted
+as LUT-equivalents = LUT4 + 2·CCU2C + 4·TRELLIS_DPR16X4. At P = 8 ctrl is 3457 LUT-equivalents
+(2379 LUT4 + 539 CCU2C), 44.5 % of the hierarchical total 7766, against 1300 LUT4 estimated here; it
+does not scale with P (3305-3457 for P = 1..16). P = 1 already places at 5788 LUT4 (P = 8: 7313). The
+per-module numbers are an attribution, not the placed count: hierarchical synthesis exceeds flat by
+971 LUT-equivalents at P = 8 (results/syn/README.md).
 
 ## 9. M1 architecture model (`model/`)
 

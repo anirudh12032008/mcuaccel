@@ -1,14 +1,47 @@
 #!/usr/bin/env python3
 """results/ + docs/DECISIONS.md -> FINAL_REPORT.md (skeleton filled from files; pending where results are absent)."""
-import datetime, re
+import datetime, json, re
 from status import *  # noqa: F401,F403
-from make_readme_tables import results, runtimes
+from make_readme_tables import results, runtimes, table
 
 
 def decision(tag):
     t = (ROOT / "docs/DECISIONS.md").read_text()
     m = re.search(rf"^## {tag} .*?(?=^## D|\Z)", t, re.S | re.M)
     return m.group(0).strip() if m else f"(decision {tag} not found in docs/DECISIONS.md)"
+
+
+def posthoc():
+    """Summaries of results/m6_tie_probe.json and results/syn/accel_breakdown.json (absent file -> pending)."""
+    out = []
+    f = ROOT / "results/m6_tie_probe.json"
+    if f.exists():
+        rows = [[f"{r['model']} op{r['op']} P={r['P']}", r["deviation"], r["deviation_parts"]["tie_writes_in_psetup"],
+                 r["deviation_parts"]["nontie_writes_in_psetup"], r["deviation_parts"]["requant_hidden_psetup"],
+                 r["deviation_parts"]["flush"], f"{r['err_pct']:.2f}", f"{r['err_pct_without_tie']:.2f}",
+                 f"{r['err_pct_without_psetup_writes']:.2f}", f"{r['rule_limit_pct']:.1f}", r["verdict_tie"]]
+                for r in json.loads(f.read_text())["rows"]]
+        out += ["### PSETUP probe (experiments/probe_tie.py -> results/m6_tie_probe.json; DESIGN 7.5, D21 addendum)",
+                "pred - meas split in cycles; errors in %.",
+                table(["row", "pred-meas", "tie writes in PSETUP", "other writes in PSETUP", "requant-hidden PSETUP",
+                       "flush", "err", "err w/o tie", "err w/o PSETUP writes", "rule limit", "tie explains"], rows)]
+    else:
+        out.append("- PSETUP probe: pending (results/m6_tie_probe.json absent)")
+    f = ROOT / "results/syn/accel_breakdown.json"
+    if f.exists():
+        recs = json.loads(f.read_text())["records"]
+        mods = list(recs[-1]["modules"])
+        rows = [[m] + [f"{r['modules'][m]['lut_equiv']} ({100 * r['modules'][m]['share_lut_equiv']:.1f}%)" for r in recs]
+                for m in mods]
+        rows += [["hierarchical total"] + [r["hier_total"]["lut_equiv"] for r in recs],
+                 ["flat total"] + [r["flat_total"]["lut_equiv"] for r in recs],
+                 ["post-place LUT4"] + [r["postplace"]["lut4"] for r in recs]]
+        out += ["", "### Per-module LUT attribution (syn/breakdown.sh -> results/syn/accel_breakdown.json; DESIGN 8.12 note)",
+                "LUT-equivalents = LUT4 + 2*CCU2C + 4*TRELLIS_DPR16X4 from Yosys -noflatten; an attribution, not the placed count.",
+                table(["module"] + [f"P={r['P']}" for r in recs], rows)]
+    else:
+        out.append("- LUT breakdown: pending (results/syn/accel_breakdown.json absent)")
+    return "\n".join(out)
 
 
 def pending_items():
@@ -42,6 +75,9 @@ Text copied verbatim from the decision log. None changes a threshold in SPEC; D2
 {decision('D20')}
 
 {decision('D21')}
+
+## Post-hoc analyses
+{posthoc()}
 
 ## Pending items
 """ + "\n".join(f"- {x}" for x in pending_items()) + f"""

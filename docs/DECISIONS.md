@@ -231,3 +231,15 @@ firmware comparison for both networks; synthesis rows are deduplicated per seed 
 newest RTL version of each file (documented in experiments/status.py); baseline JSON `kind` names D19
 and records `tree_dirty`; values quoted from D19/D20 live in results/deviations.json, written by
 experiments/make_deviations.py (which asserts they appear in this file).
+
+Addendum (2026-10-24): the six rows have since been probed (experiments/probe_tie.py ->
+results/m6_tie_probe.json; one RTL command per layer shape, bus STAMP equal to the measured STAMP).
+prediction - measurement splits cycle for cycle into writes granted in the PSETUP cycle, PSETUP hidden
+at requant-bound pixels (the registered term) and flush. The lam*(R+W) == NV tie fully explains four
+rows: mnist op_1 P=8 and P=16, mnist op_3 P=16, cifar op_0 P=16. It does not explain cifar op_0 P=4
+and P=8: they are strictly port bound with 0 tie writes, yet the previous pixel's pending write is
+granted in PSETUP the same way (707 and 690 writes), hiding the setup cycle. The mechanism is thus
+general: any pending write of the previous pixel granted in PSETUP. With all PSETUP-cycle writes
+removed every row is within registered bias + 0.5 pp, and the rows registered at the default 0.5 %
+keep at most 0.40 % error. Choice (b) stands; no scored number changes. DESIGN 7.5 carries the
+per-row split.

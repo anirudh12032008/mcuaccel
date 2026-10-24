@@ -26,9 +26,12 @@ step "M5 timing per P (C1, C1b, C5)"; $PY experiments/run_soc.py $SOCP $IMG
 step "M5/M6 profile + C4b at P=8"; $PY experiments/run_soc.py --P 8 $PROF
 step "M5 C2c bit-exactness on the SoC"; $PY experiments/run_soc.py --P 8 --bitexact $BX
 # C4a/C5 need results/m6_stamps_*_P*.json (`run_soc.py --P <P> --stamps`, not part of this script: long); derived outputs are rebuilt when present.
-if ls results/m6_stamps_*.json >/dev/null 2>&1 && [ -z "${REPRODUCE_QUICK:-}" ]; then step "C4a/C4b/C5 pred vs meas (compare_m1)"; $PY experiments/compare_m1.py; fi
+if ls results/m6_stamps_*.json >/dev/null 2>&1 && [ -z "${REPRODUCE_QUICK:-}" ]; then step "C4a/C4b/C5 pred vs meas (compare_m1)"; $PY experiments/compare_m1.py
+  step "PSETUP probe of the C4a over-bias rows (probe_tie, reads results/deviations.json)"; $PY experiments/probe_tie.py; fi
 step "synthesis sweep"
 if [ -n "${REPRODUCE_QUICK:-}" ]; then bash syn/synth.sh accel 8 1; else bash experiments/run_syn_sweep.sh 3; fi
+# per-module breakdown needs P=8 and P=16 (make_macros); quick mode keeps the committed results/syn/accel_breakdown.json
+if [ -z "${REPRODUCE_QUICK:-}" ]; then step "per-module LUT breakdown (Yosys only)"; bash syn/breakdown.sh; fi
 step "deviations, figure, macros"; $PY experiments/make_deviations.py; $PY experiments/plot_m6.py; $PY experiments/make_macros.py
 step "paper"; make paper
 step "README tables + FINAL_REPORT"; $PY experiments/make_readme_tables.py; $PY experiments/make_final_report.py

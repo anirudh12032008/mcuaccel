@@ -105,6 +105,8 @@ cycles for both networks in results/baseline_*.json.
   1..10 -> results/syn/*.csv. T6.2 (S, Experimenter) experiments/: speedup table, per-layer
   pred-vs-meas (`git show m1:results/m1_predictions.csv`), P ablation, Amdahl shares, variance;
   all outputs with seed, commit, environment. T6.3 (O) red-team of every claim vs evidence.
+  Post-hoc (2026-10-24): experiments/probe_tie.py -> results/m6_tie_probe.json (C4a over-bias rows);
+  syn/breakdown.sh (`make synth-breakdown`) -> results/syn/accel_breakdown.json (per-module LUTs).
 ### Step 7 paper (after M6)
 - T7.1 (S) paper/main.tex IEEEtran + experiments/make_macros.py -> paper/numbers.tex; figures from
   results/. T7.2 (O then Fable) paper reviewer: every number traced, every citation opened.
@@ -120,6 +122,9 @@ Before submission (author): push m1 to a public remote for an external timestamp
 (HARDWARE_TODO.md items 1-2).
 
 ## Log
+- 2026-10-24 Post-hoc: six-row PSETUP probe (results/m6_tie_probe.json; tie explains 4 of 6 rows, cifar
+  op_0 P=4/8 port bound, same PSETUP write grant; D21 addendum, DESIGN 7.5). Per-module LUT breakdown
+  (results/syn/accel_breakdown.json; DESIGN 8.12 note). Fig. 1 diagram; journal review pass. No scored numbers changed.
 - 2026-10-21 C2c confirmed (cifar baseline-firmware comparison, 0 mismatches). SoC synth at 10 seeds,
   soc_ram BRAM fix committed. Conference paper reviewed (T7.2); journal version written. Tags m4-m6.
 - 2026-10-19 T6.3 final claims red-team applied: D21 (PSETUP tie, CYCLES identity +1, independent STAMP
