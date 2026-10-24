@@ -1,6 +1,8 @@
 \documentclass[conference]{IEEEtran}
 \usepackage[T1]{fontenc}% XeTeX (tectonic): lets IEEEtran's Times (ptm) resolve instead of Latin Modern
 \usepackage{graphicx,booktabs,xcolor,amsmath,cite,url}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,fit}
 \def\UrlBreaks{\do\/\do\-\do\.\do\_}
 \graphicspath{{../results/}}
 \newcommand{\todo}[1]{{\color{red}\textbf{[#1]}}}
@@ -29,7 +31,7 @@ Quantized CNNs cost tens of millions of cycles per image on microcontroller-clas
 \item[C5] The saturation width of the $P$ sweep is reported, predicted versus measured; its mechanism was stated in advance.
 \end{description}
 
-\textbf{Contributions.} (i) A from-scratch int8 accelerator (conv, depthwise, fully connected) with chained in-memory descriptors, bit-exact with the gemmlowp rounding rule, and a backend that compiles \texttt{mcugrad} graphs to descriptor chains plus driver C with software fallback for everything else (Sec.~\ref{sec:arch}, \ref{sec:backend}). (ii) A closed-form cycle model of the accelerator, its driver and the fallback operators (Sec.~\ref{sec:model}), frozen before the datapath, with a written list of its known biases. (iii) A measurement protocol in which deviations are logged rather than absorbed, including a build-fairness fix that moved the baseline after the predictions were frozen (Sec.~\ref{sec:method}). (iv) The scored outcome of every claim, the refuted one included, with post-hoc root causes for the two largest prediction errors (Sec.~\ref{sec:results}). Every number in this paper is generated from result files by a script in the repository.
+\textbf{Contributions.} (i) A from-scratch int8 accelerator (conv, depthwise, fully connected) with chained in-memory descriptors, bit-exact with the gemmlowp rounding rule, and a backend that compiles \texttt{mcugrad} graphs to descriptor chains plus driver C with software fallback for everything else (Sec.~\ref{sec:arch}, \ref{sec:backend}). (ii) A closed-form cycle model of the accelerator, its driver and the fallback operators (Sec.~\ref{sec:model}), frozen before the datapath, with a written list of its known biases. (iii) A measurement protocol in which deviations are logged rather than absorbed, including a build-fairness fix that moved the baseline after the predictions were frozen (Sec.~\ref{sec:method}). (iv) The scored outcome of every claim, the refuted one included, with a post-hoc mechanism for each of the \NExceed{} commands that exceeded its registered bias (Sec.~\ref{sec:results}). Every number in this paper is generated from result files by a script in the repository.
 
 \section{Background and Related Work}\label{sec:related}
 \textbf{Quantization.} The numerical contract is the integer-only scheme of Jacob et al.~\cite{jacob2018quantization} as implemented in gemmlowp~\cite{gemmlowp_fixedpoint} and specified by LiteRT~\cite{litert_quantspec}: a saturating rounding doubling high multiply followed by a rounding divide by a power of two. \textbf{MCU inference.} TFLite Micro~\cite{david2021tflm}, CMSIS-NN~\cite{lai2018cmsisnn} and MCUNet~\cite{lin2020mcunet} provide software kernels; \texttt{mcugrad}~\cite{mcugrad_repo} is the compiler whose int8 simulator is our specification.
@@ -38,11 +40,52 @@ Quantized CNNs cost tens of millions of cycles per image on microcontroller-clas
 \section{Architecture}\label{sec:arch}
 The CPU reaches a dual-port RAM through an adapter and interconnect; the accelerator is a second bus master on the RAM's other port (a private \PortBits-bit port, one word per cycle, one outstanding request), so no arbiter is needed. The CPU writes a descriptor address and a start bit, then polls a status register (Fig.~\ref{fig:sys}).
 
-\begin{figure}[t]\centering\small
-\fbox{\parbox{0.93\columnwidth}{\centering
-PicoRV32 $\to$ adapter $\to$ interconnect $\to$ \{RAM port A, console, accelerator registers\}\\[2pt]
-fetch (only master) $\to$ ctrl (descriptor FSM, loop nest) $\to$ align $\to$ MAC array ($P$ outputs $\times$ \Lanes{} lanes) $\to$ requant $\to$ writer $\to$ RAM port B}}
-\caption{System block diagram (schematic; \texttt{docs/DESIGN.md} Sec.~1).}\label{fig:sys}
+\begin{figure}[t]\centering
+\begin{tikzpicture}[font=\scriptsize, >={Latex[length=1.4mm]},
+  b/.style={draw, rounded corners=1pt, align=center, minimum height=6.5mm, inner sep=2pt},
+  d/.style={->, thick},
+  c/.style={->, dashed},
+  l/.style={inner sep=1.5pt}]
+% SoC
+\node[b] (cpu) at (0.75,0) {PicoRV32\\RV32IM};
+\node[b] (ad) at (2.3,0) {adapter};
+\node[b] (ic) at (4.0,0) {interconnect};
+\node[b] (con) at (7.9,0) {console};
+\node[b, minimum width=31mm] (ram) at (6.6,-1.15) {RAM, true dual-port\\\RamMiB\,MiB (sim)};
+% accelerator
+\node[b] (regs) at (0.6,-2.5) {regs};
+\node[b] (ctrl) at (3.2,-2.5) {ctrl\\desc FSM, loop nest};
+\node[b] (fetch) at (6.6,-2.5) {fetch\\sole master};
+\node[b] (wbuf) at (2.15,-3.75) {wbuf\\$\WbufRows\times\Lanes P$\,B};
+\node[b] (pbuf) at (5.25,-3.75) {pbuf\\per-channel};
+\node[b] (align) at (0.55,-4.95) {align};
+\node[b] (mac) at (2.15,-4.95) {MAC array\\$\Lanes$ lanes${}\times P$};
+\node[b] (rq) at (5.25,-4.95) {requant\\SRDHM, RDBPOT};
+\node[b] (wr) at (7.85,-4.95) {writer};
+\node[draw, dashed, fit=(regs)(ctrl)(fetch)(align)(wr), inner sep=3pt] (acc) {};
+\node[anchor=north east, font=\scriptsize\ttfamily, inner sep=1pt] at (acc.south east) {mcuaccel\_top};
+% CPU side
+\draw[<->, thick] (cpu) -- (ad);
+\draw[<->, thick] (ad) -- (ic);
+\draw[<->, thick] (ic) -- (con);
+\draw[<->, thick] ([xshift=3mm]ic.south) |- node[l, pos=0.3, right] {port A} (ram.west);
+\draw[c] ([xshift=-4mm]ic.south) -- ++(0,-0.8) -| node[l, pos=0.25, above] {MMIO} (regs.north);
+\draw[c] (regs) -- node[l, above] {start} (ctrl);
+% accelerator side
+\draw[<->, very thick] (ram.south) -- node[l, right] {port B, \PortBits-bit} (fetch.north);
+\draw[<->] (ctrl) -- node[l, above] {rd req} node[l, below] {desc} (fetch);
+\draw[d] ([xshift=-4mm]fetch.south) -- ++(0,-0.42) coordinate (bus) -| node[l, pos=0.75, left] {x} (align.north);
+\draw[d] (wbuf.north |- bus) -- node[l, pos=0, above right] {w} (wbuf.north);
+\draw[d] (pbuf.north |- bus) -- node[l, pos=0, above right] {params} (pbuf.north);
+\draw[c] ([xshift=9.5mm]ctrl.south) -- node[l, pos=0.62, left, align=right] {tile,\\credits} ([xshift=9.5mm]ctrl.south |- rq.north);
+\draw[d] (wbuf) -- (mac);
+\draw[d] (pbuf) -- (rq);
+\draw[d] (align) -- (mac);
+\draw[d] (mac) -- node[l, above] {acc} (rq);
+\draw[d] (rq) -- node[l, above] {bytes} (wr);
+\draw[d] (wr.north) |- node[l, pos=0.25, left] {wr req} (fetch.east);
+\end{tikzpicture}
+\caption{System and accelerator block diagram. Boxes are RTL modules (vendored PicoRV32 and \texttt{soc\_*} above, \texttt{mcuaccel\_*} in the dashed box); solid arrows carry data, dashed ones commands. The CPU writes a descriptor address and \textsc{start} through MMIO, then polls; the accelerator reaches RAM only through its private port B.}\label{fig:sys}
 \end{figure}
 
 \textbf{Dataflow.} The array is output-stationary over one output pixel and a tile of $P$ output channels. In NHWC layout the in-bounds part of a kernel row is contiguous, so each cycle one four-byte activation word meets one weight-buffer row of $\Lanes\cdot P$ bytes and performs $\Lanes\cdot P$ multiply-accumulates; every channel count uses one mechanism, and an aligner absorbs the three non-zero word alignments at the cost of one priming read per kernel row. Depthwise layers get only \Lanes{} useful MACs per cycle. Weights and per-channel parameters are loaded once per command into local buffers (\WbufRows{} rows). A single requantizer emits one byte per cycle using the specification's SRDHM/RDBPOT rule; accumulators are 32 bit and the backend enforces a no-wrap bound. Two credits separate the sequencer from the requantizer: a tile's last request takes a credit, and the requantizer returns it when the tile's last value enters its pipeline.
@@ -98,7 +141,7 @@ $P$ & pred. & meas. & pred. & meas.\\\midrule
 
 \textbf{C2: bit-exactness.} Random layers: \MeasCtwoALayers{} run, \MeasCtwoAMismatch{} mismatching bytes (C2a \VerdictCtwoA). Intermediate tensors: \MeasCtwoBImages{} images, \MeasCtwoBMismatch{} mismatches. Full SoC: \MeasCtwoCImages{} images, \MeasCtwoCMismatch{} mismatches against the integer reference and \MeasCtwoCBaseMnist{} (mnist), \MeasCtwoCBaseCifar{} (cifar) against the baseline firmware's outputs (C2c \VerdictCtwoC).
 
-\textbf{C3: resources.} Table~\ref{tab:syn} reports the Yosys/nextpnr-ecp5 flow on the LFE5U-85F. The accelerator at $P=\PDefault$ uses \SynAccelPeightLut{} LUT4, \SynAccelPeightMult{} \texttt{MULT18X18D} and \SynAccelPeightBram{} \texttt{DP16KD}; the multiplier and block-RAM budgets hold, the LUT budget does not, so C3 is \VerdictCthree. The LUT budget followed a pre-RTL estimate in the design document; we report the miss rather than revise the budget. Across the sweep the LUT count grows from \SynAccelPoneLut{} at $P=1$ to \SynAccelPsixteenLut{} at $P=16$: the fetch, sequencer and requantizer are a fixed cost that the multiplier array only overtakes at the largest $P$.
+\textbf{C3: resources.} Table~\ref{tab:syn} reports the Yosys/nextpnr-ecp5 flow on the LFE5U-85F. The accelerator at $P=\PDefault$ uses \SynAccelPeightLut{} LUT4, \SynAccelPeightMult{} \texttt{MULT18X18D} and \SynAccelPeightBram{} \texttt{DP16KD}; the multiplier and block-RAM budgets hold, the LUT budget does not, so C3 is \VerdictCthree. The LUT budget followed a pre-RTL estimate in the design document; we report the miss rather than revise the budget. Across the sweep the LUT count grows from \SynAccelPoneLut{} at $P=1$ to \SynAccelPsixteenLut{} at $P=16$: the fetch, sequencer and requantizer are a fixed cost that the multiplier array only overtakes at the largest $P$. A post-hoc per-module synthesis attributes \BrkCtrlShare\,\% of the $P=\PDefault$ LUT-equivalents to the sequencer (\BrkCtrlLut{} against a design estimate of \EstCtrlLut{}), independent of $P$, while the MAC array grows by about \BrkMacPerLane{} per lane (\BrkPlacePerLane{} placed); the per-module counts are an attribution, since the hierarchy adds \BrkHierGap{} over the flattened design and placement \BrkPackGap{}. Narrowing the sequencer's 32-bit address arithmetic to the SoC address width and keeping the requantizer's partial-product sum and product registers in DSPs are likely, unmeasured ways under the budget (post hoc).
 
 \begin{table}[t]\centering\caption{Synthesis (resources from the lowest seed of the newest RTL version of each design; Fmax median over its distinct seeds).}\label{tab:syn}
 \footnotesize\setlength{\tabcolsep}{3pt}\tabtodo\begin{tabular}{lrrrrr}\toprule
@@ -113,7 +156,7 @@ SoC with accel. & \SynSocPeightLut & \SynSocPeightMult & \SynSocPeightBram & \Sy
 
 \textbf{C4/C5: prediction accuracy.} Table~\ref{tab:cmd} lists predicted command cycles at $P=\PDefault$ against the stamp measurement. Over the commands of the sweep the maximum absolute error is \MeasCfourMaxErr\,\%, the median signed error \MeasCfourMedianErr\,\%, with \MeasCfourViolations{} tolerance violations out of \MeasCfourRows{} rows (C4a \VerdictCfourA). Per network, accelerator plus driver, the signed error is \MeasCfourBErrMnist\,\% (mnist) and \MeasCfourBErrCifar\,\% (cifar). Figure~\ref{fig:p} overlays the measurement on the frozen prediction: summed STAMP per inference versus $P$, and every scored command against the $\pm\ThreshFourA\,\%$ band. The predicted saturation width is \PredPstarMnist{} (mnist) and \PredPstarCifar{} (cifar) on the grid, where \PMax{} means not reached, against measured \PstarMeasMnist{} and \PstarMeasCifar. C5 is descriptive; its falsifiable part is C4a at every $P$. The model attributes the flattening to the depthwise layers, the single requantizer and the weight load, not to the port.
 
-\textbf{C4 post-hoc notes.} The pre-registered bias list (design Sec.~7.4) gave an over-prediction for a few commands and under \BiasDefault\,\% for all others. \NExceed{} scored rows exceed their registered value by more than \ExceedMargin{} percentage points (Table~\ref{tab:exceed}); all stay inside the tolerance, so C4a is unchanged. Root cause, found after measurement (post hoc, red-team probe on the RTL): when the port term $\lambda(R+W)$ ties the requantizer term, a write of the previous tile is granted in the setup cycle, which is then hidden; the RTL behaves as a maximum over $1+\lambda R$, $\lambda(R+W)$ and the requantizer term, whereas (\ref{eq:pix}) adds the setup cycle to the maximum. The registered bias counted only strictly requantizer-bound pixels. In mnist op~1 at $P=\PDefault$, \TieMnistWrites{} of \TieMnistPixels{} setup cycles coincide with a write grant; in cifar op~0 at $P=16$, \TieCifarWrites{} of \TieCifarPixels{}. The other listed rows were not probed. The model outputs stay as scored (decision D21).
+\textbf{C4 post-hoc notes.} The pre-registered bias list (design Sec.~7.4) gave an over-prediction for a few commands and under \BiasDefault\,\% for all others. \NExceed{} scored rows exceed their registered value by more than \ExceedMargin{} percentage points (Table~\ref{tab:exceed}); all stay inside the tolerance, so C4a is unchanged. Root cause, found after measurement (post hoc, RTL trace of all \TieNProbed{} rows): in every row the deviation splits cycle for cycle into writes granted in the per-pixel setup cycle, requantizer-bound pixels and the drain. A pending write of the previous pixel granted in the setup cycle hides that cycle, so the RTL behaves as a maximum over $1+\lambda R$, $\lambda(R+W)$ and the requantizer term, whereas (\ref{eq:pix}) adds the setup cycle to the maximum; the registered bias counted only strictly requantizer-bound pixels. A tie of $\lambda(R+W)$ with the requantizer term is a special case and fully explains mnist op~1 at $P=\PDefault$ and $P=16$ (\TieMnistWrites{} and \TieMnistSixteenWrites{} of \TieMnistPixels{} setup cycles carry a write), cifar op~0 at $P=16$ (\TieCifarWrites{} of \TieCifarPixels{}) and mnist op~3 at $P=16$ (\TieMnistThreeTie{} tie writes among \TieMnistThreeWrites{} of \TieMnistThreePixels{}). Cifar op~0 at $P=4$ and $P=8$ is strictly port-bound (\TieCifarFourTie{} tie writes), yet \TieCifarFourWrites{} and \TieCifarEightWrites{} of \TieCifarFourPixels{} setup cycles carry a write. With all setup-cycle writes removed, no row registered at the default bias keeps more than \TieResidMax\,\% error. The model outputs stay as scored (decision D21).
 
 The per-chain cycle counter obeys $\mathrm{CYCLES}=\sum(\mathrm{STAMP}+\lambda+1)+1$ on \IdentPlusOne{} of \IdentCalls{} chain calls; the frozen check, with $+2$ as in (\ref{eq:chain}), holds on \IdentPlusTwo. Root cause: the accepting cycle of the start write is not busy. RTL and STAMP are correct; the design's chain time with $+2$ includes that cycle and is the CPU-visible term, so C4b is unaffected beyond one cycle per chain call. An independent bus-level count, from the first descriptor request to the stamp request, equals the self-reported STAMP on \IndepStampAgree{} of \IndepStampN{} commands (\IndepStampList{} cycles), the first such check.
 
@@ -132,10 +175,10 @@ The per-chain cycle counter obeys $\mathrm{CYCLES}=\sum(\mathrm{STAMP}+\lambda+1
 \end{table}
 
 \section{Discussion and Limitations}
-All cycle counts come from Verilator simulation; the FPGA is used only for synthesis figures (LUT, DSP, BRAM, Fmax). No FPGA wall-clock or power measurement exists yet; the procedure is in \texttt{HARDWARE\_TODO.md}. Wall-time speedup would be the cycle speedup scaled by the Fmax ratio of the SoC with and without the accelerator, and Table~\ref{tab:syn} shows that ratio is below one: the SoC with the accelerator closes at \SynSocPeightFmax{} MHz against \SynSocNoAccelFmax{} MHz without it in this flow, and below the nominal \ClockMHzMnist{} MHz, so a board result would be smaller than the cycle speedup by that factor. The memory model is zero-wait on-chip RAM; an external memory would change the port-bound assumption, although $\lambda$ in the model is the knob that would absorb it. The accelerator covers convolution, depthwise (multiplier one) and fully connected layers only; pooling and layout ops stay in software and cap MNIST by Amdahl's law. The model has biases documented before \texttt{m1}; the setup bias proved larger than documented where the port and requantizer terms tie (above), which is the kind of finding a frozen model makes visible and a fitted model would have absorbed. The baseline is a size-optimized multi-cycle core~\cite{picorv32}, so the speedups are relative to a deliberately small CPU and are not comparable with speedups over pipelined cores; they are reported to show the claims were met, not as a result. Only two networks are evaluated, both from one compiler, and one person wrote both the model and the RTL, so the independence between them rests on the git history rather than on separate authors; until the \texttt{m1} tag is timestamped outside the author's control, a reader has to trust that history.
+All cycle counts come from Verilator simulation; the FPGA is used only for synthesis figures (LUT, DSP, BRAM, Fmax). No FPGA wall-clock or power measurement exists yet; the procedure is in \texttt{HARDWARE\_TODO.md}. Wall-time speedup would be the cycle speedup scaled by the Fmax ratio of the SoC with and without the accelerator, and Table~\ref{tab:syn} shows that ratio is below one: the SoC with the accelerator closes at \SynSocPeightFmax{} MHz against \SynSocNoAccelFmax{} MHz without it in this flow, and below the nominal \ClockMHzMnist{} MHz, so a board result would be smaller than the cycle speedup by that factor. The memory model is zero-wait on-chip RAM; an external memory would change the port-bound assumption, although $\lambda$ in the model is the knob that would absorb it. The accelerator covers convolution, depthwise (multiplier one) and fully connected layers only; pooling and layout ops stay in software and cap MNIST by Amdahl's law. The model has biases documented before \texttt{m1}; the setup bias proved larger than documented wherever a pending write is granted in the setup cycle (above), which is the kind of finding a frozen model makes visible and a fitted model would have absorbed. The baseline is a size-optimized multi-cycle core~\cite{picorv32}, so the speedups are relative to a deliberately small CPU and are not comparable with speedups over pipelined cores; they are reported to show the claims were met, not as a result. Only two networks are evaluated, both from one compiler, and one person wrote both the model and the RTL, so the independence between them rests on the git history rather than on separate authors; until the \texttt{m1} tag is timestamped outside the author's control, a reader has to trust that history.
 
 \section{Conclusion}
-We built a small int8 accelerator and its backend and scored an analytic cycle model that was frozen before the RTL. The model held to within \MeasCfourMaxErr\,\% per command and \MeasCfourBErrMnist\,\% and \MeasCfourBErrCifar\,\% per network, the resource budget was missed on LUTs, and the two largest prediction errors have identified mechanisms. The outcomes of the pre-registered claims are those in the tables above; they update from \texttt{results/} through \texttt{experiments/make\_macros.py}.
+We built a small int8 accelerator and its backend and scored an analytic cycle model that was frozen before the RTL. The model held to within \MeasCfourMaxErr\,\% per command and \MeasCfourBErrMnist\,\% and \MeasCfourBErrCifar\,\% per network, the resource budget was missed on LUTs, and every command that exceeded its registered bias has a mechanism identified post hoc. The outcomes of the pre-registered claims are those in the tables above; they update from \texttt{results/} through \texttt{experiments/make\_macros.py}.
 
 \section*{Acknowledgment}
 AI assistance (Anthropic's Claude) was used to draft code and text; the author takes responsibility for all content.

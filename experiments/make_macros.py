@@ -282,6 +282,15 @@ if dv:
     for k, nm in (("mnist_cnn_op1_P8", "Mnist"), ("cifar_mobilenet_op0_P16", "Cifar")):
         emit(f"Tie{nm}Writes", i(tp[k]["writes_in_psetup"]), f"results/deviations.json root_cause_A.tie_probe.{k}")
         emit(f"Tie{nm}Pixels", i(tp[k]["pixels"]), f"results/deviations.json root_cause_A.tie_probe.{k}")
+    emit("TieNProbed", len([k for k in tp if k != "source"]), "results/deviations.json root_cause_A.tie_probe keys")
+    for k, nm in (("mnist_cnn_op1_P16", "MnistSixteen"), ("mnist_cnn_op3_P16", "MnistThree"),
+                  ("cifar_mobilenet_op0_P4", "CifarFour"), ("cifar_mobilenet_op0_P8", "CifarEight")):
+        emit(f"Tie{nm}Writes", i(tp[k]["writes_in_psetup"]), f"results/deviations.json root_cause_A.tie_probe.{k}")
+        emit(f"Tie{nm}Tie", i(tp[k]["tie_writes_in_psetup"]), f"results/deviations.json root_cause_A.tie_probe.{k}")
+        emit(f"Tie{nm}Pixels", i(tp[k]["pixels"]), f"results/deviations.json root_cause_A.tie_probe.{k}")
+    tpr = [r for r in load(R / "m6_tie_probe.json")["rows"] if r["registered_bias_pct"] == dv["root_cause_A"]["bias_default_pct"]]
+    emit("TieResidMax", f"{max(r['err_pct_without_psetup_writes'] for r in tpr):.2f}",
+         "results/m6_tie_probe.json max err_pct_without_psetup_writes over rows registered at the default bias")
     b = dv["root_cause_B"]
     emit("IdentCalls", b["chain_calls"], "results/deviations.json root_cause_B.chain_calls")
     emit("IdentPlusOne", b["plus1_holds"], "results/deviations.json root_cause_B.plus1_holds")
@@ -314,6 +323,25 @@ else:
 
 # ---- journal extension (paper/journal/main.tex): M3 totals, per-P C4a, C5 sums, Amdahl shares, model archs
 emit("EstLutPeight", i(3800), "docs/DESIGN.md 8.12 pre-RTL LUT4 estimate at P=8 (spec constant)")
+emit("EstCtrlLut", i(1300), "docs/DESIGN.md 8.12 pre-RTL ctrl LUT4 estimate (spec constant)")
+bk = load(R / "syn" / "accel_breakdown.json")
+if bk:
+    src = "results/syn/accel_breakdown.json (syn/breakdown.sh)"
+    rec = {r["P"]: r for r in bk["records"]}
+    b8, b16 = rec[8], rec[16]
+    mo = b8["modules"]
+    emit("BrkCtrlLut", i(mo["ctrl"]["lut_equiv"]), f"{src} P=8 modules.ctrl.lut_equiv")
+    emit("BrkCtrlShare", f"{100 * mo['ctrl']['share_lut_equiv']:.0f}", f"{src} P=8 modules.ctrl.share_lut_equiv")
+    emit("BrkMacLut", i(mo["mac_array"]["lut_equiv"]), f"{src} P=8 modules.mac_array.lut_equiv")
+    emit("BrkRequantLut", i(mo["requant"]["lut_equiv"]), f"{src} P=8 modules.requant.lut_equiv")
+    fixed = ("ctrl", "regs", "align", "fetch", "pbuf", "top_glue", "writer")
+    emit("BrkFixedLut", i(sum(mo[m]["lut_equiv"] for m in fixed if m in mo)), f"{src} P=8 sum lut_equiv of the P-independent modules")
+    emit("BrkHierLut", i(b8["hier_total"]["lut_equiv"]), f"{src} P=8 hier_total.lut_equiv")
+    emit("BrkFlatLut", i(b8["flat_total"]["lut_equiv"]), f"{src} P=8 flat_total.lut_equiv")
+    emit("BrkHierGap", i(b8["gap"]["hier_minus_flat_lut_equiv"]), f"{src} P=8 gap.hier_minus_flat_lut_equiv")
+    emit("BrkPackGap", i(b8["gap"]["postplace_minus_flat_lut_equiv"]), f"{src} P=8 gap.postplace_minus_flat_lut_equiv")
+    emit("BrkMacPerLane", i(round((b16["modules"]["mac_array"]["lut_equiv"] - mo["mac_array"]["lut_equiv"]) / 8)), f"{src} (P16-P8 mac_array lut_equiv)/8")
+    emit("BrkPlacePerLane", i(round((b16["postplace"]["lut4"] - b8["postplace"]["lut4"]) / 8)), f"{src} (P16-P8 postplace.lut4)/8")
 m3 = load(R / "m3_summary.json")
 if m3:
     L, CE = m3["layers"].values(), m3["chains_errors"].values()

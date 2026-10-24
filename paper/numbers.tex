@@ -221,6 +221,20 @@
 \newcommand{\TieMnistPixels}{784}% results/deviations.json root_cause_A.tie_probe.mnist_cnn_op1_P8
 \newcommand{\TieCifarWrites}{690}% results/deviations.json root_cause_A.tie_probe.cifar_mobilenet_op0_P16
 \newcommand{\TieCifarPixels}{1,024}% results/deviations.json root_cause_A.tie_probe.cifar_mobilenet_op0_P16
+\newcommand{\TieNProbed}{6}% results/deviations.json root_cause_A.tie_probe keys
+\newcommand{\TieMnistSixteenWrites}{546}% results/deviations.json root_cause_A.tie_probe.mnist_cnn_op1_P16
+\newcommand{\TieMnistSixteenTie}{546}% results/deviations.json root_cause_A.tie_probe.mnist_cnn_op1_P16
+\newcommand{\TieMnistSixteenPixels}{784}% results/deviations.json root_cause_A.tie_probe.mnist_cnn_op1_P16
+\newcommand{\TieMnistThreeWrites}{47}% results/deviations.json root_cause_A.tie_probe.mnist_cnn_op3_P16
+\newcommand{\TieMnistThreeTie}{24}% results/deviations.json root_cause_A.tie_probe.mnist_cnn_op3_P16
+\newcommand{\TieMnistThreePixels}{196}% results/deviations.json root_cause_A.tie_probe.mnist_cnn_op3_P16
+\newcommand{\TieCifarFourWrites}{707}% results/deviations.json root_cause_A.tie_probe.cifar_mobilenet_op0_P4
+\newcommand{\TieCifarFourTie}{0}% results/deviations.json root_cause_A.tie_probe.cifar_mobilenet_op0_P4
+\newcommand{\TieCifarFourPixels}{1,024}% results/deviations.json root_cause_A.tie_probe.cifar_mobilenet_op0_P4
+\newcommand{\TieCifarEightWrites}{690}% results/deviations.json root_cause_A.tie_probe.cifar_mobilenet_op0_P8
+\newcommand{\TieCifarEightTie}{0}% results/deviations.json root_cause_A.tie_probe.cifar_mobilenet_op0_P8
+\newcommand{\TieCifarEightPixels}{1,024}% results/deviations.json root_cause_A.tie_probe.cifar_mobilenet_op0_P8
+\newcommand{\TieResidMax}{0.40}% results/m6_tie_probe.json max err_pct_without_psetup_writes over rows registered at the default bias
 \newcommand{\IdentCalls}{275}% results/deviations.json root_cause_B.chain_calls
 \newcommand{\IdentPlusOne}{275}% results/deviations.json root_cause_B.plus1_holds
 \newcommand{\IdentPlusTwo}{0}% results/deviations.json root_cause_B.plus2_holds
@@ -234,6 +248,18 @@
 \newcommand{\PostHocCyclesCifar}{198,760}% m6_c4b.json cifar_mobilenet.pred + mean(m5_profile_cifar_mobilenet_P8.json c4b.fallback_sum_per_image_run0) + baseline_overhead.json
 \newcommand{\PostHocSpeedupCifar}{348.0}% baseline_cifar_mobilenet.json cycles_median / (m6_c4b.json cifar_mobilenet.pred + mean(m5_profile_cifar_mobilenet_P8.json c4b.fallback_sum_per_image_run0) + baseline_overhead.json)
 \newcommand{\EstLutPeight}{3,800}% docs/DESIGN.md 8.12 pre-RTL LUT4 estimate at P=8 (spec constant)
+\newcommand{\EstCtrlLut}{1,300}% docs/DESIGN.md 8.12 pre-RTL ctrl LUT4 estimate (spec constant)
+\newcommand{\BrkCtrlLut}{3,457}% results/syn/accel_breakdown.json (syn/breakdown.sh) P=8 modules.ctrl.lut_equiv
+\newcommand{\BrkCtrlShare}{45}% results/syn/accel_breakdown.json (syn/breakdown.sh) P=8 modules.ctrl.share_lut_equiv
+\newcommand{\BrkMacLut}{1,630}% results/syn/accel_breakdown.json (syn/breakdown.sh) P=8 modules.mac_array.lut_equiv
+\newcommand{\BrkRequantLut}{1,480}% results/syn/accel_breakdown.json (syn/breakdown.sh) P=8 modules.requant.lut_equiv
+\newcommand{\BrkFixedLut}{4,347}% results/syn/accel_breakdown.json (syn/breakdown.sh) P=8 sum lut_equiv of the P-independent modules
+\newcommand{\BrkHierLut}{7,766}% results/syn/accel_breakdown.json (syn/breakdown.sh) P=8 hier_total.lut_equiv
+\newcommand{\BrkFlatLut}{6,795}% results/syn/accel_breakdown.json (syn/breakdown.sh) P=8 flat_total.lut_equiv
+\newcommand{\BrkHierGap}{971}% results/syn/accel_breakdown.json (syn/breakdown.sh) P=8 gap.hier_minus_flat_lut_equiv
+\newcommand{\BrkPackGap}{518}% results/syn/accel_breakdown.json (syn/breakdown.sh) P=8 gap.postplace_minus_flat_lut_equiv
+\newcommand{\BrkMacPerLane}{194}% results/syn/accel_breakdown.json (syn/breakdown.sh) (P16-P8 mac_array lut_equiv)/8
+\newcommand{\BrkPlacePerLane}{300}% results/syn/accel_breakdown.json (syn/breakdown.sh) (P16-P8 postplace.lut4)/8
 \newcommand{\MThreePerP}{1,000}% results/m3_summary.json layers[P].rows
 \newcommand{\MThreeChainsTotal}{500}% results/m3_summary.json sum chains_errors[P].chains.runs
 \newcommand{\MThreeErrorsTotal}{1,450}% results/m3_summary.json sum chains_errors[P].errors.runs
