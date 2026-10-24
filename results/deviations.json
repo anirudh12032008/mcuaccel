@@ -126,14 +126,26 @@
       }
     ],
     "tie_probe": {
-      "source": "red-team T6.3 probe, build/redteam_A/{r1.log,r3.log} (scratch, not a result file)",
+      "source": "results/m6_tie_probe.json (experiments/probe_tie.py); first found by red-team T6.3, build/redteam_A",
       "mnist_cnn_op1_P8": {
         "pixels": 784,
         "writes_in_psetup": 546,
         "R": 6,
         "W": 2,
         "NV": 8,
-        "bus_stamp": 6356
+        "bus_stamp": 6356,
+        "tie_writes_in_psetup": 546,
+        "deviation": 788,
+        "deviation_parts": {
+          "tie_writes_in_psetup": 546,
+          "nontie_writes_in_psetup": 0,
+          "requant_hidden_psetup": 239,
+          "flush": 3,
+          "other": 0
+        },
+        "err_pct_without_tie": 3.807,
+        "verdict_tie": "fully",
+        "verdict_psetup_writes": "fully"
       },
       "cifar_mobilenet_op0_P16": {
         "pixels": 1024,
@@ -141,7 +153,87 @@
         "R": 12,
         "W": 4,
         "NV": 16,
-        "bus_stamp": 16616
+        "bus_stamp": 16616,
+        "tie_writes_in_psetup": 690,
+        "deviation": 1032,
+        "deviation_parts": {
+          "tie_writes_in_psetup": 690,
+          "nontie_writes_in_psetup": 0,
+          "requant_hidden_psetup": 343,
+          "flush": -1,
+          "other": 0
+        },
+        "err_pct_without_tie": 2.058,
+        "verdict_tie": "fully",
+        "verdict_psetup_writes": "fully"
+      },
+      "mnist_cnn_op1_P16": {
+        "pixels": 784,
+        "writes_in_psetup": 546,
+        "bus_stamp": 6380,
+        "tie_writes_in_psetup": 546,
+        "deviation": 788,
+        "deviation_parts": {
+          "tie_writes_in_psetup": 546,
+          "nontie_writes_in_psetup": 0,
+          "requant_hidden_psetup": 239,
+          "flush": 3,
+          "other": 0
+        },
+        "err_pct_without_tie": 3.793,
+        "verdict_tie": "fully",
+        "verdict_psetup_writes": "fully"
+      },
+      "mnist_cnn_op3_P16": {
+        "pixels": 196,
+        "writes_in_psetup": 47,
+        "bus_stamp": 4515,
+        "tie_writes_in_psetup": 24,
+        "deviation": 65,
+        "deviation_parts": {
+          "tie_writes_in_psetup": 24,
+          "nontie_writes_in_psetup": 23,
+          "requant_hidden_psetup": 16,
+          "flush": 2,
+          "other": 0
+        },
+        "err_pct_without_tie": 0.908,
+        "verdict_tie": "fully",
+        "verdict_psetup_writes": "fully"
+      },
+      "cifar_mobilenet_op0_P4": {
+        "pixels": 1024,
+        "writes_in_psetup": 707,
+        "bus_stamp": 49381,
+        "tie_writes_in_psetup": 0,
+        "deviation": 711,
+        "deviation_parts": {
+          "tie_writes_in_psetup": 0,
+          "nontie_writes_in_psetup": 707,
+          "requant_hidden_psetup": 0,
+          "flush": 4,
+          "other": 0
+        },
+        "err_pct_without_tie": 1.44,
+        "verdict_tie": "not at all",
+        "verdict_psetup_writes": "fully"
+      },
+      "cifar_mobilenet_op0_P8": {
+        "pixels": 1024,
+        "writes_in_psetup": 690,
+        "bus_stamp": 27029,
+        "tie_writes_in_psetup": 0,
+        "deviation": 695,
+        "deviation_parts": {
+          "tie_writes_in_psetup": 0,
+          "nontie_writes_in_psetup": 690,
+          "requant_hidden_psetup": 0,
+          "flush": 5,
+          "other": 0
+        },
+        "err_pct_without_tie": 2.571,
+        "verdict_tie": "not at all",
+        "verdict_psetup_writes": "fully"
       }
     }
   },

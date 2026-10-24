@@ -58,16 +58,22 @@ for r in csv.DictReader((R / "m6_pred_vs_meas.csv").open()):
 a = {"source": "results/m6_pred_vs_meas.csv vs DESIGN.md 7.4 at tag m1 (registered over-prediction by command)",
      "bias_default_pct": BIAS_DEFAULT, "margin_pp": MARGIN,
      "rule": f"signed error > registered bias + {MARGIN} pp (unlisted commands: {BIAS_DEFAULT} %)", "exceeding_rows": exceed}
-# red-team T6.3 probe (scratch build/redteam_A): pixels where a write of the previous tile is granted in PSETUP
-tie = {"source": "red-team T6.3 probe, build/redteam_A/{r1.log,r3.log} (scratch, not a result file)",
+# PSETUP probe: pixels where a write of the previous tile is granted in PSETUP. First found by red-team T6.3 (scratch
+# build/redteam_A) on two rows; all six rows re-measured by experiments/probe_tie.py -> results/m6_tie_probe.json.
+tie = {"source": "results/m6_tie_probe.json (experiments/probe_tie.py); first found by red-team T6.3, build/redteam_A",
        "mnist_cnn_op1_P8": {"pixels": 784, "writes_in_psetup": 546, "R": 6, "W": 2, "NV": 8, "bus_stamp": 6356},
        "cifar_mobilenet_op0_P16": {"pixels": 1024, "writes_in_psetup": 690, "R": 12, "W": 4, "NV": 16, "bus_stamp": 16616}}
-for f, key in (("r1.log", "mnist_cnn_op1_P8"), ("r3.log", "cifar_mobilenet_op0_P16")):
-    p = ROOT / "build/redteam_A" / f
-    if p.exists():
-        txt = p.read_text()
-        for fld, name in (("writes_in_psetup", "writes_in_psetup"), ("n_psetup", "pixels"), ("bus_stamp", "bus_stamp")):
-            need(f"'{fld}': {tie[key][name]}", txt, f"probe {f}")
+for r in load("m6_tie_probe.json")["rows"]:
+    key = f"{r['model']}_op{r['op']}_P{r['P']}"
+    t = tie.setdefault(key, {})
+    if t:   # the two T6.3 rows: the re-measurement must reproduce them
+        assert (t["pixels"], t["writes_in_psetup"], t["bus_stamp"]) == \
+            (r["model_terms"]["n_pix"], r["writes_in_psetup"], r["bus_stamp"]), (key, t)
+    t.update(pixels=r["model_terms"]["n_pix"], writes_in_psetup=r["writes_in_psetup"], bus_stamp=r["bus_stamp"],
+             tie_writes_in_psetup=r["tie_explained"], deviation=r["deviation"], deviation_parts=r["deviation_parts"],
+             err_pct_without_tie=r["err_pct_without_tie"], verdict_tie=r["verdict_tie"],
+             verdict_psetup_writes=r["verdict_psetup_writes"])
+assert {f"{e['model']}_op{e['op']}_P{e['P']}" for e in exceed} <= set(tie) - {"source"}, "exceeding row not probed"
 a["tie_probe"] = tie
 
 # ---- root cause B and the independent STAMP check

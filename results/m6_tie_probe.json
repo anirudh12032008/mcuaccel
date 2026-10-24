@@ -1,0 +1,549 @@
+{
+  "generated_by": "experiments/probe_tie.py",
+  "commit": "76d13530325817cfd29f69af853558e489387f8d",
+  "tree_dirty": true,
+  "date": "2026-10-24T02:46:36+00:00",
+  "environment": {
+    "python": "3.12.13",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "cocotb": "2.1.0",
+    "verilator": "Verilator 5.053 devel rev v5.052-119-g014c9820d (mod)"
+  },
+  "seed": 1,
+  "source": "frozen predictions and measured STAMP: results/deviations.json root_cause_A.exceeding_rows (results/m6_pred_vs_meas.csv); RTL trace: rtl/accel at commit, one command of the layer shape",
+  "rule": "tie_explained = writes granted in a PSETUP cycle whose pending write belongs to a tie tile (lam*(R+W) == max(NV, ceil((NV+lam+3)/2))) of the previous pixel; deviation_parts sum to pred - meas; verdict fully if (pred - meas - explained)/meas <= registered bias + margin (the deviations.json rule), partly if explained > 0, else not at all",
+  "rows": [
+    {
+      "model": "mnist_cnn",
+      "op": 1,
+      "P": 8,
+      "shape": {
+        "H": 28,
+        "W": 28,
+        "C": 1,
+        "O": 8,
+        "KH": 3,
+        "SH": 1,
+        "PH": 1
+      },
+      "pred": 7144,
+      "meas": 6356,
+      "deviation": 788,
+      "err_pct": 12.3977,
+      "registered_bias_pct": 3.4,
+      "registered_cycles": 216.1,
+      "excess_over_registered": 571.9,
+      "model_terms": {
+        "t_desc": 18,
+        "t_wload": 25,
+        "t_pload": 25,
+        "t_compute": 7056,
+        "t_flush": 20,
+        "n_pix": 784,
+        "tiles_per_pix": 1,
+        "NV": [
+          8
+        ],
+        "reads": 4018,
+        "writes": 1568,
+        "slack": 686,
+        "tie_tiles": 546,
+        "pixel_class_last_tile": {
+          "tie": 546,
+          "port": 0,
+          "requant": 238
+        }
+      },
+      "measured": {
+        "bus_stamp": 6356,
+        "setup": 68,
+        "compute": 6265,
+        "tail": 23,
+        "psetup_cycles": 784,
+        "issue_reads": 4018,
+        "issue_writes": 1016,
+        "issue_idle": 447,
+        "psetup_writes": 546,
+        "writes_after_compute": 6,
+        "writes_total": 1568,
+        "psetup_writes_by_class": {
+          "tie": 546,
+          "port": 0,
+          "requant": 0
+        }
+      },
+      "delta_by_phase": {
+        "setup": 0,
+        "compute": 791,
+        "tail": -3
+      },
+      "delta_compute_split": {
+        "psetup": 0,
+        "reads": 0,
+        "writes_in_psetup": 546,
+        "writes_after_compute": 6,
+        "writes_other": 0,
+        "slack": 239
+      },
+      "deviation_parts": {
+        "tie_writes_in_psetup": 546,
+        "nontie_writes_in_psetup": 0,
+        "requant_hidden_psetup": 239,
+        "flush": 3,
+        "other": 0
+      },
+      "tie_explained": 546,
+      "writes_in_psetup": 546,
+      "err_pct_without_tie": 3.807,
+      "err_pct_without_psetup_writes": 3.807,
+      "rule_limit_pct": 3.9,
+      "verdict_tie": "fully",
+      "verdict_psetup_writes": "fully",
+      "bus_stamp": 6356
+    },
+    {
+      "model": "mnist_cnn",
+      "op": 1,
+      "P": 16,
+      "shape": {
+        "H": 28,
+        "W": 28,
+        "C": 1,
+        "O": 8,
+        "KH": 3,
+        "SH": 1,
+        "PH": 1
+      },
+      "pred": 7168,
+      "meas": 6380,
+      "deviation": 788,
+      "err_pct": 12.3511,
+      "registered_bias_pct": 3.4,
+      "registered_cycles": 216.9,
+      "excess_over_registered": 571.1,
+      "model_terms": {
+        "t_desc": 18,
+        "t_wload": 49,
+        "t_pload": 25,
+        "t_compute": 7056,
+        "t_flush": 20,
+        "n_pix": 784,
+        "tiles_per_pix": 1,
+        "NV": [
+          8
+        ],
+        "reads": 4018,
+        "writes": 1568,
+        "slack": 686,
+        "tie_tiles": 546,
+        "pixel_class_last_tile": {
+          "tie": 546,
+          "port": 0,
+          "requant": 238
+        }
+      },
+      "measured": {
+        "bus_stamp": 6380,
+        "setup": 92,
+        "compute": 6265,
+        "tail": 23,
+        "psetup_cycles": 784,
+        "issue_reads": 4018,
+        "issue_writes": 1016,
+        "issue_idle": 447,
+        "psetup_writes": 546,
+        "writes_after_compute": 6,
+        "writes_total": 1568,
+        "psetup_writes_by_class": {
+          "tie": 546,
+          "port": 0,
+          "requant": 0
+        }
+      },
+      "delta_by_phase": {
+        "setup": 0,
+        "compute": 791,
+        "tail": -3
+      },
+      "delta_compute_split": {
+        "psetup": 0,
+        "reads": 0,
+        "writes_in_psetup": 546,
+        "writes_after_compute": 6,
+        "writes_other": 0,
+        "slack": 239
+      },
+      "deviation_parts": {
+        "tie_writes_in_psetup": 546,
+        "nontie_writes_in_psetup": 0,
+        "requant_hidden_psetup": 239,
+        "flush": 3,
+        "other": 0
+      },
+      "tie_explained": 546,
+      "writes_in_psetup": 546,
+      "err_pct_without_tie": 3.793,
+      "err_pct_without_psetup_writes": 3.793,
+      "rule_limit_pct": 3.9,
+      "verdict_tie": "fully",
+      "verdict_psetup_writes": "fully",
+      "bus_stamp": 6380
+    },
+    {
+      "model": "mnist_cnn",
+      "op": 3,
+      "P": 16,
+      "shape": {
+        "H": 14,
+        "W": 14,
+        "C": 8,
+        "O": 16,
+        "KH": 3,
+        "SH": 1,
+        "PH": 1
+      },
+      "pred": 4580,
+      "meas": 4515,
+      "deviation": 65,
+      "err_pct": 1.4396,
+      "registered_bias_pct": 0.5,
+      "registered_cycles": 22.6,
+      "excess_over_registered": 42.4,
+      "model_terms": {
+        "t_desc": 18,
+        "t_wload": 289,
+        "t_pload": 49,
+        "t_compute": 4196,
+        "t_flush": 28,
+        "n_pix": 196,
+        "tiles_per_pix": 1,
+        "NV": [
+          16
+        ],
+        "reads": 3200,
+        "writes": 784,
+        "slack": 16,
+        "tie_tiles": 48,
+        "pixel_class_last_tile": {
+          "tie": 48,
+          "port": 144,
+          "requant": 4
+        }
+      },
+      "measured": {
+        "bus_stamp": 4515,
+        "setup": 356,
+        "compute": 4124,
+        "tail": 35,
+        "psetup_cycles": 196,
+        "issue_reads": 3200,
+        "issue_writes": 728,
+        "issue_idle": 0,
+        "psetup_writes": 47,
+        "writes_after_compute": 9,
+        "writes_total": 784,
+        "psetup_writes_by_class": {
+          "tie": 24,
+          "port": 23,
+          "requant": 0
+        }
+      },
+      "delta_by_phase": {
+        "setup": 0,
+        "compute": 72,
+        "tail": -7
+      },
+      "delta_compute_split": {
+        "psetup": 0,
+        "reads": 0,
+        "writes_in_psetup": 47,
+        "writes_after_compute": 9,
+        "writes_other": 0,
+        "slack": 16
+      },
+      "deviation_parts": {
+        "tie_writes_in_psetup": 24,
+        "nontie_writes_in_psetup": 23,
+        "requant_hidden_psetup": 16,
+        "flush": 2,
+        "other": 0
+      },
+      "tie_explained": 24,
+      "writes_in_psetup": 47,
+      "err_pct_without_tie": 0.908,
+      "err_pct_without_psetup_writes": 0.399,
+      "rule_limit_pct": 1.0,
+      "verdict_tie": "fully",
+      "verdict_psetup_writes": "fully",
+      "bus_stamp": 4515
+    },
+    {
+      "model": "cifar_mobilenet",
+      "op": 0,
+      "P": 4,
+      "shape": {
+        "H": 32,
+        "W": 32,
+        "C": 3,
+        "O": 16,
+        "KH": 3,
+        "SH": 1,
+        "PH": 1
+      },
+      "pred": 50092,
+      "meas": 49381,
+      "deviation": 711,
+      "err_pct": 1.4398,
+      "registered_bias_pct": 0.5,
+      "registered_cycles": 246.9,
+      "excess_over_registered": 464.1,
+      "model_terms": {
+        "t_desc": 18,
+        "t_wload": 145,
+        "t_pload": 49,
+        "t_compute": 49864,
+        "t_flush": 16,
+        "n_pix": 1024,
+        "tiles_per_pix": 4,
+        "NV": [
+          4,
+          4,
+          4,
+          4
+        ],
+        "reads": 44744,
+        "writes": 4096,
+        "slack": 0,
+        "tie_tiles": 0,
+        "pixel_class_last_tile": {
+          "tie": 0,
+          "port": 1024,
+          "requant": 0
+        }
+      },
+      "measured": {
+        "bus_stamp": 49381,
+        "setup": 212,
+        "compute": 49154,
+        "tail": 15,
+        "psetup_cycles": 1024,
+        "issue_reads": 44744,
+        "issue_writes": 3386,
+        "issue_idle": 0,
+        "psetup_writes": 707,
+        "writes_after_compute": 3,
+        "writes_total": 4096,
+        "psetup_writes_by_class": {
+          "tie": 0,
+          "port": 707,
+          "requant": 0
+        }
+      },
+      "delta_by_phase": {
+        "setup": 0,
+        "compute": 710,
+        "tail": 1
+      },
+      "delta_compute_split": {
+        "psetup": 0,
+        "reads": 0,
+        "writes_in_psetup": 707,
+        "writes_after_compute": 3,
+        "writes_other": 0,
+        "slack": 0
+      },
+      "deviation_parts": {
+        "tie_writes_in_psetup": 0,
+        "nontie_writes_in_psetup": 707,
+        "requant_hidden_psetup": 0,
+        "flush": 4,
+        "other": 0
+      },
+      "tie_explained": 0,
+      "writes_in_psetup": 707,
+      "err_pct_without_tie": 1.44,
+      "err_pct_without_psetup_writes": 0.008,
+      "rule_limit_pct": 1.0,
+      "verdict_tie": "not at all",
+      "verdict_psetup_writes": "fully",
+      "bus_stamp": 49381
+    },
+    {
+      "model": "cifar_mobilenet",
+      "op": 0,
+      "P": 8,
+      "shape": {
+        "H": 32,
+        "W": 32,
+        "C": 3,
+        "O": 16,
+        "KH": 3,
+        "SH": 1,
+        "PH": 1
+      },
+      "pred": 27724,
+      "meas": 27029,
+      "deviation": 695,
+      "err_pct": 2.5713,
+      "registered_bias_pct": 0.5,
+      "registered_cycles": 135.1,
+      "excess_over_registered": 559.9,
+      "model_terms": {
+        "t_desc": 18,
+        "t_wload": 145,
+        "t_pload": 49,
+        "t_compute": 27492,
+        "t_flush": 20,
+        "n_pix": 1024,
+        "tiles_per_pix": 2,
+        "NV": [
+          8,
+          8
+        ],
+        "reads": 22372,
+        "writes": 4096,
+        "slack": 0,
+        "tie_tiles": 36,
+        "pixel_class_last_tile": {
+          "tie": 18,
+          "port": 1006,
+          "requant": 0
+        }
+      },
+      "measured": {
+        "bus_stamp": 27029,
+        "setup": 212,
+        "compute": 26797,
+        "tail": 20,
+        "psetup_cycles": 1024,
+        "issue_reads": 22372,
+        "issue_writes": 3401,
+        "issue_idle": 0,
+        "psetup_writes": 690,
+        "writes_after_compute": 5,
+        "writes_total": 4096,
+        "psetup_writes_by_class": {
+          "tie": 0,
+          "port": 690,
+          "requant": 0
+        }
+      },
+      "delta_by_phase": {
+        "setup": 0,
+        "compute": 695,
+        "tail": 0
+      },
+      "delta_compute_split": {
+        "psetup": 0,
+        "reads": 0,
+        "writes_in_psetup": 690,
+        "writes_after_compute": 5,
+        "writes_other": 0,
+        "slack": 0
+      },
+      "deviation_parts": {
+        "tie_writes_in_psetup": 0,
+        "nontie_writes_in_psetup": 690,
+        "requant_hidden_psetup": 0,
+        "flush": 5,
+        "other": 0
+      },
+      "tie_explained": 0,
+      "writes_in_psetup": 690,
+      "err_pct_without_tie": 2.571,
+      "err_pct_without_psetup_writes": 0.018,
+      "rule_limit_pct": 1.0,
+      "verdict_tie": "not at all",
+      "verdict_psetup_writes": "fully",
+      "bus_stamp": 27029
+    },
+    {
+      "model": "cifar_mobilenet",
+      "op": 0,
+      "P": 16,
+      "shape": {
+        "H": 32,
+        "W": 32,
+        "C": 3,
+        "O": 16,
+        "KH": 3,
+        "SH": 1,
+        "PH": 1
+      },
+      "pred": 17648,
+      "meas": 16616,
+      "deviation": 1032,
+      "err_pct": 6.2109,
+      "registered_bias_pct": 1.9,
+      "registered_cycles": 315.7,
+      "excess_over_registered": 716.3,
+      "model_terms": {
+        "t_desc": 18,
+        "t_wload": 145,
+        "t_pload": 49,
+        "t_compute": 17408,
+        "t_flush": 28,
+        "n_pix": 1024,
+        "tiles_per_pix": 1,
+        "NV": [
+          16
+        ],
+        "reads": 11186,
+        "writes": 4096,
+        "slack": 1102,
+        "tie_tiles": 690,
+        "pixel_class_last_tile": {
+          "tie": 690,
+          "port": 0,
+          "requant": 334
+        }
+      },
+      "measured": {
+        "bus_stamp": 16616,
+        "setup": 212,
+        "compute": 16365,
+        "tail": 39,
+        "psetup_cycles": 1024,
+        "issue_reads": 11186,
+        "issue_writes": 3396,
+        "issue_idle": 759,
+        "psetup_writes": 690,
+        "writes_after_compute": 10,
+        "writes_total": 4096,
+        "psetup_writes_by_class": {
+          "tie": 690,
+          "port": 0,
+          "requant": 0
+        }
+      },
+      "delta_by_phase": {
+        "setup": 0,
+        "compute": 1043,
+        "tail": -11
+      },
+      "delta_compute_split": {
+        "psetup": 0,
+        "reads": 0,
+        "writes_in_psetup": 690,
+        "writes_after_compute": 10,
+        "writes_other": 0,
+        "slack": 343
+      },
+      "deviation_parts": {
+        "tie_writes_in_psetup": 690,
+        "nontie_writes_in_psetup": 0,
+        "requant_hidden_psetup": 343,
+        "flush": -1,
+        "other": 0
+      },
+      "tie_explained": 690,
+      "writes_in_psetup": 690,
+      "err_pct_without_tie": 2.058,
+      "err_pct_without_psetup_writes": 2.058,
+      "rule_limit_pct": 2.4,
+      "verdict_tie": "fully",
+      "verdict_psetup_writes": "fully",
+      "bus_stamp": 16616
+    }
+  ]
+}
