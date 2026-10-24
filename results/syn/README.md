@@ -65,3 +65,17 @@ mapping for memory soc_top.u_ram.mem" when port b is live (the true-dual-port, p
 `always_ff` in rtl/soc/soc_ram.sv, lines 55-62), turning 256 KiB into about 2M flip-flops; the Yosys run
 did not finish in over 30 min and could not fit the device anyway. With the accelerator tied off
 (`soc_noaccel`) the same RAM maps to 128 DP16KD. `soc_noaccel` rows carry the commits a2e8c4b/f22f185.
+
+## accel_breakdown.json (per-module, C3 analysis)
+
+`make synth-breakdown` (= `syn/breakdown.sh [P ...]`, default P in 1 2 4 8 16) runs Yosys
+`synth_ecp5 -noflatten` (per-module `stat -json`) and the normal flattened `synth_ecp5`, no nextpnr,
+and joins both with the last row of `accel_P<P>.jsonl` (post-place). One record per P:
+`modules.<name>` cell counts (`LUT4, CCU2C, PFUMX, L6MUX21, TRELLIS_FF, MULT18X18D, DP16KD,
+TRELLIS_DPR16X4`) plus `lut_equiv = LUT4 + 2*CCU2C + 4*TRELLIS_DPR16X4` (nextpnr's pre-pack
+logic + carry + RAM LUTs) and its share; `top_glue` is `mcuaccel_top`'s own logic, `wrapper` the
+212 port FFs. `hier_total`, `flat_total`, `postplace` and `gap`: hierarchical synthesis keeps
+module boundaries (no cross-module constant propagation or sharing), so it is larger than flat;
+post-place TRELLIS_COMB exceeds flat `lut_equiv` by the route-through LUTs nextpnr's packer adds.
+Per-module numbers are an attribution, not the placed count. The script asserts the flat LUT4 equals
+the jsonl row's `yosys_cells.LUT4` (same RTL).

@@ -1,0 +1,879 @@
+{
+ "design": "accel",
+ "top": "mcuaccel_top_wrap",
+ "flow": "yosys synth_ecp5 -noflatten (modules) and synth_ecp5 (flat); postplace from accel_P<P>.jsonl last row",
+ "lut_equiv": "LUT4 + 2*CCU2C + 4*TRELLIS_DPR16X4 (nextpnr pre-pack logic+carry+RAM LUTs)",
+ "records": [
+  {
+   "P": 1,
+   "modules": {
+    "ctrl": {
+     "LUT4": 2339,
+     "CCU2C": 545,
+     "PFUMX": 467,
+     "L6MUX21": 71,
+     "TRELLIS_FF": 1622,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 3429,
+     "share_lut_equiv": 0.5624
+    },
+    "requant": {
+     "LUT4": 639,
+     "CCU2C": 230,
+     "PFUMX": 108,
+     "L6MUX21": 11,
+     "TRELLIS_FF": 468,
+     "MULT18X18D": 4,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 40,
+     "lut_equiv": 1259,
+     "share_lut_equiv": 0.2065
+    },
+    "mac_array": {
+     "LUT4": 327,
+     "CCU2C": 94,
+     "PFUMX": 20,
+     "L6MUX21": 9,
+     "TRELLIS_FF": 202,
+     "MULT18X18D": 4,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 515,
+     "share_lut_equiv": 0.0845
+    },
+    "regs": {
+     "LUT4": 292,
+     "CCU2C": 32,
+     "PFUMX": 129,
+     "L6MUX21": 89,
+     "TRELLIS_FF": 163,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 356,
+     "share_lut_equiv": 0.0584
+    },
+    "align": {
+     "LUT4": 128,
+     "CCU2C": 0,
+     "PFUMX": 64,
+     "L6MUX21": 32,
+     "TRELLIS_FF": 24,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 128,
+     "share_lut_equiv": 0.021
+    },
+    "fetch": {
+     "LUT4": 116,
+     "CCU2C": 0,
+     "PFUMX": 22,
+     "L6MUX21": 16,
+     "TRELLIS_FF": 56,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 116,
+     "share_lut_equiv": 0.019
+    },
+    "pbuf": {
+     "LUT4": 104,
+     "CCU2C": 0,
+     "PFUMX": 14,
+     "L6MUX21": 10,
+     "TRELLIS_FF": 79,
+     "MULT18X18D": 0,
+     "DP16KD": 3,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 104,
+     "share_lut_equiv": 0.0171
+    },
+    "top_glue": {
+     "LUT4": 83,
+     "CCU2C": 0,
+     "PFUMX": 5,
+     "L6MUX21": 1,
+     "TRELLIS_FF": 0,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 83,
+     "share_lut_equiv": 0.0136
+    },
+    "wbuf": {
+     "LUT4": 54,
+     "CCU2C": 0,
+     "PFUMX": 9,
+     "L6MUX21": 5,
+     "TRELLIS_FF": 75,
+     "MULT18X18D": 0,
+     "DP16KD": 1,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 54,
+     "share_lut_equiv": 0.0089
+    },
+    "writer": {
+     "LUT4": 47,
+     "CCU2C": 3,
+     "PFUMX": 1,
+     "L6MUX21": 0,
+     "TRELLIS_FF": 103,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 53,
+     "share_lut_equiv": 0.0087
+    },
+    "wrapper": {
+     "LUT4": 0,
+     "CCU2C": 0,
+     "PFUMX": 0,
+     "L6MUX21": 0,
+     "TRELLIS_FF": 212,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 0,
+     "share_lut_equiv": 0.0
+    }
+   },
+   "hier_total": {
+    "LUT4": 4129,
+    "CCU2C": 904,
+    "PFUMX": 839,
+    "L6MUX21": 244,
+    "TRELLIS_FF": 3004,
+    "MULT18X18D": 8,
+    "DP16KD": 4,
+    "TRELLIS_DPR16X4": 40,
+    "lut_equiv": 6097
+   },
+   "flat_total": {
+    "LUT4": 3424,
+    "CCU2C": 898,
+    "PFUMX": 404,
+    "L6MUX21": 12,
+    "TRELLIS_FF": 2932,
+    "MULT18X18D": 8,
+    "DP16KD": 4,
+    "TRELLIS_DPR16X4": 40,
+    "lut_equiv": 5380
+   },
+   "postplace": {
+    "lut4": 5788,
+    "ff": 2932,
+    "mult18x18d": 8,
+    "dp16kd": 4,
+    "lutram": 40,
+    "seed": 3,
+    "commit": "89953450e78213d418a7659d46e70b5808dc7d6a"
+   },
+   "gap": {
+    "hier_minus_flat_lut_equiv": 717,
+    "hier_minus_flat_ff": 72,
+    "postplace_minus_flat_lut_equiv": 408
+   }
+  },
+  {
+   "P": 2,
+   "modules": {
+    "ctrl": {
+     "LUT4": 2305,
+     "CCU2C": 543,
+     "PFUMX": 436,
+     "L6MUX21": 70,
+     "TRELLIS_FF": 1620,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 3391,
+     "share_lut_equiv": 0.5419
+    },
+    "requant": {
+     "LUT4": 639,
+     "CCU2C": 230,
+     "PFUMX": 108,
+     "L6MUX21": 11,
+     "TRELLIS_FF": 468,
+     "MULT18X18D": 4,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 40,
+     "lut_equiv": 1259,
+     "share_lut_equiv": 0.2012
+    },
+    "mac_array": {
+     "LUT4": 420,
+     "CCU2C": 104,
+     "PFUMX": 40,
+     "L6MUX21": 18,
+     "TRELLIS_FF": 270,
+     "MULT18X18D": 8,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 628,
+     "share_lut_equiv": 0.1004
+    },
+    "regs": {
+     "LUT4": 342,
+     "CCU2C": 32,
+     "PFUMX": 162,
+     "L6MUX21": 110,
+     "TRELLIS_FF": 163,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 406,
+     "share_lut_equiv": 0.0649
+    },
+    "align": {
+     "LUT4": 128,
+     "CCU2C": 0,
+     "PFUMX": 64,
+     "L6MUX21": 32,
+     "TRELLIS_FF": 24,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 128,
+     "share_lut_equiv": 0.0205
+    },
+    "fetch": {
+     "LUT4": 116,
+     "CCU2C": 0,
+     "PFUMX": 22,
+     "L6MUX21": 16,
+     "TRELLIS_FF": 56,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 116,
+     "share_lut_equiv": 0.0185
+    },
+    "pbuf": {
+     "LUT4": 104,
+     "CCU2C": 0,
+     "PFUMX": 14,
+     "L6MUX21": 10,
+     "TRELLIS_FF": 79,
+     "MULT18X18D": 0,
+     "DP16KD": 3,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 104,
+     "share_lut_equiv": 0.0166
+    },
+    "wbuf": {
+     "LUT4": 90,
+     "CCU2C": 0,
+     "PFUMX": 10,
+     "L6MUX21": 7,
+     "TRELLIS_FF": 77,
+     "MULT18X18D": 0,
+     "DP16KD": 2,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 90,
+     "share_lut_equiv": 0.0144
+    },
+    "top_glue": {
+     "LUT4": 83,
+     "CCU2C": 0,
+     "PFUMX": 5,
+     "L6MUX21": 1,
+     "TRELLIS_FF": 0,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 83,
+     "share_lut_equiv": 0.0133
+    },
+    "writer": {
+     "LUT4": 47,
+     "CCU2C": 3,
+     "PFUMX": 1,
+     "L6MUX21": 0,
+     "TRELLIS_FF": 103,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 53,
+     "share_lut_equiv": 0.0085
+    },
+    "wrapper": {
+     "LUT4": 0,
+     "CCU2C": 0,
+     "PFUMX": 0,
+     "L6MUX21": 0,
+     "TRELLIS_FF": 212,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 0,
+     "share_lut_equiv": 0.0
+    }
+   },
+   "hier_total": {
+    "LUT4": 4274,
+    "CCU2C": 912,
+    "PFUMX": 862,
+    "L6MUX21": 275,
+    "TRELLIS_FF": 3072,
+    "MULT18X18D": 12,
+    "DP16KD": 5,
+    "TRELLIS_DPR16X4": 40,
+    "lut_equiv": 6258
+   },
+   "flat_total": {
+    "LUT4": 3542,
+    "CCU2C": 905,
+    "PFUMX": 410,
+    "L6MUX21": 30,
+    "TRELLIS_FF": 2998,
+    "MULT18X18D": 12,
+    "DP16KD": 5,
+    "TRELLIS_DPR16X4": 40,
+    "lut_equiv": 5512
+   },
+   "postplace": {
+    "lut4": 5922,
+    "ff": 2998,
+    "mult18x18d": 12,
+    "dp16kd": 5,
+    "lutram": 40,
+    "seed": 3,
+    "commit": "89953450e78213d418a7659d46e70b5808dc7d6a"
+   },
+   "gap": {
+    "hier_minus_flat_lut_equiv": 746,
+    "hier_minus_flat_ff": 74,
+    "postplace_minus_flat_lut_equiv": 410
+   }
+  },
+  {
+   "P": 4,
+   "modules": {
+    "ctrl": {
+     "LUT4": 2359,
+     "CCU2C": 541,
+     "PFUMX": 489,
+     "L6MUX21": 161,
+     "TRELLIS_FF": 1618,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 3441,
+     "share_lut_equiv": 0.5194
+    },
+    "requant": {
+     "LUT4": 639,
+     "CCU2C": 230,
+     "PFUMX": 108,
+     "L6MUX21": 11,
+     "TRELLIS_FF": 468,
+     "MULT18X18D": 4,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 40,
+     "lut_equiv": 1259,
+     "share_lut_equiv": 0.19
+    },
+    "mac_array": {
+     "LUT4": 606,
+     "CCU2C": 124,
+     "PFUMX": 80,
+     "L6MUX21": 36,
+     "TRELLIS_FF": 406,
+     "MULT18X18D": 16,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 854,
+     "share_lut_equiv": 0.1289
+    },
+    "regs": {
+     "LUT4": 350,
+     "CCU2C": 32,
+     "PFUMX": 166,
+     "L6MUX21": 113,
+     "TRELLIS_FF": 163,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 414,
+     "share_lut_equiv": 0.0625
+    },
+    "wbuf": {
+     "LUT4": 173,
+     "CCU2C": 0,
+     "PFUMX": 18,
+     "L6MUX21": 13,
+     "TRELLIS_FF": 81,
+     "MULT18X18D": 0,
+     "DP16KD": 4,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 173,
+     "share_lut_equiv": 0.0261
+    },
+    "align": {
+     "LUT4": 128,
+     "CCU2C": 0,
+     "PFUMX": 64,
+     "L6MUX21": 32,
+     "TRELLIS_FF": 24,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 128,
+     "share_lut_equiv": 0.0193
+    },
+    "fetch": {
+     "LUT4": 116,
+     "CCU2C": 0,
+     "PFUMX": 22,
+     "L6MUX21": 16,
+     "TRELLIS_FF": 56,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 116,
+     "share_lut_equiv": 0.0175
+    },
+    "pbuf": {
+     "LUT4": 104,
+     "CCU2C": 0,
+     "PFUMX": 14,
+     "L6MUX21": 10,
+     "TRELLIS_FF": 79,
+     "MULT18X18D": 0,
+     "DP16KD": 3,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 104,
+     "share_lut_equiv": 0.0157
+    },
+    "top_glue": {
+     "LUT4": 83,
+     "CCU2C": 0,
+     "PFUMX": 5,
+     "L6MUX21": 1,
+     "TRELLIS_FF": 0,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 83,
+     "share_lut_equiv": 0.0125
+    },
+    "writer": {
+     "LUT4": 47,
+     "CCU2C": 3,
+     "PFUMX": 1,
+     "L6MUX21": 0,
+     "TRELLIS_FF": 103,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 53,
+     "share_lut_equiv": 0.008
+    },
+    "wrapper": {
+     "LUT4": 0,
+     "CCU2C": 0,
+     "PFUMX": 0,
+     "L6MUX21": 0,
+     "TRELLIS_FF": 212,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 0,
+     "share_lut_equiv": 0.0
+    }
+   },
+   "hier_total": {
+    "LUT4": 4605,
+    "CCU2C": 930,
+    "PFUMX": 967,
+    "L6MUX21": 393,
+    "TRELLIS_FF": 3210,
+    "MULT18X18D": 20,
+    "DP16KD": 7,
+    "TRELLIS_DPR16X4": 40,
+    "lut_equiv": 6625
+   },
+   "flat_total": {
+    "LUT4": 3745,
+    "CCU2C": 924,
+    "PFUMX": 410,
+    "L6MUX21": 13,
+    "TRELLIS_FF": 3134,
+    "MULT18X18D": 20,
+    "DP16KD": 7,
+    "TRELLIS_DPR16X4": 40,
+    "lut_equiv": 5753
+   },
+   "postplace": {
+    "lut4": 6171,
+    "ff": 3134,
+    "mult18x18d": 20,
+    "dp16kd": 7,
+    "lutram": 40,
+    "seed": 3,
+    "commit": "89953450e78213d418a7659d46e70b5808dc7d6a"
+   },
+   "gap": {
+    "hier_minus_flat_lut_equiv": 872,
+    "hier_minus_flat_ff": 76,
+    "postplace_minus_flat_lut_equiv": 418
+   }
+  },
+  {
+   "P": 8,
+   "modules": {
+    "ctrl": {
+     "LUT4": 2379,
+     "CCU2C": 539,
+     "PFUMX": 522,
+     "L6MUX21": 195,
+     "TRELLIS_FF": 1618,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 3457,
+     "share_lut_equiv": 0.4451
+    },
+    "mac_array": {
+     "LUT4": 1174,
+     "CCU2C": 228,
+     "PFUMX": 160,
+     "L6MUX21": 72,
+     "TRELLIS_FF": 806,
+     "MULT18X18D": 32,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 1630,
+     "share_lut_equiv": 0.2099
+    },
+    "requant": {
+     "LUT4": 732,
+     "CCU2C": 230,
+     "PFUMX": 95,
+     "L6MUX21": 9,
+     "TRELLIS_FF": 468,
+     "MULT18X18D": 4,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 72,
+     "lut_equiv": 1480,
+     "share_lut_equiv": 0.1906
+    },
+    "regs": {
+     "LUT4": 342,
+     "CCU2C": 32,
+     "PFUMX": 160,
+     "L6MUX21": 107,
+     "TRELLIS_FF": 163,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 406,
+     "share_lut_equiv": 0.0523
+    },
+    "wbuf": {
+     "LUT4": 309,
+     "CCU2C": 0,
+     "PFUMX": 19,
+     "L6MUX21": 9,
+     "TRELLIS_FF": 89,
+     "MULT18X18D": 0,
+     "DP16KD": 8,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 309,
+     "share_lut_equiv": 0.0398
+    },
+    "align": {
+     "LUT4": 128,
+     "CCU2C": 0,
+     "PFUMX": 64,
+     "L6MUX21": 32,
+     "TRELLIS_FF": 24,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 128,
+     "share_lut_equiv": 0.0165
+    },
+    "fetch": {
+     "LUT4": 116,
+     "CCU2C": 0,
+     "PFUMX": 22,
+     "L6MUX21": 16,
+     "TRELLIS_FF": 56,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 116,
+     "share_lut_equiv": 0.0149
+    },
+    "pbuf": {
+     "LUT4": 104,
+     "CCU2C": 0,
+     "PFUMX": 14,
+     "L6MUX21": 10,
+     "TRELLIS_FF": 79,
+     "MULT18X18D": 0,
+     "DP16KD": 3,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 104,
+     "share_lut_equiv": 0.0134
+    },
+    "top_glue": {
+     "LUT4": 83,
+     "CCU2C": 0,
+     "PFUMX": 5,
+     "L6MUX21": 1,
+     "TRELLIS_FF": 0,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 83,
+     "share_lut_equiv": 0.0107
+    },
+    "writer": {
+     "LUT4": 47,
+     "CCU2C": 3,
+     "PFUMX": 1,
+     "L6MUX21": 0,
+     "TRELLIS_FF": 103,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 53,
+     "share_lut_equiv": 0.0068
+    },
+    "wrapper": {
+     "LUT4": 0,
+     "CCU2C": 0,
+     "PFUMX": 0,
+     "L6MUX21": 0,
+     "TRELLIS_FF": 212,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 0,
+     "share_lut_equiv": 0.0
+    }
+   },
+   "hier_total": {
+    "LUT4": 5414,
+    "CCU2C": 1032,
+    "PFUMX": 1062,
+    "L6MUX21": 451,
+    "TRELLIS_FF": 3618,
+    "MULT18X18D": 36,
+    "DP16KD": 11,
+    "TRELLIS_DPR16X4": 72,
+    "lut_equiv": 7766
+   },
+   "flat_total": {
+    "LUT4": 4445,
+    "CCU2C": 1031,
+    "PFUMX": 403,
+    "L6MUX21": 13,
+    "TRELLIS_FF": 3542,
+    "MULT18X18D": 36,
+    "DP16KD": 11,
+    "TRELLIS_DPR16X4": 72,
+    "lut_equiv": 6795
+   },
+   "postplace": {
+    "lut4": 7313,
+    "ff": 3542,
+    "mult18x18d": 36,
+    "dp16kd": 11,
+    "lutram": 72,
+    "seed": 10,
+    "commit": "f9ef16f4d583f45dda46a78effd5532d1bba22ba"
+   },
+   "gap": {
+    "hier_minus_flat_lut_equiv": 971,
+    "hier_minus_flat_ff": 76,
+    "postplace_minus_flat_lut_equiv": 518
+   }
+  },
+  {
+   "P": 16,
+   "modules": {
+    "ctrl": {
+     "LUT4": 2225,
+     "CCU2C": 540,
+     "PFUMX": 388,
+     "L6MUX21": 90,
+     "TRELLIS_FF": 1618,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 3305,
+     "share_lut_equiv": 0.3314
+    },
+    "mac_array": {
+     "LUT4": 2310,
+     "CCU2C": 436,
+     "PFUMX": 320,
+     "L6MUX21": 144,
+     "TRELLIS_FF": 1606,
+     "MULT18X18D": 64,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 3182,
+     "share_lut_equiv": 0.319
+    },
+    "requant": {
+     "LUT4": 951,
+     "CCU2C": 230,
+     "PFUMX": 118,
+     "L6MUX21": 8,
+     "TRELLIS_FF": 468,
+     "MULT18X18D": 4,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 136,
+     "lut_equiv": 1955,
+     "share_lut_equiv": 0.196
+    },
+    "wbuf": {
+     "LUT4": 667,
+     "CCU2C": 0,
+     "PFUMX": 66,
+     "L6MUX21": 49,
+     "TRELLIS_FF": 105,
+     "MULT18X18D": 0,
+     "DP16KD": 16,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 667,
+     "share_lut_equiv": 0.0669
+    },
+    "regs": {
+     "LUT4": 317,
+     "CCU2C": 32,
+     "PFUMX": 143,
+     "L6MUX21": 100,
+     "TRELLIS_FF": 163,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 381,
+     "share_lut_equiv": 0.0382
+    },
+    "align": {
+     "LUT4": 128,
+     "CCU2C": 0,
+     "PFUMX": 64,
+     "L6MUX21": 32,
+     "TRELLIS_FF": 24,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 128,
+     "share_lut_equiv": 0.0128
+    },
+    "fetch": {
+     "LUT4": 116,
+     "CCU2C": 0,
+     "PFUMX": 22,
+     "L6MUX21": 16,
+     "TRELLIS_FF": 56,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 116,
+     "share_lut_equiv": 0.0116
+    },
+    "pbuf": {
+     "LUT4": 104,
+     "CCU2C": 0,
+     "PFUMX": 14,
+     "L6MUX21": 10,
+     "TRELLIS_FF": 79,
+     "MULT18X18D": 0,
+     "DP16KD": 3,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 104,
+     "share_lut_equiv": 0.0104
+    },
+    "top_glue": {
+     "LUT4": 83,
+     "CCU2C": 0,
+     "PFUMX": 5,
+     "L6MUX21": 1,
+     "TRELLIS_FF": 0,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 83,
+     "share_lut_equiv": 0.0083
+    },
+    "writer": {
+     "LUT4": 47,
+     "CCU2C": 3,
+     "PFUMX": 1,
+     "L6MUX21": 0,
+     "TRELLIS_FF": 103,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 53,
+     "share_lut_equiv": 0.0053
+    },
+    "wrapper": {
+     "LUT4": 0,
+     "CCU2C": 0,
+     "PFUMX": 0,
+     "L6MUX21": 0,
+     "TRELLIS_FF": 212,
+     "MULT18X18D": 0,
+     "DP16KD": 0,
+     "TRELLIS_DPR16X4": 0,
+     "lut_equiv": 0,
+     "share_lut_equiv": 0.0
+    }
+   },
+   "hier_total": {
+    "LUT4": 6948,
+    "CCU2C": 1241,
+    "PFUMX": 1141,
+    "L6MUX21": 450,
+    "TRELLIS_FF": 4434,
+    "MULT18X18D": 68,
+    "DP16KD": 19,
+    "TRELLIS_DPR16X4": 136,
+    "lut_equiv": 9974
+   },
+   "flat_total": {
+    "LUT4": 5984,
+    "CCU2C": 1239,
+    "PFUMX": 522,
+    "L6MUX21": 41,
+    "TRELLIS_FF": 4358,
+    "MULT18X18D": 68,
+    "DP16KD": 19,
+    "TRELLIS_DPR16X4": 136,
+    "lut_equiv": 9006
+   },
+   "postplace": {
+    "lut4": 9716,
+    "ff": 4358,
+    "mult18x18d": 68,
+    "dp16kd": 19,
+    "lutram": 136,
+    "seed": 3,
+    "commit": "89953450e78213d418a7659d46e70b5808dc7d6a"
+   },
+   "gap": {
+    "hier_minus_flat_lut_equiv": 968,
+    "hier_minus_flat_ff": 76,
+    "postplace_minus_flat_lut_equiv": 710
+   }
+  }
+ ],
+ "commit": "76d13530325817cfd29f69af853558e489387f8d",
+ "dirty": true,
+ "date": "2026-10-24T02:47:58Z",
+ "tools": {
+  "yosys": "Yosys 0.69+187 (git sha1 2f08661dd, Release, Clang /usr/local/osxcross/target/bin/aarch64-apple-darwin25.5-clang++ 21.1.8)"
+ }
+}

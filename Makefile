@@ -17,7 +17,7 @@ endif
 endif
 export PATH := $(ROOT)/.venv/bin:$(ROOT)/tools/xpack-riscv-none-elf-gcc-15.2.0-1/bin:$(ROOT)/tools/oss-cad-suite/bin:$(PATH)
 
-.PHONY: bootstrap lint test test-slow synth macros paper paper-journal reproduce clean-clone-check readme clean
+.PHONY: bootstrap lint test test-slow synth synth-breakdown macros paper paper-journal reproduce clean-clone-check readme clean
 
 RTL := $(shell find rtl -name '*.sv' 2>/dev/null | sort)
 PICO := third_party/picorv32/picorv32.v
@@ -43,15 +43,19 @@ test-slow:
 synth:
 	bash syn/synth.sh $(or $(DESIGN),accel) $(or $(P),8) $(or $(SEED),1)
 
+# Per-module LUT breakdown (Yosys -noflatten), all P -> results/syn/accel_breakdown.json.
+synth-breakdown:
+	bash syn/breakdown.sh $(P)
+
 macros:
 	$(PY) experiments/make_deviations.py && $(PY) experiments/plot_m6.py && $(PY) experiments/make_macros.py
 
 paper:
-	mkdir -p paper/build && cd paper && tectonic -X compile main.tex --outdir build
+	mkdir -p paper/build && cd paper && tectonic -X compile main.tex --outdir build --keep-logs
 	cp paper/build/main.pdf paper/main.pdf
 
 paper-journal:
-	mkdir -p paper/journal/build && cd paper/journal && tectonic -X compile main.tex --outdir build
+	mkdir -p paper/journal/build && cd paper/journal && tectonic -X compile main.tex --outdir build --keep-logs
 	cp paper/journal/build/main.pdf paper/journal/main.pdf
 
 # Full pipeline (hours; runtimes in README). REPRODUCE_QUICK=1 for a smoke run that restores results/ afterwards.
