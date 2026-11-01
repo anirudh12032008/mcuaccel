@@ -6,7 +6,7 @@ Paper cells for these stay `\todo{MEASURE}` until the file exists.
 Everything in README/paper is simulation (Verilator) or synthesis (Yosys + nextpnr, no board). The items
 below are not done. Any number that depends on them is `\todo{MEASURE}` in the paper, "pending" in README.
 
-## 1. Publish the pre-registration externally (manual)
+## 1. Publish the pre-registration externally (done 2026-11-01, results/prereg_publication.json)
 The repository has no remote, so the m1 timestamp is only as good as local git. Before submission:
 1. `git rev-parse m1^{}` and `git show m1:results/m1_predictions.csv | shasum -a 256` (current values are
    printed in README.md and FINAL_REPORT.md; they must match).

@@ -62,7 +62,7 @@ Repository HEAD `{head}`{' (working tree dirty)' if dirty else ''}.
 ## Pre-registration (SPEC section 6)
 - tag `m1` commit: `{c or 'unknown'}`
 - sha256 of `results/m1_predictions.csv` at tag m1: `{sha or 'unknown'}`
-- Publishing these externally (no remote exists) is a manual step: HARDWARE_TODO.md.
+{pub_line()}
 
 ## Claims and verdicts
 {results()}

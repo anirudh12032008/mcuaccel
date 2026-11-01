@@ -42,6 +42,14 @@ def prereg():
     return c, (hashlib.sha256(raw.stdout).hexdigest() if raw.returncode == 0 else None)
 
 
+def pub_line():
+    """Where and when tag m1 was published, from results/prereg_publication.json (HARDWARE_TODO item 1)."""
+    p = load(R / "prereg_publication.json")
+    if not p or p["sha256"] != prereg()[1]:
+        return "- external timestamp: pending (HARDWARE_TODO.md item 1)\n"
+    return f"- published at {p['url']} on {p['date']} (GitHub pushed_at {p['pushed_at']})\n"
+
+
 def baseline(m):
     b = load(R / f"baseline_{m}.json")
     return b["mcugrad_result"]["cycles_median"] if b else None

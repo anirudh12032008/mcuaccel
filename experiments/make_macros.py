@@ -89,6 +89,13 @@ summ = json.loads(tagged("results/m1_summary.json"))
 emit("MOneModelCommit", summ["commit"][:7], "results/m1_summary.json commit")
 emit("MOneRowsAll", n_all, "data rows of results/m1_predictions.csv (all archs)")
 emit("MOneRows", len(preds), "rows with arch=os in results/m1_predictions.csv")
+pub = load(R / "prereg_publication.json")
+if pub and pub["sha256"] == sha:
+    emit("PreregDate", pub["date"], "results/prereg_publication.json date (GitHub pushed_at)")
+    emit("PreregUrl", f"\\url{{{pub['url']}}}", "results/prereg_publication.json url")
+else:
+    todo("PreregDate", "public timestamp of m1, HARDWARE_TODO.md item 1", "results/prereg_publication.json")
+    todo("PreregUrl", "public URL of m1, HARDWARE_TODO.md item 1", "results/prereg_publication.json")
 for P in PW:
     emit(f"MOneRowsP{PW[P]}", sum(r["P"] == str(P) for r in preds), f"rows with arch=os and P={P}")
 

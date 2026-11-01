@@ -93,12 +93,13 @@ ECP5 LFE5U-85F, Yosys + nextpnr, 50 MHz target (LUT4/FF/MULT/BRAM from the lowes
 
 The cycle-model predictions (`results/m1_predictions.csv`) were committed at git tag `m1`, before any
 datapath RTL (SPEC section 6, "Pre-registration rule"). To verify:
-`git show m1:results/m1_predictions.csv | shasum -a 256`. The repository has no remote, so publishing
-these values externally is a manual step ([HARDWARE_TODO.md](HARDWARE_TODO.md) section 1).
+`git show m1:results/m1_predictions.csv | shasum -a 256`. Both values were published with the
+tag on GitHub (record: `results/prereg_publication.json`).
 
 <!-- BEGIN:prereg -->
 - tag `m1` commit: `6533b1e9f9f2b7c46bb8dbca5d205ab71fca11ff`
 - sha256 of `results/m1_predictions.csv` at that tag (`git show m1:results/m1_predictions.csv | shasum -a 256`): `fd94f39a1a913ee63cb03e4a9cd256cc42e6ca0df9dd0c5383c50ac62e4bd362`
+- published at https://github.com/anirudh12032008/mcuaccel/tree/m1 on 2026-11-01 (GitHub pushed_at 2026-11-01T05:41:20Z)
 <!-- END:prereg -->
 
 Deviations made after m1 are logged in [docs/DECISIONS.md](docs/DECISIONS.md) (D19 baseline change, D20 RTL

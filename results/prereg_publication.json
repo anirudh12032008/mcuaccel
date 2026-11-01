@@ -1,0 +1,11 @@
+{
+  "url": "https://github.com/anirudh12032008/mcuaccel/tree/m1",
+  "repo": "https://github.com/anirudh12032008/mcuaccel",
+  "date": "2026-11-01",
+  "repo_created_at": "2026-11-01T05:41:10Z",
+  "pushed_at": "2026-11-01T05:41:20Z",
+  "commit": "6533b1e9f9f2b7c46bb8dbca5d205ab71fca11ff",
+  "sha256": "fd94f39a1a913ee63cb03e4a9cd256cc42e6ca0df9dd0c5383c50ac62e4bd362",
+  "source": "GitHub API repos/anirudh12032008/mcuaccel created_at and pushed_at, read right after the first push of main and all tags",
+  "note": "Server timestamp bounds the m1 hash to on or before this date only. The whole history went public in one push, so the ordering of m1 before the datapath RTL still rests on local git history."
+}

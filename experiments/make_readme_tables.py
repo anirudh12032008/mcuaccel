@@ -38,7 +38,7 @@ def prereg_block():
     c, sha = prereg()
     return (f"- tag `m1` commit: `{c or 'unknown (tag not found)'}`\n"
             f"- sha256 of `results/m1_predictions.csv` at that tag (`git show m1:results/m1_predictions.csv | shasum -a 256`): "
-            f"`{sha or 'unknown'}`\n")
+            f"`{sha or 'unknown'}`\n" + pub_line())
 
 
 def runtimes():

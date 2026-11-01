@@ -118,8 +118,8 @@ cycles for both networks in results/baseline_*.json.
 ## Next action
 2026-10-21: all claims scored (C1, C1b, C2a-c, C4a, C4b confirmed; C3 refuted; C5 descriptive); both
 papers built; clean-clone check passed; tags m4-m6 and v0.1.0.
-Before submission (author): push m1 to a public remote for an external timestamp; board wall-clock run
-(HARDWARE_TODO.md items 1-2).
+2026-11-01: m1 and all tags pushed to github.com/anirudh12032008/mcuaccel (HARDWARE_TODO item 1 done).
+Before submission (author): board wall-clock run (HARDWARE_TODO.md item 2).
 
 ## Log
 - 2026-10-24 Post-hoc: six-row PSETUP probe (results/m6_tie_probe.json; tie explains 4 of 6 rows, cifar
